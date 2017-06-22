@@ -42,8 +42,9 @@ class DOMTools {
 
 	cacheNodes( rootNode ) {
 		let nodeHash		= Object.create( null ),
-			availableNames	= Object.create( null ),
-			firstRun		= true;
+			availableNames	= Object.create( null );
+
+		nodeHash.root = rootNode;
 
 		(function crawlNodes( node ) {
 			let currentTag = null;
@@ -63,16 +64,11 @@ class DOMTools {
 				// fill nodeHash lookup
 				if( typeof nodeHash[ currentTag ] === 'undefined' ) {
 					nodeHash[ currentTag ] = node;
-					
-					if( firstRun ) {
-						nodeHash.root = node;
-					}
 				}
 				else {
 					nodeHash[ currentTag + '_' + availableNames[ currentTag ] ] = node;
 				}
 
-				firstRun = false;
 				// loop over every childnode, if we have children of children, recursively call crawlNodes()
 				if( node.children.length ) {
 					for( let i = 0, len = node.children.length; i < len; i++ ) {

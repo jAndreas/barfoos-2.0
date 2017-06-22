@@ -25,13 +25,13 @@ class Component {
 	}
 }
 
-function init( ...modules ) {
-	return appEvents.fire( 'waitForDOM' ).then( () => {
-		return modules.length === 1	?	new modules[ 0 ]()
-									:	modules.map( module => {
-											return new module();
-										});
-	});
+async function init( ...modules ) {
+	await appEvents.fire( 'waitForDOM' );
+
+	return modules.length === 1	?	new modules[ 0 ]()
+								:	modules.map( module => {
+										return new module();
+									});
 }
 
 export { Component, init };
