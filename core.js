@@ -1,4 +1,4 @@
-"use strict";
+"use strict"; // test
 
 import { extend } from './toolkit.js';
 import { win, doc, undef, DOMTools } from './domkit.js';
@@ -44,7 +44,7 @@ async function init( ...modules ) {
 	worldStyle.use();
 
 	await appEvents.fire( 'waitForDOM' );
-		
+
 	console.log('CORE DOMReady Event. Injecting nodes: ', nodes);
 
 	doc.body.appendChild( nodes[ 'div#world' ] );
