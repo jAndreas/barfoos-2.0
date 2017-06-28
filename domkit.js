@@ -30,7 +30,7 @@ class DOMTools {
 		return nodes;
 	}
 
-	waitForDOM() {
+	waitForDOM( event ) {
 		return doc.readyState === 'complete' || new Promise( (res, rej) => {
 			doc.onreadystatechange = () => {
 				if( doc.readyState === 'complete' ) {
@@ -63,7 +63,13 @@ class DOMTools {
 
 				// fill nodeHash lookup
 				if( typeof nodeHash[ currentTag ] === 'undefined' ) {
+					let alias = node.getAttribute( 'alias' );
+
 					nodeHash[ currentTag ] = node;
+					
+					if( alias ) {
+						nodeHash[ alias ] = node;
+					}
 				}
 				else {
 					nodeHash[ currentTag + '_' + availableNames[ currentTag ] ] = node;
@@ -89,6 +95,7 @@ class DOMTools {
 
 	init() {
 		doc.onreadystatechange = () => {
+			console.log('onreadystatechange DOMContentLoaded..: ', doc.readyState);
 			if( doc.readyState === 'complete' ) {
 				this.appEvents.fire( 'DOMReady' );
 			}

@@ -47,7 +47,7 @@ class mediator {
 		}
 	}
 
-	fire( eName, data, callback ) {
+	fire( eName, data = { }, callback ) {
 		if( arguments.length === 2 && typeof data === 'function' ) {
 			// just in case we want to dispatch an event without any data, but with a callback handler
 			callback = data;
@@ -68,18 +68,18 @@ class mediator {
 							eventData	= listener[ listenersMax ];
 							result		= eventData.handler.call( eventData.scope, data );
 
-							// returning false explicitly from an event handler just means to stop any further propagation
-							if( result === false ) {
-								listenersMax = -1;
-								break;
-							}
-
 							// push whatever result was into data to our promises array
 							resultData.push( result );
 
 							// in case of a "per iteration" - callback, call it now with the current data
 							if( typeof callback === 'function' ) {
 								callback( result );
+							}
+
+							// returning false explicitly from an event handler just means to stop any further propagation
+							if( data.stopPropagation ) {
+								listenersMax = -1;
+								break; // while()
 							}
 
 							listenersMax--;

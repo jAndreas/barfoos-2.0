@@ -1,0 +1,90 @@
+#world {
+	display: flex;
+	align-items: stretch;
+	justify-content: space-around;
+	flex-direction: row;
+	flex-wrap: wrap;
+
+	border: 1px solid black;
+	box-sizing: border-box;
+	
+	transition: all 1s linear;
+}
+
+#world > section {
+	background-color: yellow;
+	flex-grow: 1;
+	flex-shrink: 1;
+	flex-basis: 100%;
+	
+	padding: 10px;
+	
+	display: flex;
+	justify-content: flex-start;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+
+#world > section.head {
+	flex-grow: 1;
+	background-color: green;
+	flex-basis: 100%;
+}
+
+#world > section.footer {
+	flex-grow: 1;
+	flex-basis: 100%;
+	order: 5;
+	
+	background-color: blue;
+	color: white;
+}
+
+#world > section.content.left {
+	background-color: red;
+	flex-basis: 0%;
+	flex-grow: 2;
+	flex-shrink: 1;
+	order: 0;
+}
+
+#world > section.content.right {
+	background-color: black;
+	color: white;
+	flex-basis: 0%;
+	flex-grow: 2;
+	order: 4;
+}
+
+@media all and (max-width: 600px) {
+	#world > section.content.left { 
+		flex-grow: 1;
+		flex-basis: 100%;
+		flex-shrink: 1;
+	}
+	
+	 #world > section.content.right { 
+		flex-grow: 1;
+		flex-basis: 100%;
+	}
+}
+
+@media all and (min-width: 800px) {
+	#world > section.content {
+		flex-grow: 5;
+		flex-basis: 0%;
+		min-height: 200px;
+		order: 1;
+	}
+}
+
+
+.module {
+	flex-grow: 1;
+	
+	width: 70px;
+	height: 70px;
+	background-color: white;
+	border: 1px dashed gray;
+	overflow: hidden;
+}
