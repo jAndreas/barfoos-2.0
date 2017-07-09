@@ -4,7 +4,7 @@
   "description": "A little helper framework",
   "main": "core.js",
   "scripts": {
-    "compile": "babel *.js --out-dir ../reveal/node_modules/barfoos2.0/ | cp -R ./html/ ../reveal/node_modules/barfoos2.0/ | cp -R ./css/ ../reveal/node_modules/barfoos2.0/"
+    "compile": "babel *.js --out-dir ../dvg_website/node_modules/barfoos2.0/ | cp -R ./html/ ../dvg_website/node_modules/barfoos2.0/ | cp -R ./css/ ../dvg_website/node_modules/barfoos2.0/"
   },
   "author": "Andreas Goebel",
   "license": "ISC",
