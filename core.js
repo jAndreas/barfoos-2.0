@@ -1,4 +1,4 @@
-"use strict"; // test
+"use strict";
 
 import { extend } from './toolkit.js';
 import { win, doc, undef, DOMTools } from './domkit.js';
