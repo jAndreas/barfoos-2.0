@@ -31,15 +31,6 @@ class Component {
 	}
 }
 
-async function init( ...modules ) {
-	await appEvents.fire( 'waitForDOM' );
-
-	return modules.length === 1	?	new modules[ 0 ]()
-								:	modules.map( module => {
-										return new module();
-									});
-}
-
 (async function main() {
 	worldStyle.use();
 
@@ -50,4 +41,4 @@ async function init( ...modules ) {
 	doc.body.appendChild( nodes[ 'div#world' ] );
 }());
 
-export { Component, init };
+export { Component };
