@@ -14,9 +14,9 @@ class DOMTools {
 
 		extend( this ).with({
 			vDom:		doc.implementation.createHTMLDocument(),
-			appEvents:	new mediator({ register: 'ApplicationEvents' }) 
+			appEvents:	new mediator({ register: 'ApplicationEvents' })
 		}, true);
-		
+
 		this.init();
 	}
 
@@ -66,7 +66,7 @@ class DOMTools {
 					let alias = node.getAttribute( 'alias' );
 
 					nodeHash[ currentTag ] = node;
-					
+
 					if( alias ) {
 						nodeHash[ alias ] = node;
 					}
@@ -138,7 +138,7 @@ extend( query ).with({
 				return doc;
 			} else {
 				throw new TypeError( 'By() requires a node reference or a query string as context argument' );
-			} 
+			}
 		}
 	}
 });

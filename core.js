@@ -15,12 +15,14 @@ class Component {
 	constructor( options = { } ) {
 		extend( this ).with( options ).and({
 			appEvents:		new mediator({ register: 'ApplicationEvents' }),
-			moduleEvents:	new mediator({ register: 'GUIModuleEvents' })
+			moduleEvents:	new mediator({ register: 'GUIModuleEvents' }),
+			dependencies:	[ ]
 		});
 
 		if( typeof this.tmpl === 'string' ) {
 			this.nodes		= Object.create( null );
 			this.location	= this.location || moduleLocations.center;
+			this.dependencies.push( this.appEvents.fire( 'waitForDOM' ) );
 
 			extend( this.nodes ).with( DOM.transpile( this.tmpl ), true );
 
