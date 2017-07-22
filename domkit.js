@@ -32,11 +32,8 @@ class DOMTools {
 
 	waitForDOM( event ) {
 		return doc.readyState === 'complete' || new Promise( (res, rej) => {
-			doc.onreadystatechange = () => {
-				if( doc.readyState === 'complete' ) {
-					res( doc.readyState );
-				}
-			}
+			console.log(`waitForDOM: document readyState not complete(${doc.readyState}), adding to DCL.`, event, this);
+			doc.addEventListener( 'DOMContentLoaded', () => res( doc.readyState ) );
 		});
 	}
 

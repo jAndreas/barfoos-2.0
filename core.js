@@ -1,10 +1,11 @@
 "use strict";
 
-import { extend } from './toolkit.js';
+import { extend, type } from './toolkit.js';
 import { win, doc, undef, DOMTools } from './domkit.js';
 import { mediator } from './mediator.js';
 import { moduleLocations } from './defs.js';
 import worldMarkup from './html/world.html';
+import normalize from './css/normalize.css';
 import worldStyle from './css/world.css';
 
 let appEvents	= new mediator({ register: 'ApplicationEvents' }),
@@ -30,10 +31,15 @@ class Component {
 		} else {
 			console.log('worker..?');
 		}
+
+		this.appEvents.fire( 'moduleLaunch', {
+			name:	this.constructor.name
+		});
 	}
 }
 
 (async function main() {
+	normalize.use();
 	worldStyle.use();
 
 	await appEvents.fire( 'waitForDOM' );
@@ -42,5 +48,9 @@ class Component {
 
 	doc.body.appendChild( nodes[ 'div#world' ] );
 }());
+
+appEvents.on( 'moduleLaunch', module => {
+		console.log('module was launched: ', module.name);
+});
 
 export { Component };

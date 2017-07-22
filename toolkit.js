@@ -1,6 +1,6 @@
 "use strict";
 
-const	type		= Function.prototype.call.bind( Object.prototype.toString ),
+const	type		= input => Object.prototype.toString.call( input ).split( /\s/ )[ 1 ].slice( 0, -1 ),
 		desc		= Object.getOwnPropertyDescriptor,
 		defineProp	= Object.defineProperty,
 		props		= Object.getOwnPropertyNames,
@@ -28,13 +28,13 @@ function extend( target = { } ) {
 		'with': ( source = { }, noDeepClone ) => {
 			let propList	= props( source ),
 				len			= propList.length;
-				
+
 			while( len-- ) {
 				loopKeys( propList[ len ] );
 			}
-		
+
 			return actions;
-			
+
 			// -- locals --
 			function loopKeys( key ) {
 				if( typeof source[ key ] === 'object' && source[ key ] !== null && noDeepClone === undef ) {
