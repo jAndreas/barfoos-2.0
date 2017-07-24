@@ -77,7 +77,6 @@
 	#world > section.content {
 		flex-grow:10;
 		flex-basis:0%;
-		min-height:200px;
 		order: 1;
 	}
 }
