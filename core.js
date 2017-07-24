@@ -61,7 +61,7 @@ appEvents.on( 'moduleLaunch', module => {
 	if( module.id in modules ) {
 		modules[ module.id ]++;
 	} else {
-		modules[ module.id ] = 0;
+		modules[ module.id ] = 1;
 	}
 
 	console.log( `module ${module.id} was launched( ${modules[module.id]}x )` );

@@ -83,16 +83,16 @@ class DOMTools extends LogTools {
 
 				// fill nodeHash lookup
 				if( typeof nodeHash[ currentTag ] === 'undefined' ) {
-					let alias = node.getAttribute( 'alias' );
-
 					nodeHash[ currentTag ] = node;
-
-					if( alias ) {
-						nodeHash[ alias ] = node;
-					}
 				}
 				else {
 					nodeHash[ currentTag + '_' + availableNames[ currentTag ] ] = node;
+				}
+
+				let alias = node.getAttribute( 'alias' );
+
+				if( alias ) {
+					nodeHash[ alias ] = node;
 				}
 
 				// loop over every childnode, if we have children of children, recursively call crawlNodes()
