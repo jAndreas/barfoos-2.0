@@ -1,28 +1,36 @@
 "use strict";
 
-import { extend, type } from './toolkit.js';
-import { win, doc, undef, DOMTools } from './domkit.js';
+import { extend, mix, type } from './toolkit.js';
+import { win, doc, undef, DOMTools, LogTools } from './domkit.js';
 import { mediator } from './mediator.js';
 import { moduleLocations } from './defs.js';
 import worldMarkup from './html/world.html';
 import normalize from './css/normalize.css';
 import worldStyle from './css/world.css';
 
-let appEvents	= new mediator({ register: 'ApplicationEvents' }),
-	DOM			= new DOMTools(),
-	nodes		= DOM.transpile( worldMarkup );
+const	appEvents	= new mediator({ register: 'ApplicationEvents' }),
+		DOM			= new DOMTools(),
+		nodes		= DOM.transpile( worldMarkup ),
+		modules		= Object.create( null ),
+		console		= new LogTools({ id: 'core' });
 
-class Component {
+class Component extends LogTools {
 	constructor( options = { } ) {
+		super( ...arguments );
+
 		extend( this ).with( options ).and({
+			id:				this.constructor.name,
 			appEvents:		new mediator({ register: 'ApplicationEvents' }),
 			moduleEvents:	new mediator({ register: 'GUIModuleEvents' }),
 			dependencies:	[ ]
 		});
 
 		if( typeof this.tmpl === 'string' ) {
-			this.nodes		= Object.create( null );
-			this.location	= this.location || moduleLocations.center;
+			extend( this ).with({
+				nodes:		Object.create( null ),
+				location:	this.location || moduleLocations.center
+			});
+
 			this.dependencies.push( this.appEvents.fire( 'waitForDOM' ) );
 
 			extend( this.nodes ).with( DOM.transpile( this.tmpl ), true );
@@ -33,7 +41,7 @@ class Component {
 		}
 
 		this.appEvents.fire( 'moduleLaunch', {
-			name:	this.constructor.name
+			id:	this.id
 		});
 	}
 }
@@ -50,7 +58,13 @@ class Component {
 }());
 
 appEvents.on( 'moduleLaunch', module => {
-		console.log('module was launched: ', module.name);
+	if( module.id in modules ) {
+		modules[ module.id ]++;
+	} else {
+		modules[ module.id ] = 0;
+	}
+
+	console.log( `module ${module.id} was launched( ${modules[module.id]}x )` );
 });
 
 export { Component };

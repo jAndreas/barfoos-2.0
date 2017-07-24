@@ -1,6 +1,6 @@
 "use strict";
 
-import { extend } from './toolkit.js';
+import { mix, extend, intToRGB, hashCode } from './toolkit.js';
 import { mediator } from './mediator.js';
 
 const		win			= window,
@@ -8,11 +8,33 @@ const		win			= window,
 			undef		= void 0,
 			query		= Object.create( null );
 
-class DOMTools {
-	constructor( data = { } ) {
-		extend( this ).with( data );
-
+class LogTools {
+	constructor( opts = { } ) {
 		extend( this ).with({
+			id:		opts.id || this.constructor.name,
+			color:	intToRGB( hashCode( opts.id || this.constructor.name ) )
+		});
+	}
+
+	log( ...args ) {
+		if( ENV_PROD ) {
+			return;
+		}
+
+		let prefixed = args.slice( 0 );
+
+		prefixed.unshift( `%c${this.id}: `, `color: #${this.color};font-weight: normal;text-shadow: 1px 1px 1px white,-1px -1px 1px black;` );
+		console.log( ...prefixed );
+
+		super.log && super.log( ...args );
+	}
+};
+
+class DOMTools extends LogTools {
+	constructor( data = { } ) {
+		super( ...arguments );
+
+		extend( this ).with( data ).and({
 			vDom:		doc.implementation.createHTMLDocument(),
 			appEvents:	new mediator({ register: 'ApplicationEvents' })
 		}, true);
@@ -32,14 +54,15 @@ class DOMTools {
 
 	waitForDOM( event ) {
 		return doc.readyState === 'complete' || new Promise( (res, rej) => {
-			console.log(`waitForDOM: document readyState not complete(${doc.readyState}), adding to DCL.`, event, this);
+			this.log(`waitForDOM: document readyState not complete(${doc.readyState}), adding to DCL.`);
 			doc.addEventListener( 'DOMContentLoaded', () => res( doc.readyState ) );
 		});
 	}
 
 	cacheNodes( rootNode ) {
 		let nodeHash		= Object.create( null ),
-			availableNames	= Object.create( null );
+			availableNames	= Object.create( null ),
+			self			= this;
 
 		nodeHash.root = rootNode;
 
@@ -80,10 +103,10 @@ class DOMTools {
 				}
 			} else if( node instanceof NodeList ) {
 				// handle each node of NodeList
-				console.log('NodeList not implemented yet');
+				self.log('NodeList not implemented yet');
 			} else if( node instanceof HTMLCollection ) {
 				// handle each node of HTMLCollection
-				console.log('HTMLCollection not implemented yet');
+				self.log('HTMLCollection not implemented yet');
 			}
 		}( rootNode ));
 
@@ -92,13 +115,13 @@ class DOMTools {
 
 	init() {
 		doc.onreadystatechange = () => {
-			console.log('onreadystatechange DOMContentLoaded..: ', doc.readyState);
+			this.log('onreadystatechange DOMContentLoaded..: ', doc.readyState);
 			if( doc.readyState === 'complete' ) {
 				this.appEvents.fire( 'DOMReady' );
 			}
 		}
 
-		this.appEvents.on( 'waitForDOM', this.waitForDOM )
+		this.appEvents.on( 'waitForDOM', this.waitForDOM, this );
 	}
 }
 
@@ -140,4 +163,9 @@ extend( query ).with({
 	}
 });
 
-export { win, doc, query, DOMTools };
+if(!('console' in win) ) {
+	win.console = Object.create( null );
+	'debug error info log warn dir dirxml table trace group groupCollapsed groupEnd clear count assert markTimeline profile profileEnd timeline timelineEnd time timeEnd timeStamp memory'.split( /\s+/ ).forEach( fncName => win.console[ fncName ] = () => undef );
+}
+
+export { win, doc, query, DOMTools, LogTools };

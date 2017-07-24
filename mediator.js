@@ -9,7 +9,7 @@ const	registerContainer	= Object.create( null ),
 class mediator {
 	constructor( data = { } ) {
 		extend( this ).with( data );
-		
+
 		if( typeof this.register === 'string' ) {
 			if( registerContainer[ this.register ] === undef ) {
 				registerContainer[ this.register ] = Object.create( null );
@@ -26,12 +26,12 @@ class mediator {
 			if( this.container[ eName ] === undef ) {
 				this.container[ eName ] = [ ];
 			}
-			
-			this.container[ eName ].unshift({ handler: handler, scope: scope || undef });
+
+			this.container[ eName ].unshift({ handler: handler.bind( scope ) });
 		} else {
 			throw new TypeError( 'on() was called with wrong arguments.' );
 		}
-		
+
 		return this;
 	}
 
@@ -66,7 +66,7 @@ class mediator {
 
 						do {
 							eventData	= listener[ listenersMax ];
-							result		= eventData.handler.call( eventData.scope, data );
+							result		= eventData.handler( data );
 
 							// push whatever result was into data to our promises array
 							resultData.push( result );
@@ -95,7 +95,7 @@ class mediator {
 				});
 			}
 		} else { throw new TypeError( 'event name must be a string.' ); }
-		
+
 		return Promise.resolve( 'fire() warning' );
 	}
 }
