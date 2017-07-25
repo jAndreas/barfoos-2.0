@@ -25,7 +25,7 @@ function mix( targetClass ) {
 
 function extend( target = { } ) {
 	let actions = {
-		'with': ( source = { }, noDeepClone ) => {
+		'with': ( source = { }, DeepCloneFreeze ) => {
 			let propList	= props( source ),
 				len			= propList.length;
 
@@ -37,7 +37,7 @@ function extend( target = { } ) {
 
 			// -- locals --
 			function loopKeys( key ) {
-				if( typeof source[ key ] === 'object' && source[ key ] !== null && noDeepClone === undef ) {
+				if( typeof source[ key ] === 'object' && source[ key ] !== null && DeepCloneFreeze ) {
 					if( Array.isArray( source[ key ] ) ) {
 						if( Array.isArray( target[ key ] ) ) {
 							target[ key ] = [ ...target[ key ], ...source[ key ] ];
@@ -52,7 +52,7 @@ function extend( target = { } ) {
 						}
 					}
 
-					extend( target[ key ] ).with( source[ key ], noDeepClone );
+					extend( target[ key ] ).with( source[ key ], DeepCloneFreeze );
 				} else {
 					defineProp( target, key, desc( source, key ) );
 				}

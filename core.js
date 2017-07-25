@@ -2,27 +2,29 @@
 
 import { extend, mix, type } from './toolkit.js';
 import { win, doc, undef, DOMTools, LogTools } from './domkit.js';
-import { mediator } from './mediator.js';
+import { Mediator } from './mediator.js';
+import { BrowserKit } from './browserkit.js';
 import { moduleLocations } from './defs.js';
 import worldMarkup from './html/world.html';
 import normalize from './css/normalize.css';
 import worldStyle from './css/world.css';
 
-const	appEvents	= new mediator({ register: 'ApplicationEvents' }),
+const	appEvents	= new Mediator({ register: 'ApplicationEvents' }),
 		DOM			= new DOMTools(),
+		Browser		= new BrowserKit(),
+		console		= new LogTools({ id: 'core' }),
 		nodes		= DOM.transpile( worldMarkup ),
-		modules		= Object.create( null ),
-		console		= new LogTools({ id: 'core' });
+		modules		= Object.create( null );
 
 class Component extends LogTools {
 	constructor( options = { } ) {
 		super( ...arguments );
 
 		extend( this ).with( options ).and({
-			id:				this.constructor.name,
-			appEvents:		new mediator({ register: 'ApplicationEvents' }),
-			moduleEvents:	new mediator({ register: 'GUIModuleEvents' }),
-			dependencies:	[ ]
+			id:						this.constructor.name,
+			appEvents:				new Mediator({ register: 'ApplicationEvents' }),
+			moduleEvents:			new Mediator({ register: 'GUIModuleEvents' }),
+			runtimeDependencies:	[ ]
 		});
 
 		if( typeof this.tmpl === 'string' ) {
@@ -31,9 +33,9 @@ class Component extends LogTools {
 				location:	this.location || moduleLocations.center
 			});
 
-			this.dependencies.push( this.appEvents.fire( 'waitForDOM' ) );
+			this.runtimeDependencies.push( this.appEvents.fire( 'waitForDOM' ) );
 
-			extend( this.nodes ).with( DOM.transpile( this.tmpl ), true );
+			extend( this.nodes ).with( DOM.transpile( this.tmpl ) );
 
 			nodes[ `section.${ this.location }` ].appendChild( this.nodes.root );
 		} else {
@@ -44,6 +46,10 @@ class Component extends LogTools {
 			id:	this.id
 		});
 	}
+
+	init() {
+		return Promise.all( this.runtimeDependencies ).then( () => this );
+	}
 }
 
 (async function main() {
@@ -52,9 +58,10 @@ class Component extends LogTools {
 
 	await appEvents.fire( 'waitForDOM' );
 
-	console.log('CORE DOMReady Event. Injecting nodes: ', nodes);
+	console.log('CORE DOMReady Event. Injecting nodes to document body: ', nodes);
 
 	doc.body.appendChild( nodes[ 'div#world' ] );
+	nodes[ 'div#world' ].focus();
 }());
 
 appEvents.on( 'moduleLaunch', module => {

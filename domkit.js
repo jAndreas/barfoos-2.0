@@ -1,7 +1,7 @@
 "use strict";
 
 import { mix, extend, intToRGB, hashCode } from './toolkit.js';
-import { mediator } from './mediator.js';
+import { Mediator } from './mediator.js';
 
 const		win			= window,
 			doc			= win.document,
@@ -36,8 +36,8 @@ class DOMTools extends LogTools {
 
 		extend( this ).with( data ).and({
 			vDom:		doc.implementation.createHTMLDocument(),
-			appEvents:	new mediator({ register: 'ApplicationEvents' })
-		}, true);
+			appEvents:	new Mediator({ register: 'ApplicationEvents' })
+		});
 
 		this.init();
 	}

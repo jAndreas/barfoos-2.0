@@ -6,7 +6,7 @@ const	registerContainer	= Object.create( null ),
 		maxLoopTime			= 100,
 		undef				= void 0;
 
-class mediator {
+class Mediator {
 	constructor( data = { } ) {
 		extend( this ).with( data );
 
@@ -23,11 +23,13 @@ class mediator {
 
 	on( eName, handler, scope ) {
 		if( typeof eName === 'string' && typeof handler === 'function' ) {
-			if( this.container[ eName ] === undef ) {
-				this.container[ eName ] = [ ];
-			}
+			for( let singleName of eName.split( /\s+/ ) ) {
+				if( this.container[ singleName ] === undef ) {
+					this.container[ singleName ] = [ ];
+				}
 
-			this.container[ eName ].unshift({ handler: handler.bind( scope ) });
+				this.container[ singleName ].unshift({ handler: scope ? handler.bind( scope ) : handler });
+			}
 		} else {
 			throw new TypeError( 'on() was called with wrong arguments.' );
 		}
@@ -100,4 +102,4 @@ class mediator {
 	}
 }
 
-export { mediator };
+export { Mediator };
