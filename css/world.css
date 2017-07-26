@@ -12,6 +12,20 @@
 	background-color:rgba(10,10,10,1);
 }
 
+#world:before {
+	content:'';
+	position:absolute;
+	top:0;
+	left:0;
+	right:0;
+	bottom:0;
+	background-image:url(/images/background.jpg);
+	filter:blur(5px);
+	background-attachment:fixed;
+	background-size:cover;
+	background-repeat:no-repeat;
+}
+
 #world > section {
 	position:relative;
 	flex-grow:1;
