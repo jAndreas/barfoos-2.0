@@ -8,11 +8,16 @@ const		win			= window,
 			undef		= void 0,
 			query		= Object.create( null );
 
-class LogTools {
-	constructor( opts = { } ) {
+/*****************************************************************************************************
+ * Mixin Class LogTools: Provides a logging with hash-generated color from base class constructor name
+ *****************************************************************************************************/
+let LogTools = target => class extends target {
+	constructor( options = { } ) {
+		super( ...arguments );
+
 		extend( this ).with({
-			id:		opts.id || this.constructor.name,
-			color:	intToRGB( hashCode( opts.id || this.constructor.name ) )
+			id:		options.id || this.constructor.name,
+			color:	intToRGB( hashCode( options.id || this.constructor.name ) )
 		});
 	}
 
@@ -29,14 +34,17 @@ class LogTools {
 		super.log && super.log( ...args );
 	}
 };
+/********************************************* LogTools End ******************************************/
 
-class DOMTools extends LogTools {
+/*****************************************************************************************************
+ * Class DOMTools: Provides a DOM toolset for transpiling html-strings into Node-References, watching
+ * DOM ready events and providing request-events.
+ *****************************************************************************************************/
+class DOMTools {
 	constructor( data = { } ) {
-		super( ...arguments );
-
 		extend( this ).with( data ).and({
-			vDom:		doc.implementation.createHTMLDocument(),
-			appEvents:	new Mediator({ register: 'ApplicationEvents' })
+			id:			this.constructor.name,
+			vDom:		doc.implementation.createHTMLDocument()
 		});
 
 		this.init();
@@ -117,14 +125,21 @@ class DOMTools extends LogTools {
 		doc.onreadystatechange = () => {
 			this.log('onreadystatechange DOMContentLoaded..: ', doc.readyState);
 			if( doc.readyState === 'complete' ) {
-				this.appEvents.fire( 'DOMReady' );
+				this.fire( 'DOMReady.appEvents' );
 			}
 		}
 
-		this.appEvents.on( 'waitForDOM', this.waitForDOM, this );
+		this.on( 'waitForDOM.appEvents', this.waitForDOM, this );
 	}
 }
 
+// DOMTools Extension (Mixin)
+class DOMToolsEx extends mix( DOMTools ).with( LogTools, Mediator ) { };
+/********************************************* DOMTools End ******************************************/
+
+/*****************************************************************************************************
+ * query is a native, simple DOM selector API.
+ *****************************************************************************************************/
 extend( query ).with({
 	By:	{
 		'id':		function byId( id, ctx ) {
@@ -162,10 +177,11 @@ extend( query ).with({
 		}
 	}
 });
+/********************************************* query End ******************************************/
 
 if(!('console' in win) ) {
 	win.console = Object.create( null );
 	'debug error info log warn dir dirxml table trace group groupCollapsed groupEnd clear count assert markTimeline profile profileEnd timeline timelineEnd time timeEnd timeStamp memory'.split( /\s+/ ).forEach( fncName => win.console[ fncName ] = () => undef );
 }
 
-export { win, doc, query, DOMTools, LogTools };
+export { win, doc, query, DOMToolsEx, LogTools };

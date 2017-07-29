@@ -1,29 +1,30 @@
 "use strict";
 
-import { extend, mix, type } from './toolkit.js';
-import { win, doc, undef, DOMTools, LogTools } from './domkit.js';
+import { extend, mix, makeClass, type } from './toolkit.js';
+import { win, doc, undef, DOMToolsEx, LogTools } from './domkit.js';
 import { Mediator } from './mediator.js';
-import { BrowserKit } from './browserkit.js';
+import { BrowserKitEx } from './browserkit.js';
 import { moduleLocations } from './defs.js';
 import worldMarkup from './html/world.html';
 import normalize from './css/normalize.css';
 import worldStyle from './css/world.css';
 
-const	appEvents	= new Mediator({ register: 'ApplicationEvents' }),
-		DOM			= new DOMTools(),
-		Browser		= new BrowserKit(),
-		console		= new LogTools({ id: 'core' }),
+const	eventLoop	= makeClass().mixin( Mediator ),
+		console		= makeClass( class core{ }, { id: 'core'} ).mixin( LogTools ),
+		DOM			= new DOMToolsEx(),
+		Browser		= new BrowserKitEx(),
 		nodes		= DOM.transpile( worldMarkup ),
 		modules		= Object.create( null );
 
-class Component extends LogTools {
+/*****************************************************************************************************
+ * Class Component is the basic GUI Module set of BarFoos 2. It provides automatic html-string transpiling,
+ * appending of module nodes, creating and waiting any async events (promises) to keep things in order and will
+ * also be augmented with Log and Mediator classes for any GUI module
+ *****************************************************************************************************/
+class Component {
 	constructor( options = { } ) {
-		super( ...arguments );
-
 		extend( this ).with( options ).and({
 			id:						this.constructor.name,
-			appEvents:				new Mediator({ register: 'ApplicationEvents' }),
-			moduleEvents:			new Mediator({ register: 'GUIModuleEvents' }),
 			runtimeDependencies:	[ ]
 		});
 
@@ -33,7 +34,7 @@ class Component extends LogTools {
 				location:	this.location || moduleLocations.center
 			});
 
-			this.runtimeDependencies.push( this.appEvents.fire( 'waitForDOM' ) );
+			this.runtimeDependencies.push( this.fire( 'waitForDOM.appEvents' ) );
 
 			extend( this.nodes ).with( DOM.transpile( this.tmpl ) );
 
@@ -42,7 +43,7 @@ class Component extends LogTools {
 			console.log('worker..?');
 		}
 
-		this.appEvents.fire( 'moduleLaunch', {
+		this.fire( 'moduleLaunch.appEvents', {
 			id:	this.id
 		});
 	}
@@ -52,19 +53,27 @@ class Component extends LogTools {
 	}
 }
 
+// Component Extension (Mixin)
+class ComponentEx extends mix( Component ).with( LogTools, Mediator ) { };
+/****************************************** Component End ******************************************/
+
 (async function main() {
 	normalize.use();
 	worldStyle.use();
 
-	await appEvents.fire( 'waitForDOM' );
+	await eventLoop.fire( 'waitForDOM.appEvents' );
 
 	console.log('CORE DOMReady Event. Injecting nodes to document body: ', nodes);
 
 	doc.body.appendChild( nodes[ 'div#world' ] );
+
 	nodes[ 'div#world' ].focus();
 }());
 
-appEvents.on( 'moduleLaunch', module => {
+/*****************************************************************************************************
+ * Core Event handling
+ *****************************************************************************************************/
+eventLoop.on( 'moduleLaunch.appEvents', (module, event) => {
 	if( module.id in modules ) {
 		modules[ module.id ]++;
 	} else {
@@ -72,6 +81,14 @@ appEvents.on( 'moduleLaunch', module => {
 	}
 
 	console.log( `module ${module.id} was launched( ${modules[module.id]}x )` );
+	console.log( 'event object: ', event );
 });
 
-export { Component };
+eventLoop.on( 'defineApp.appEvents', app => {
+	console.log( `Setting up BarFoos Application ${ app.name } version ${ app.version }(${ app.status }).` );
+
+	doc.title	= app.title;
+});
+/****************************************** Event Handling End ****************************************/
+
+export { ComponentEx };

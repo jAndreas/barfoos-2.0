@@ -1,47 +1,50 @@
 'use strict';
 
-import { extend } from './toolkit.js';
+import { extend, mix } from './toolkit.js';
 import { Mediator } from './mediator.js';
 import { doc, win, LogTools } from './domkit.js';
 
-const test = new Mediator({ register: 'ApplicationEvents' });
-
-class BrowserKit extends LogTools {
+/*****************************************************************************************************
+ * Class BrowserKit provides basic browser event abstraction into BarFoos events
+ * Any Browser related task will be handled here
+ *****************************************************************************************************/
+class BrowserKit {
 	constructor() {
-		super( ...arguments );
-
 		extend( this ).with({
-			appEvents:	new Mediator({ register: 'ApplicationEvents' })
 		});
 
 		this.init();
 	}
 
 	async init() {
-		await this.appEvents.fire( 'waitForDOM' );
+		await this.fire( 'waitForDOM.appEvents' );
 
 		doc.addEventListener( 'visibilitychange', this.visibilityChange.bind( this ), false );
 		doc.addEventListener( 'focusin', this.focusin.bind( this ), false );
 		doc.addEventListener( 'focusout', this.focusout.bind( this ), false );
 
-		this.appEvents.on( 'isAppHidden', () => doc.hidden );
-		this.appEvents.on( 'isAppFocused', () => doc.hasFocus() );
+		this.on( 'isAppHidden.appEvents', () => doc.hidden );
+		this.on( 'isAppFocused.appEvents', () => doc.hasFocus() );
 		// onbeforeunload
 		// resize
 		// scroll
 	}
 
 	visibilityChange() {
-		this.appEvents.fire( 'appVisibilityChange', !doc.hidden );
+		this.fire( 'appVisibilityChange.appEvents', !doc.hidden );
 	}
 
 	focusin() {
-		this.appEvents.fire( 'appFocusChange', doc.hasFocus() );
+		this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
 	}
 
 	focusout() {
-		this.appEvents.fire( 'appFocusChange', doc.hasFocus() );
+		this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
 	}
 }
 
-export { BrowserKit };
+// BrowserKit Extension (Mixin)
+class BrowserKitEx extends mix( BrowserKit ).with( LogTools, Mediator ) { };
+/****************************************** BrowserKit End ******************************************/
+
+export { BrowserKitEx };

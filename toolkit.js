@@ -15,11 +15,19 @@ function mix( targetClass ) {
 	return {
 		with: function( ...sources ) {
 			composedClass = sources.reduce( ( composition, mixinFnc ) => mixinFnc( composition ), targetClass );
-			return this;
-		},
-		spawn:				( ...args )	=> new composedClass( ...args ),
-		spawnFrozen:		( ...args )	=> Object.freeze( new composedClass( ...args ) ),
-		get result			() { return composedClass }
+			return composedClass;
+		}
+	};
+}
+
+function makeClass( cls, args = { } ) {
+	let	composedClass;
+	
+	return {
+		mixin: function( ...sources ) {
+			composedClass = sources.reduce( ( composition, mixinFnc ) => mixinFnc( composition ), cls || class { } );
+			return new composedClass( args );
+		}
 	};
 }
 
@@ -83,4 +91,4 @@ function intToRGB( i = 0 ){
 	return '00000'.substring( 0, 6 - c.length ) + c;
 }
 
-export { mix, extend, type, desc, defineProp, props, slice, hashCode, intToRGB };
+export { mix, makeClass, extend, type, desc, defineProp, props, slice, hashCode, intToRGB };
