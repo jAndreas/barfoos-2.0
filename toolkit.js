@@ -10,7 +10,7 @@ const	type		= input => Object.prototype.toString.call( input ).split( /\s/ )[ 1 
 
 const	undef		= void 0;
 
-function mix( targetClass ) {
+function mix( targetClass = class { } ) {
 	let composedClass;
 	return {
 		with: function( ...sources ) {
@@ -22,10 +22,10 @@ function mix( targetClass ) {
 
 function makeClass( cls, args = { } ) {
 	let	composedClass;
-	
+
 	return {
 		mixin: function( ...sources ) {
-			composedClass = sources.reduce( ( composition, mixinFnc ) => mixinFnc( composition ), cls || class { } );
+			composedClass = sources.reduce( ( composition, mixinFnc ) => mixinFnc( composition ), cls || class { } );
 			return new composedClass( args );
 		}
 	};

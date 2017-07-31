@@ -8,8 +8,10 @@ import { doc, win, LogTools } from './domkit.js';
  * Class BrowserKit provides basic browser event abstraction into BarFoos events
  * Any Browser related task will be handled here
  *****************************************************************************************************/
-class BrowserKit {
+class BrowserKit extends mix().with( LogTools, Mediator ) {
 	constructor() {
+		super( ...arguments );
+
 		extend( this ).with({
 		});
 
@@ -42,9 +44,6 @@ class BrowserKit {
 		this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
 	}
 }
-
-// BrowserKit Extension (Mixin)
-class BrowserKitEx extends mix( BrowserKit ).with( LogTools, Mediator ) { };
 /****************************************** BrowserKit End ******************************************/
 
-export { BrowserKitEx };
+export { BrowserKit };

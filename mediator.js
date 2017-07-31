@@ -2,9 +2,11 @@
 
 import { extend } from './toolkit.js';
 
-const	namespaceContainer	= Object.create( null ),
-		maxLoopTime			= 100,
-		undef				= void 0;
+const	namespaceContainer			= Object.create( null ),
+		maxLoopTime					= 100,
+		undef						= void 0;
+
+		namespaceContainer.global	= Object.create( null );
 
 let Mediator = target => class extends target {
 	constructor( data = { } ) {
@@ -71,7 +73,7 @@ let Mediator = target => class extends target {
 				[ eventName, eventNameSpace = 'global' ] = singleLocation.split( '.' );
 			}
 
-			if( namespaceContainer[ eventNameSpace ][ eventName ] ) {
+			if( namespaceContainer[ eventNameSpace ] && namespaceContainer[ eventNameSpace ][ eventName ] ) {
 				return new Promise(( res, rej ) => {
 					let container		= namespaceContainer[ eventNameSpace ][ eventName ],
 						listenersMax	= container.length - 1,
@@ -117,6 +119,8 @@ let Mediator = target => class extends target {
 						}
 					}());
 				});
+			} else {
+				this.log && this.log( `There is no listener for ${eventName} in ${eventNameSpace} at present. Async The has Matrix you?` );
 			}
 		} else { throw new TypeError( 'event name must be a string.' ); }
 

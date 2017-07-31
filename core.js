@@ -1,9 +1,9 @@
 "use strict";
 
 import { extend, mix, makeClass, type } from './toolkit.js';
-import { win, doc, undef, DOMToolsEx, LogTools } from './domkit.js';
+import { win, doc, undef, DOMTools, LogTools } from './domkit.js';
 import { Mediator } from './mediator.js';
-import { BrowserKitEx } from './browserkit.js';
+import { BrowserKit } from './browserkit.js';
 import { moduleLocations } from './defs.js';
 import worldMarkup from './html/world.html';
 import normalize from './css/normalize.css';
@@ -11,8 +11,8 @@ import worldStyle from './css/world.css';
 
 const	eventLoop	= makeClass().mixin( Mediator ),
 		console		= makeClass( class core{ }, { id: 'core'} ).mixin( LogTools ),
-		DOM			= new DOMToolsEx(),
-		Browser		= new BrowserKitEx(),
+		DOM			= new DOMTools(),
+		Browser		= new BrowserKit(),
 		nodes		= DOM.transpile( worldMarkup ),
 		modules		= Object.create( null );
 
@@ -21,8 +21,10 @@ const	eventLoop	= makeClass().mixin( Mediator ),
  * appending of module nodes, creating and waiting any async events (promises) to keep things in order and will
  * also be augmented with Log and Mediator classes for any GUI module
  *****************************************************************************************************/
-class Component {
+class Component extends mix().with( LogTools, Mediator ) {
 	constructor( options = { } ) {
+		super( ...arguments );
+
 		extend( this ).with( options ).and({
 			id:						this.constructor.name,
 			runtimeDependencies:	[ ]
@@ -34,9 +36,12 @@ class Component {
 				location:	this.location || moduleLocations.center
 			});
 
-			this.runtimeDependencies.push( this.fire( 'waitForDOM.appEvents' ) );
-
 			extend( this.nodes ).with( DOM.transpile( this.tmpl ) );
+
+			this.runtimeDependencies.push(
+				this.fire( 'waitForDOM.appEvents' ),
+				this.fire( 'waitForConfig' )
+			);
 
 			nodes[ `section.${ this.location }` ].appendChild( this.nodes.root );
 		} else {
@@ -49,14 +54,14 @@ class Component {
 	}
 
 	init() {
-		return Promise.all( this.runtimeDependencies ).then( () => this );
+		return Promise.all( this.runtimeDependencies );
 	}
 }
-
-// Component Extension (Mixin)
-class ComponentEx extends mix( Component ).with( LogTools, Mediator ) { };
 /****************************************** Component End ******************************************/
 
+/*****************************************************************************************************
+ * Core entry point
+ *****************************************************************************************************/
 (async function main() {
 	normalize.use();
 	worldStyle.use();
@@ -84,11 +89,15 @@ eventLoop.on( 'moduleLaunch.appEvents', (module, event) => {
 	console.log( 'event object: ', event );
 });
 
-eventLoop.on( 'defineApp.appEvents', app => {
+eventLoop.on( 'configApp.core', app => {
 	console.log( `Setting up BarFoos Application ${ app.name } version ${ app.version }(${ app.status }).` );
 
-	doc.title	= app.title;
+	doc.title	= app.title || 'BarFoos Application';
+
+	if( app.background ) {
+
+	}
 });
 /****************************************** Event Handling End ****************************************/
 
-export { ComponentEx };
+export { Component };

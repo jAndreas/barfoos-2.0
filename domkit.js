@@ -40,8 +40,10 @@ let LogTools = target => class extends target {
  * Class DOMTools: Provides a DOM toolset for transpiling html-strings into Node-References, watching
  * DOM ready events and providing request-events.
  *****************************************************************************************************/
-class DOMTools {
+class DOMTools extends mix().with( LogTools, Mediator ) {
 	constructor( data = { } ) {
+		super( ...arguments );
+		
 		extend( this ).with( data ).and({
 			id:			this.constructor.name,
 			vDom:		doc.implementation.createHTMLDocument()
@@ -132,9 +134,6 @@ class DOMTools {
 		this.on( 'waitForDOM.appEvents', this.waitForDOM, this );
 	}
 }
-
-// DOMTools Extension (Mixin)
-class DOMToolsEx extends mix( DOMTools ).with( LogTools, Mediator ) { };
 /********************************************* DOMTools End ******************************************/
 
 /*****************************************************************************************************
@@ -184,4 +183,4 @@ if(!('console' in win) ) {
 	'debug error info log warn dir dirxml table trace group groupCollapsed groupEnd clear count assert markTimeline profile profileEnd timeline timelineEnd time timeEnd timeStamp memory'.split( /\s+/ ).forEach( fncName => win.console[ fncName ] = () => undef );
 }
 
-export { win, doc, query, DOMToolsEx, LogTools };
+export { win, doc, query, DOMTools, LogTools };
