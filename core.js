@@ -88,19 +88,23 @@ eventLoop.on( 'moduleLaunch.appEvents', (module, event) => {
 	console.log( 'event object: ', event );
 });
 
-eventLoop.on( 'configApp.core', async app => {
+eventLoop.on( 'configApp.core', app => {
 	console.log( `Setting up BarFoos Application ${ app.name } version ${ app.version }(${ app.status }).` );
 
 	doc.title	= app.title || 'BarFoos Application';
 
 	if( app.background ) {
 		if( typeof app.background.image === 'string' ) {
-			let image = await eventLoop.fire( 'loadImage', app.background.image );
+			return eventLoop.fire( 'loadImage', app.background.image ).then( image => {
+				let bgImage = document.createElement( 'div' );
 
-			let bgImage = document.createElement( 'div' );
-			bgImage.style.backgroundImage = 'url(' + image + ')';
-			bgImage.classList.add( 'backgroundImage' );
-			nodes[ 'div#world' ].insertAdjacentElement( 'beforeBegin', bgImage );
+				bgImage.style.backgroundImage = 'url(' + image + ')';
+				bgImage.classList.add( 'backgroundImage' );
+				nodes[ 'div#world' ].insertAdjacentElement( 'beforeBegin', bgImage );
+
+				return bgImage;
+			});
+
 		}
 	}
 });

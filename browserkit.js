@@ -32,9 +32,9 @@ class BrowserKit extends mix().with( LogTools, Mediator ) {
 		// scroll
 	}
 
-	async loadImage( url, event ) {
+	loadImage( url, event ) {
 		try {
-			return await fetch( url ).then( res => res.blob() ).then( blob => URL.createObjectURL( blob ) );
+			return fetch( url ).then( res => res.blob() ).then( blob => URL.createObjectURL( blob ) );
 		} catch ( ex ) {
 			this.log( `Error: ${ ex.message }` );
 		}
