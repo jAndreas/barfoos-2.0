@@ -39,13 +39,12 @@ class Component extends mix().with( LogTools, Mediator ) {
 			extend( this.nodes ).with( DOM.transpile( this.tmpl ) );
 
 			this.runtimeDependencies.push(
-				this.fire( 'waitForDOM.appEvents' ),
-				this.fire( 'waitForConfig' )
+				this.fire( 'waitForDOM.appEvents' )
 			);
 
 			nodes[ `section.${ this.location }` ].appendChild( this.nodes.root );
 		} else {
-			console.log('worker..?');
+			this.log('worker..?');
 		}
 
 		this.fire( 'moduleLaunch.appEvents', {
@@ -89,13 +88,20 @@ eventLoop.on( 'moduleLaunch.appEvents', (module, event) => {
 	console.log( 'event object: ', event );
 });
 
-eventLoop.on( 'configApp.core', app => {
+eventLoop.on( 'configApp.core', async app => {
 	console.log( `Setting up BarFoos Application ${ app.name } version ${ app.version }(${ app.status }).` );
 
 	doc.title	= app.title || 'BarFoos Application';
 
 	if( app.background ) {
+		if( typeof app.background.image === 'string' ) {
+			let image = await eventLoop.fire( 'loadImage', app.background.image );
 
+			let bgImage = document.createElement( 'div' );
+			bgImage.style.backgroundImage = 'url(' + image + ')';
+			bgImage.classList.add( 'backgroundImage' );
+			nodes[ 'div#world' ].insertAdjacentElement( 'beforeBegin', bgImage );
+		}
 	}
 });
 /****************************************** Event Handling End ****************************************/

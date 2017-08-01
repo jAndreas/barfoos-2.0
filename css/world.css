@@ -12,8 +12,7 @@
 	background-color:rgba(10,10,10,1);
 }
 
-#world:before {
-	content:'';
+div.backgroundImage {
 	position:absolute;
 	top:0;
 	left:0;

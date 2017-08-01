@@ -19,17 +19,25 @@ class BrowserKit extends mix().with( LogTools, Mediator ) {
 	}
 
 	async init() {
-		await this.fire( 'waitForDOM.appEvents' );
-
 		doc.addEventListener( 'visibilitychange', this.visibilityChange.bind( this ), false );
 		doc.addEventListener( 'focusin', this.focusin.bind( this ), false );
 		doc.addEventListener( 'focusout', this.focusout.bind( this ), false );
 
 		this.on( 'isAppHidden.appEvents', () => doc.hidden );
 		this.on( 'isAppFocused.appEvents', () => doc.hasFocus() );
+
+		this.on( 'loadImage', this.loadImage, this );
 		// onbeforeunload
 		// resize
 		// scroll
+	}
+
+	async loadImage( url, event ) {
+		try {
+			return await fetch( url ).then( res => res.blob() ).then( blob => URL.createObjectURL( blob ) );
+		} catch ( ex ) {
+			this.log( `Error: ${ ex.message }` );
+		}
 	}
 
 	visibilityChange() {

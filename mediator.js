@@ -115,7 +115,13 @@ let Mediator = target => class extends target {
 						if( listenersMax > -1 ) {
 							setTimeout( _asyncLoop, maxLoopTime );
 						} else {
-							Promise.all( resultData ).then( res, rej );
+							Promise.all( resultData ).then( localResult => {
+								if( localResult.length === 1 ) {
+									res( localResult[ 0 ] );
+								} else {
+									res( localResult );
+								}
+							}, rej );
 						}
 					}());
 				});
