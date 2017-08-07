@@ -95,14 +95,15 @@ eventLoop.on( 'configApp.core', app => {
 
 	if( app.background ) {
 		if( typeof app.background.image === 'string' ) {
-			return eventLoop.fire( 'loadImage', app.background.image ).then( image => {
+			eventLoop.fire( 'loadImage', app.background.image ).then( objURL => {
 				let bgImage = document.createElement( 'div' );
 
-				bgImage.style.backgroundImage = 'url(' + image + ')';
+				bgImage.style.backgroundImage = 'url(' + objURL + ')';
 				bgImage.classList.add( 'backgroundImage' );
+
 				nodes[ 'div#world' ].insertAdjacentElement( 'beforeBegin', bgImage );
 
-				return bgImage;
+				eventLoop.fire( 'backgroundImageLoaded.core' );
 			});
 
 		}
