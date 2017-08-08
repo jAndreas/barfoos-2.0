@@ -21,6 +21,7 @@ div.backgroundImage {
 	background-attachment:fixed;
 	background-size:cover;
 	background-repeat:no-repeat;
+	z-index:0;
 }
 
 #world > section {
@@ -36,8 +37,11 @@ div.backgroundImage {
 	flex-direction:row;
 	flex-wrap:wrap;
 
+	/*
+	DEBUG BORDER
 	box-sizing:border-box;
 	border:1px dashed white;
+	*/
 }
 
 #world > section.head {

@@ -95,11 +95,15 @@ eventLoop.on( 'configApp.core', app => {
 
 	if( app.background ) {
 		if( typeof app.background.image === 'string' ) {
-			eventLoop.fire( 'loadImage', app.background.image ).then( objURL => {
+			Browser.loadImage( app.background.image ).then( objURL => {
 				let bgImage = document.createElement( 'div' );
 
 				bgImage.style.backgroundImage = 'url(' + objURL + ')';
 				bgImage.classList.add( 'backgroundImage' );
+
+				for( let [ prop, value ] of Object.entries( app.background.css ) ) {
+					bgImage.style[ prop ] = value;
+				}
 
 				nodes[ 'div#world' ].insertAdjacentElement( 'beforeBegin', bgImage );
 

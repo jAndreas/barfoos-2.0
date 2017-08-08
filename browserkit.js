@@ -25,14 +25,13 @@ class BrowserKit extends mix().with( LogTools, Mediator ) {
 
 		this.on( 'isAppHidden.appEvents', () => doc.hidden );
 		this.on( 'isAppFocused.appEvents', () => doc.hasFocus() );
-
-		this.on( 'loadImage', this.loadImage, this );
 		// onbeforeunload
 		// resize
 		// scroll
 	}
 
-	loadImage( url, event ) {
+	loadImage( url ) {
+		this.log('loadImage as class member call...!');
 		try {
 			return fetch( url ).then( res => res.blob() ).then( blob => URL.createObjectURL( blob ) );
 		} catch ( ex ) {
