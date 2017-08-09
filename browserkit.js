@@ -19,38 +19,38 @@ class BrowserKit extends mix().with( LogTools, Mediator ) {
 	}
 
 	async init() {
-		doc.addEventListener( 'visibilitychange', this.visibilityChange.bind( this ), false );
-		doc.addEventListener( 'focusin', this.focusin.bind( this ), false );
-		doc.addEventListener( 'focusout', this.focusout.bind( this ), false );
+		doc.addEventListener( 'visibilitychange', visibilityChange.bind( this ), false );
+		doc.addEventListener( 'focusin', focusin.bind( this ), false );
+		doc.addEventListener( 'focusout', focusout.bind( this ), false );
 
 		this.on( 'isAppHidden.appEvents', () => doc.hidden );
 		this.on( 'isAppFocused.appEvents', () => doc.hasFocus() );
 		// onbeforeunload
+		// mediaQuery
 		// resize
 		// scroll
 	}
 
 	loadImage( url ) {
-		this.log('loadImage as class member call...!');
 		try {
 			return fetch( url ).then( res => res.blob() ).then( blob => URL.createObjectURL( blob ) );
 		} catch ( ex ) {
 			this.log( `Error: ${ ex.message }` );
 		}
 	}
-
-	visibilityChange() {
-		this.fire( 'appVisibilityChange.appEvents', !doc.hidden );
-	}
-
-	focusin() {
-		this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
-	}
-
-	focusout() {
-		this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
-	}
 }
 /****************************************** BrowserKit End ******************************************/
+
+function visibilityChange() {
+	this.fire( 'appVisibilityChange.appEvents', !doc.hidden );
+}
+
+function focusin() {
+	this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
+}
+
+function focusout() {
+	this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
+}
 
 export { BrowserKit };
