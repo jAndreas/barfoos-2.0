@@ -20,15 +20,19 @@ let Mediator = target => class extends target {
 			for( let singleLocation of eventLocators.split( /\s+/ ) ) {
 				let [ eventName, eventNameSpace = 'global' ] = singleLocation.split( '.' );
 
-				if( namespaceContainer[ eventNameSpace ] === undef ) {
-					namespaceContainer[ eventNameSpace ] = Object.create( null );
-				}
+				if( eventName.trim().length ) {
+					if( namespaceContainer[ eventNameSpace ] === undef ) {
+						namespaceContainer[ eventNameSpace ] = Object.create( null );
+					}
 
-				if( namespaceContainer[ eventNameSpace ][ eventName ] === undef ) {
-					namespaceContainer[ eventNameSpace ][ eventName ] = [ ];
-				}
+					if( namespaceContainer[ eventNameSpace ][ eventName ] === undef ) {
+						namespaceContainer[ eventNameSpace ][ eventName ] = [ ];
+					}
 
-				namespaceContainer[ eventNameSpace ][ eventName ].unshift({ handler: scope ? handler.bind( scope ) : handler });
+					namespaceContainer[ eventNameSpace ][ eventName ].unshift({ handler: scope ? handler.bind( scope ) : handler });
+				} else {
+					throw new SyntaxError( 'an event name is mandatory for on() locators.' );
+				}
 			}
 		} else {
 			throw new TypeError( 'on() was called with wrong arguments.' );
@@ -43,18 +47,21 @@ let Mediator = target => class extends target {
 
 			for( let singleLocation of eventLocators.split( /\s+/ ) ) {
 				[ eventName, eventNameSpace = 'global' ] = singleLocation.split( '.' );
-			}
 
-			if( eventNameSpace in namespaceContainer ) {
-				if( typeof handler === 'function' ) {
-					namespaceContainer[ eventNameSpace ][ eventName ] = namespaceContainer[ eventNameSpace ][ eventName ].filter( eventData => eventData.handler !== handler );
+				if( eventNameSpace in namespaceContainer ) {
+					if( eventName.trim().length ) {
+						if( typeof handler === 'function' ) {
+							namespaceContainer[ eventNameSpace ][ eventName ] = namespaceContainer[ eventNameSpace ][ eventName ].filter( eventData => eventData.handler !== handler );
+						} else {
+							delete namespaceContainer[ eventNameSpace ][ eventName ];
+						}
+					} else {
+						// no event name was passed, drop entire namespace here?
+					}
 				} else {
-					delete namespaceContainer[ eventNameSpace ][ eventName ];
+					throw new Error( `There is no "${ eventNameSpace }" namespace.` );
 				}
-			} else {
-				throw new Error( `There is no "${ eventNameSpace }" namespace.` );
 			}
-
 		} else {
 			throw new TypeError( 'off() was called with wrong arguments.' );
 		}
