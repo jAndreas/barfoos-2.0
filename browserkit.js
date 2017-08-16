@@ -20,6 +20,8 @@ class BrowserKit extends mix().with( LogTools, Mediator ) {
 
 	async init() {
 		doc.addEventListener( 'visibilitychange', visibilityChange.bind( this ), false );
+		doc.addEventListener( 'focus', focusin.bind( this ), false );
+		doc.addEventListener( 'blur', focusout.bind( this ), false );
 		doc.addEventListener( 'focusin', focusin.bind( this ), false );
 		doc.addEventListener( 'focusout', focusout.bind( this ), false );
 
