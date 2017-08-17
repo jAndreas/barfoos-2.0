@@ -29,7 +29,11 @@ let LogTools = target => class extends target {
 		let prefixed = args.slice( 0 );
 
 		prefixed.unshift( `%c${this.id}: `, `color: #${this.color};font-weight: normal;text-shadow: 1px 1px 1px white,-1px -1px 1px black;` );
-		console.log( ...prefixed );
+
+		console.groupCollapsed( ...prefixed );
+		this.nodes && console.log( this.nodes.root );
+		console.trace();
+		console.groupEnd();
 
 		super.log && super.log( ...args );
 	}
@@ -43,7 +47,7 @@ let LogTools = target => class extends target {
 class DOMTools extends mix().with( LogTools, Mediator ) {
 	constructor( data = { } ) {
 		super( ...arguments );
-		
+
 		extend( this ).with( data ).and({
 			id:			this.constructor.name,
 			vDom:		doc.implementation.createHTMLDocument()
