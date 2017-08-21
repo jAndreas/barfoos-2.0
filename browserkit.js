@@ -1,6 +1,6 @@
 'use strict';
 
-import { extend, mix } from './toolkit.js';
+import { extend, Composition } from './toolkit.js';
 import { Mediator } from './mediator.js';
 import { doc, win, LogTools } from './domkit.js';
 
@@ -8,7 +8,7 @@ import { doc, win, LogTools } from './domkit.js';
  * Class BrowserKit provides basic browser event abstraction into BarFoos events
  * Any Browser related task will be handled here
  *****************************************************************************************************/
-class BrowserKit extends mix().with( LogTools, Mediator ) {
+class BrowserKit extends Composition( LogTools, Mediator ) {
 	constructor() {
 		super( ...arguments );
 

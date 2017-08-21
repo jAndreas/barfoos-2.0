@@ -1,6 +1,6 @@
 "use strict";
 
-import { mix, extend, intToRGB, hashCode } from './toolkit.js';
+import { Composition, extend, intToRGB, hashCode } from './toolkit.js';
 import { Mediator } from './mediator.js';
 
 const		win			= window,
@@ -44,7 +44,7 @@ let LogTools = target => class extends target {
  * Class DOMTools: Provides a DOM toolset for transpiling html-strings into Node-References, watching
  * DOM ready events and providing request-events.
  *****************************************************************************************************/
-class DOMTools extends mix().with( LogTools, Mediator ) {
+class DOMTools extends Composition( LogTools, Mediator ) {
 	constructor( data = { } ) {
 		super( ...arguments );
 

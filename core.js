@@ -1,6 +1,6 @@
 "use strict";
 
-import { extend, mix, makeClass, type } from './toolkit.js';
+import { extend, Composition, makeClass, type } from './toolkit.js';
 import { win, doc, undef, DOMTools, LogTools } from './domkit.js';
 import { Mediator } from './mediator.js';
 import { BrowserKit } from './browserkit.js';
@@ -21,7 +21,7 @@ const	eventLoop	= makeClass().mixin( Mediator ),
  * appending of module nodes, creating and waiting any async events (promises) to keep things in order and will
  * also be augmented with Log and Mediator classes for any GUI module
  *****************************************************************************************************/
-class Component extends mix().with( LogTools, Mediator ) {
+class Component extends Composition( LogTools, Mediator ) {
 	constructor( options = { } ) {
 		super( ...arguments );
 
