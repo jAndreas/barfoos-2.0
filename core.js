@@ -67,7 +67,7 @@ class Component extends Composition( LogTools, Mediator ) {
 
 	await eventLoop.fire( 'waitForDOM.appEvents' );
 
-	console.log('CORE DOMReady Event. Injecting nodes to document body: ', nodes);
+	console.log('CORE DOMReady Event. Injecting BarFoos world nodes into document body: ', nodes);
 
 	doc.body.appendChild( nodes[ 'div#world' ] );
 
