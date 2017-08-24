@@ -1,0 +1,96 @@
+$iPadPortrait:768px;
+
+div#world {
+	display:flex;
+	align-items:stretch;
+	justify-content:space-around;
+	flex-direction:row;
+	flex-wrap:wrap;
+
+	transition:all 1s linear;
+	background-color:rgba(10,10,10,1);
+
+	overflow: hidden;
+
+	> section {
+		position:relative;
+		flex-grow:1;
+		flex-shrink:1;
+		flex-basis:100%;
+
+		padding:0px;
+
+		display:flex;
+		justify-content:flex-start;
+		flex-direction:row;
+		flex-wrap:wrap;
+
+		/*
+		DEBUG BORDER
+		box-sizing:border-box;
+		border:1px dashed white;
+		*/
+	}
+
+	> section.head {
+		flex-grow:1;
+		flex-basis:100%;
+	}
+
+	> section.content.center {
+		justify-content:space-around;
+	}
+
+	> section.footer {
+		flex-grow:1;
+		flex-basis:100%;
+		order:5;
+
+		color:white;
+	}
+
+	> section.content.left {
+		flex-basis:0%;
+		flex-grow:0;
+		flex-shrink:1;
+		order:0;
+
+		@media screen and (max-width:$iPadPortrait) {
+			flex-grow:1;
+			flex-basis:100vw;
+			flex-shrink:1;
+		}
+	}
+
+	> section.content.right {
+		color:white;
+		flex-basis:0%;
+		flex-grow:0;
+		order:4;
+
+		@media screen and (max-width:$iPadPortrait) {
+			flex-grow:1;
+			flex-basis:100vw;
+		}
+	}
+}
+
+div.backgroundImage {
+	position:absolute;
+	top:0;
+	left:0;
+	right:0;
+	bottom:0;
+	background-attachment:fixed;
+	background-size:cover;
+	background-repeat:no-repeat;
+	z-index:0;
+}
+
+@media all and (min-width:800px) {
+	#world > section.content {
+		flex-grow:10;
+		flex-basis:0%;
+		order: 1;
+	}
+}

@@ -6,8 +6,8 @@ import { Mediator } from './mediator.js';
 import { BrowserKit } from './browserkit.js';
 import { moduleLocations } from './defs.js';
 import worldMarkup from './html/world.html';
-import normalize from './css/normalize.css';
-import worldStyle from './css/world.css';
+import normalize from './css/normalize.scss';
+import worldStyle from './css/world.scss';
 
 const	eventLoop	= makeClass().mixin( Mediator ),
 		console		= makeClass( class core{ }, { id: 'core'} ).mixin( LogTools ),
