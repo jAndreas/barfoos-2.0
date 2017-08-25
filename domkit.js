@@ -1,6 +1,6 @@
 "use strict";
 
-import { Composition, extend, intToRGB, hashCode } from './toolkit.js';
+import { Composition, extend, intToRGB, hashCode, type } from './toolkit.js';
 import { Mediator } from './mediator.js';
 
 const		win			= window,
@@ -36,6 +36,15 @@ let LogTools = target => class extends target {
 		console.groupEnd();
 
 		super.log && super.log( ...args );
+	}
+
+	error( ...args ) {
+		console.groupCollapsed( ...prefixed );
+		this.nodes && console.log( this.nodes.root );
+		throw new Error( args );
+		console.groupEnd();
+
+		super.error && super.error( ...args );
 	}
 };
 /********************************************* LogTools End ******************************************/
@@ -140,6 +149,19 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 }
 /********************************************* DOMTools End ******************************************/
 
+class NodeTools extends Composition( LogTools, Mediator ) {
+	constructor( ...nodes ) {
+		if(!nodes.every( node => node instanceof HTMLElement ) ) {
+			this.error( `${this.id} requires HTMLElement(s) as input.` );
+		}
+
+		let EnhancedNode = Object.create( null );
+		
+
+		console.log('FOO NODETOOLS MAGIC MAGIC#####');
+	}
+}
+
 /*****************************************************************************************************
  * query is a native, simple DOM selector API.
  *****************************************************************************************************/
@@ -187,4 +209,4 @@ if(!('console' in win) ) {
 	'debug error info log warn dir dirxml table trace group groupCollapsed groupEnd clear count assert markTimeline profile profileEnd timeline timelineEnd time timeEnd timeStamp memory'.split( /\s+/ ).forEach( fncName => win.console[ fncName ] = () => undef );
 }
 
-export { win, doc, query, DOMTools, LogTools };
+export { win, doc, query, DOMTools, NodeTools, LogTools };
