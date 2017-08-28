@@ -112,10 +112,20 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 					nodeHash[ currentTag + '_' + availableNames[ currentTag ] ] = node;
 				}
 
-				let alias = node.getAttribute( 'alias' );
+				let alias					= node.getAttribute( 'alias' ),
+					defaultChildContainer	= node.getAttribute( 'defaultChildContainer' );
 
 				if( alias ) {
 					nodeHash[ alias ] = node;
+				}
+
+				if( defaultChildContainer ) {
+					Object.defineProperty(nodeHash, 'defaultChildContainer', {
+						value:			node,
+						enumerable:		true,
+						configurable:	false,
+						writable:		false
+					});
 				}
 
 				// loop over every childnode, if we have children of children, recursively call crawlNodes()
@@ -133,6 +143,10 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 			}
 		}( rootNode ));
 
+		if(!nodeHash.defaultChildContainer ) {
+			nodeHash.defaultChildContainer = nodeHash.root;
+		}
+
 		return nodeHash;
 	}
 
@@ -149,17 +163,28 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 }
 /********************************************* DOMTools End ******************************************/
 
-class NodeTools extends Composition( LogTools, Mediator ) {
-	constructor( ...nodes ) {
-		if(!nodes.every( node => node instanceof HTMLElement ) ) {
-			this.error( `${this.id} requires HTMLElement(s) as input.` );
+function transition({ node, style, className, opts: opts = { speed:200, props:'all', timing: 'linear' } } = { }) {
+	return new Promise(( res, rej ) => {
+		if( type( node ) === 'HTMLElement' ) {
+			if( typeof style === 'object' ) {
+				for( let [ name, value ] of Object.entries( style ) ) {
+					node.style[ name ] = value;
+				}
+			}
+
+			if( typeof className === 'string' ) {
+				node.classList.add( className );
+			}
+
+			node.style.transition =
+
+			node.addEventListener('transitionend', event => {
+				res();
+			}, false );
+		} else {
+			rej( 'node must be of type HTMLElement.' );
 		}
-
-		let EnhancedNode = Object.create( null );
-		
-
-		console.log('FOO NODETOOLS MAGIC MAGIC#####');
-	}
+	});
 }
 
 /*****************************************************************************************************
@@ -209,4 +234,4 @@ if(!('console' in win) ) {
 	'debug error info log warn dir dirxml table trace group groupCollapsed groupEnd clear count assert markTimeline profile profileEnd timeline timelineEnd time timeEnd timeStamp memory'.split( /\s+/ ).forEach( fncName => win.console[ fncName ] = () => undef );
 }
 
-export { win, doc, query, DOMTools, NodeTools, LogTools };
+export { win, doc, query, DOMTools, LogTools };

@@ -16,6 +16,9 @@ const	eventLoop	= makeClass().mixin( Mediator ),
 		nodes		= DOM.transpile( worldMarkup ),
 		modules		= Object.create( null );
 
+		modules.online		= Object.create( null );
+		modules.awaiting	= Object.create( null );
+
 /*****************************************************************************************************
  * Class Component is the basic GUI Module set of BarFoos 2. It provides automatic html-string transpiling,
  * appending of module nodes, creating and waiting any async events (promises) to keep things in order and will
@@ -32,17 +35,36 @@ class Component extends Composition( LogTools, Mediator ) {
 
 		if( typeof this.tmpl === 'string' ) {
 			extend( this ).with({
-				nodes:		Object.create( null ),
-				location:	this.location || moduleLocations.center
+				nodes:			Object.create( null ),
+				location:		this.location,
+				nodeLocation:	'beforeend'
 			});
 
 			extend( this.nodes ).with( DOM.transpile( this.tmpl ) );
 
+			if( typeof this.location === 'string' ) {
+				if( this.location in moduleLocations ) {
+					nodes[ `section.${ this.location }` ].appendChild( this.nodes.root );
+				} else if( this.location in modules.online ) {
+					this.fire( `newChildModule.${ this.location }`, {
+						node:			this.nodes.root,
+						nodeLocation:	this.nodeLocation
+					});
+				} else {
+					if( typeof modules.awaiting[ this.location ] === undef ) {
+						modules.awaiting[ this.location ] = [ ];
+					}
+
+					modules.awaiting[ this.location ].push({
+						node:			this.nodes.root,
+						nodeLocation:	this.nodeLocation
+					});
+				}
+			}
+
 			this.runtimeDependencies.push(
 				this.fire( 'waitForDOM.appEvents' )
 			);
-
-			nodes[ `section.${ this.location }` ].appendChild( this.nodes.root );
 		} else {
 			this.log('worker..?');
 		}
@@ -53,7 +75,13 @@ class Component extends Composition( LogTools, Mediator ) {
 	}
 
 	init() {
+		this.on( `newChildModule.${ this.id }`, this.newChildModule, this );
+
 		return Promise.all( this.runtimeDependencies );
+	}
+
+	newChildModule( childNode, event ) {
+		this.nodes.defaultChildContainer.insertAdjacentElement( 'afterbegin', childNode );
 	}
 }
 /****************************************** Component End ******************************************/
@@ -62,8 +90,7 @@ class Component extends Composition( LogTools, Mediator ) {
  * Core entry point
  *****************************************************************************************************/
 (async function main() {
-	normalize.use();
-	worldStyle.use();
+	[ normalize, worldStyle ].forEach( style => style.use() );
 
 	await eventLoop.fire( 'waitForDOM.appEvents' );
 
@@ -71,6 +98,7 @@ class Component extends Composition( LogTools, Mediator ) {
 
 	doc.body.appendChild( nodes[ 'div#world' ] );
 
+	// all eyes on us!
 	nodes[ 'div#world' ].focus();
 }());
 
@@ -78,13 +106,21 @@ class Component extends Composition( LogTools, Mediator ) {
  * Core Event handling
  *****************************************************************************************************/
 eventLoop.on( 'moduleLaunch.appEvents', (module, event) => {
-	if( module.id in modules ) {
-		modules[ module.id ]++;
+	if( module.id in modules.online ) {
+		modules.online[ module.id ]++;
 	} else {
-		modules[ module.id ] = 1;
+		modules.online[ module.id ] = 1;
 	}
 
-	console.log( `module ${module.id} was launched( ${modules[module.id]}x )` );
+	if( modules.awaiting[ module.id ] ) {
+		for( let hookData of modules.awaiting[ module.id ] ) {
+			this.fire( `newChildModule.${ module.id }`, hookData );
+		}
+
+		delete modules.awaiting[ module.id ];
+	}
+
+	console.log( `module ${module.id} was launched( ${modules.online[module.id]}x )` );
 	console.log( 'event object: ', event );
 });
 
