@@ -163,9 +163,12 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 }
 /********************************************* DOMTools End ******************************************/
 
-function transition({ node, style, className, opts: opts = { speed:200, props:'all', timing: 'linear' } } = { }) {
+function transition({ node, style, className, rules: rules = { delay:delay = '0s', duration:duration = 200, property:property = 'all', timing:timing = 'linear' } } = { }) {
 	return new Promise(( res, rej ) => {
-		if( type( node ) === 'HTMLElement' ) {
+		if( node instanceof HTMLElement ) {
+			node.style.transition = `${ rules.property } ${ rules.duration } ${ rules.timing } ${ rules.delay }`;
+			node.style.offsetHeight;
+
 			if( typeof style === 'object' ) {
 				for( let [ name, value ] of Object.entries( style ) ) {
 					node.style[ name ] = value;
@@ -176,10 +179,8 @@ function transition({ node, style, className, opts: opts = { speed:200, props:'a
 				node.classList.add( className );
 			}
 
-			node.style.transition =
-
 			node.addEventListener('transitionend', event => {
-				res();
+				res( event );
 			}, false );
 		} else {
 			rej( 'node must be of type HTMLElement.' );
@@ -234,4 +235,4 @@ if(!('console' in win) ) {
 	'debug error info log warn dir dirxml table trace group groupCollapsed groupEnd clear count assert markTimeline profile profileEnd timeline timelineEnd time timeEnd timeStamp memory'.split( /\s+/ ).forEach( fncName => win.console[ fncName ] = () => undef );
 }
 
-export { win, doc, query, DOMTools, LogTools };
+export { win, doc, query, transition, DOMTools, LogTools };
