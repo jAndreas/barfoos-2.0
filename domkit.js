@@ -163,15 +163,20 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 }
 /********************************************* DOMTools End ******************************************/
 
-function transition({ node, style, className, rules: rules = { delay:delay = '0s', duration:duration = 200, property:property = 'all', timing:timing = 'linear' } } = { }) {
+function transition( { node, style, className, rules:{ delay = '0', duration = 200, property = 'all', timing = 'linear' } = { } } = { } ) {
+	let rules = { delay, duration, property, timing };
+
 	return new Promise(( res, rej ) => {
+		let oldStyleValues = Object.create( null );
+
 		if( node instanceof HTMLElement ) {
-			node.style.transition = `${ rules.property } ${ rules.duration } ${ rules.timing } ${ rules.delay }`;
-			node.style.offsetHeight;
+			node.style.transition = `${ property } ${ duration }ms ${ timing } ${ delay }ms`;
+			node.style.offsetHeight = node.style.offsetHeight;
 
 			if( typeof style === 'object' ) {
-				for( let [ name, value ] of Object.entries( style ) ) {
-					node.style[ name ] = value;
+				for( let [ name, newValue ] of Object.entries( style ) ) {
+					oldStyleValues[ name ]	= node.style[ name ];
+					node.style[ name ]		= newValue;
 				}
 			}
 
@@ -179,9 +184,37 @@ function transition({ node, style, className, rules: rules = { delay:delay = '0s
 				node.classList.add( className );
 			}
 
-			node.addEventListener('transitionend', event => {
-				res( event );
-			}, false );
+			node.addEventListener('transitionend', transitionEndEvent, false );
+
+			function transitionEndEvent( event ){
+				node.removeEventListener( 'transitionend', transitionEndEvent );
+
+				res({
+					undo:		() => {
+						return new Promise(( undoRes, undoRej) => {
+							for( let [ name, oldValue ] of Object.entries( oldStyleValues ) ) {
+								node.style[ name ] = oldValue;
+							}
+
+							node.classList.remove( className );
+
+							node.style.offsetHeight = node.style.offsetHeight;
+
+							node.addEventListener('transitionend', undoEnd, false );
+
+							function undoEnd( event ) {
+								node.removeEventListener( 'transitionend', undoEnd );
+								node.style.transition = '';
+								undoRes( event );
+							}
+						});
+					},
+					finalize:	() => {
+						node.style.transition = '';
+					},
+					event:		event
+				});
+			}
 		} else {
 			rej( 'node must be of type HTMLElement.' );
 		}
