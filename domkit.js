@@ -68,11 +68,11 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 	transpile( html = '' )  {
 		this.vDom.body.innerHTML = html;
 
-		let nodes = this.cacheNodes( this.vDom.body.firstChild.cloneNode( true ) );
+		let [ nodes, dataHash ] = this.cacheNodes( this.vDom.body.firstChild.cloneNode( true ) );
 
 		this.vDom.body.firstChild.remove();
 
-		return nodes;
+		return [ nodes, dataHash ];
 	}
 
 	waitForDOM( event ) {
@@ -85,6 +85,7 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 	cacheNodes( rootNode ) {
 		let nodeHash		= Object.create( null ),
 			availableNames	= Object.create( null ),
+			dataHash		= new WeakMap(),
 			self			= this;
 
 		nodeHash.root = rootNode;
@@ -128,6 +129,10 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 					});
 				}
 
+				dataHash[ node ]			= Object.create( null );
+				dataHash[ node ].storage	= Object.create( null );
+				dataHash[ node ].events		= Object.create( null );
+
 				// loop over every childnode, if we have children of children, recursively call crawlNodes()
 				if( node.children.length ) {
 					for( let i = 0, len = node.children.length; i < len; i++ ) {
@@ -147,7 +152,7 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 			nodeHash.defaultChildContainer = nodeHash.root;
 		}
 
-		return nodeHash;
+		return [ nodeHash, dataHash ];
 	}
 
 	init() {
@@ -186,12 +191,12 @@ function transition( { node, style, className, rules:{ delay = '0', duration = 2
 
 			node.addEventListener('transitionend', transitionEndEvent, false );
 
-			function transitionEndEvent( event ){
+			function transitionEndEvent( event ) {
 				node.removeEventListener( 'transitionend', transitionEndEvent );
 
 				res({
 					undo:		() => {
-						return new Promise(( undoRes, undoRej) => {
+						return new Promise(( undoRes, undoRej ) => {
 							for( let [ name, oldValue ] of Object.entries( oldStyleValues ) ) {
 								node.style[ name ] = oldValue;
 							}

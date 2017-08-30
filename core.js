@@ -13,11 +13,12 @@ const	eventLoop	= makeClass().mixin( Mediator ),
 		console		= makeClass( class core{ }, { id: 'core'} ).mixin( LogTools ),
 		DOM			= new DOMTools(),
 		Browser		= new BrowserKit(),
-		nodes		= DOM.transpile( worldMarkup ),
 		modules		= Object.create( null );
 
 		modules.online		= Object.create( null );
 		modules.awaiting	= Object.create( null );
+
+const [ nodes, data ]		= DOM.transpile( worldMarkup );
 
 /*****************************************************************************************************
  * Class Component is the basic GUI Module set of BarFoos 2. It provides automatic html-string transpiling,
@@ -36,11 +37,15 @@ class Component extends Composition( LogTools, Mediator ) {
 		if( typeof this.tmpl === 'string' ) {
 			extend( this ).with({
 				nodes:			Object.create( null ),
+				data:			Object.create( null ),
 				location:		this.location,
 				nodeLocation:	'beforeend'
 			});
 
-			extend( this.nodes ).with( DOM.transpile( this.tmpl ) );
+			let [ moduleNodes, moduleData ] = DOM.transpile( this.tmpl );
+
+			extend( this.nodes ).with( moduleNodes );
+			extend( this.data ).with( moduleData );
 
 			if( typeof this.location === 'string' ) {
 				if( this.location in moduleLocations ) {
@@ -82,6 +87,24 @@ class Component extends Composition( LogTools, Mediator ) {
 
 	newChildModule( childNode, event ) {
 		this.nodes.defaultChildContainer.insertAdjacentElement( 'afterbegin', childNode );
+	}
+
+	nodeEvent( node, type, fnc ) {
+		if(!( type in this )) {
+			this[ `${ type }Handler` ] = event => {
+				if( this.data[ event.target ] && this.data[ event.target ].events[ event.type ] ) {
+					this.data[ event.target ].events[ event.type ].forEach( fnc => fnc.apply( event ) );
+				}
+			};
+
+			this.nodes.root.addEventListener( type, this[ `${ type }Handler` ], false );
+		}
+
+		if( typeof this.data[ node ].events[ type ] === 'undefined' ) {
+			this.data[ node ].events[ type ] = [ ];
+		}
+
+		this.data[ node ].events[ type ].push( fnc );
 	}
 }
 /****************************************** Component End ******************************************/

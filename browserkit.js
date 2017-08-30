@@ -19,11 +19,11 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 	}
 
 	async init() {
-		doc.addEventListener( 'visibilitychange', visibilityChange.bind( this ), false );
-		doc.addEventListener( 'focus', focusin.bind( this ), false );
-		doc.addEventListener( 'blur', focusout.bind( this ), false );
-		doc.addEventListener( 'focusin', focusin.bind( this ), false );
-		doc.addEventListener( 'focusout', focusout.bind( this ), false );
+		doc.addEventListener( 'visibilitychange', this.visibilityChange, false );
+		doc.addEventListener( 'focus', this.focusin, false );
+		doc.addEventListener( 'blur', this.focusout, false );
+		doc.addEventListener( 'focusin', this.focusin, false );
+		doc.addEventListener( 'focusout', this.focusout, false );
 
 		this.on( 'isAppHidden.appEvents', () => doc.hidden );
 		this.on( 'isAppFocused.appEvents', () => doc.hasFocus() );
@@ -40,19 +40,19 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 			this.log( `Error: ${ ex.message }` );
 		}
 	}
+
+	visibilityChange = event => {
+		this.fire( 'appVisibilityChange.appEvents', !doc.hidden );
+	}
+
+	focusin = event => {
+		this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
+	}
+
+	focusout = event => {
+		this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
+	}
 }
 /****************************************** BrowserKit End ******************************************/
-
-function visibilityChange() {
-	this.fire( 'appVisibilityChange.appEvents', !doc.hidden );
-}
-
-function focusin() {
-	this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
-}
-
-function focusout() {
-	this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
-}
 
 export { BrowserKit };
