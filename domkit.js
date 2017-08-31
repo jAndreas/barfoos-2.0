@@ -16,12 +16,16 @@ let NodeTools = target => class extends target {
 
 		this._delegatedEventHandler = event => {
 			if( this.data.get( event.target ) && this.data.get( event.target ).events[ event.type ] ) {
-				this.data.get( event.target ).events[ event.type ].forEach( fnc => fnc.apply( event ) );
+				this.data.get( event.target ).events[ event.type ].forEach( fnc => fnc.call( this, event ) );
 			}
 		};
 	}
 
 	addNodeEvent( node, type, fnc ) {
+		if( typeof node === 'string' ) {
+			node = this.nodes[ node ];
+		}
+
 		if( node instanceof HTMLElement ) {
 			if(!( type in this._alreadyDelegatedEvents )) {
 				this._alreadyDelegatedEvents[ type ] = true;
@@ -39,6 +43,10 @@ let NodeTools = target => class extends target {
 	}
 
 	removeNodeEvent( node, type, fnc ) {
+		if( typeof node === 'string' ) {
+			node = this.nodes[ node ];
+		}
+
 		if( node instanceof HTMLElement ) {
 			if( typeof fnc === 'function' ) {
 				if( Array.isArray( this.data.get( node ).events[ type ] ) ) {
@@ -59,6 +67,78 @@ let NodeTools = target => class extends target {
 			this.data.get( node ).events[ type ] = null;
 			delete this.data.get( node ).events[ type ];
 		}
+	}
+
+	transition( { node, style, className, id = 'last', rules:{ delay = '0', duration = 200, property = 'all', timing = 'linear' } = { } } = { } ) {
+		let rules = { delay, duration, property, timing };
+
+		return new Promise(( res, rej ) => {
+			let oldStyleValues = Object.create( null );
+
+			if( node instanceof HTMLElement ) {
+				node.style.transition = `${ property } ${ duration }ms ${ timing } ${ delay }ms`;
+				node.style.offsetHeight = node.style.offsetHeight;
+
+				if( typeof style === 'object' ) {
+					for( let [ name, newValue ] of Object.entries( style ) ) {
+						oldStyleValues[ name ]	= node.style[ name ];
+						node.style[ name ]		= newValue;
+					}
+				}
+
+				if( typeof className === 'string' ) {
+					className = className.split( /\s+/ );
+					className.forEach( cls => node.classList.add( cls ) );
+				}
+
+				this.addNodeEvent( node, 'transitionend', transitionEndEvent );
+
+				function transitionEndEvent( event ) {
+					this.removeNodeEvent( node, 'transitionend', transitionEndEvent );
+
+					let options = {
+						undo:		() => {
+							return new Promise(( undoRes, undoRej ) => {
+								for( let [ name, oldValue ] of Object.entries( oldStyleValues ) ) {
+									node.style[ name ] = oldValue;
+								}
+
+								className.forEach( cls => node.classList.remove( cls ) );
+
+								node.style.offsetHeight = node.style.offsetHeight;
+
+								this.addNodeEvent( node, 'transitionend', undoEnd );
+
+								function undoEnd( event ) {
+									this.removeNodeEvent( node, 'transitionend', undoEnd );
+									node.style.transition = '';
+
+									delete this.data.get( node ).storage.transitions[ id ];
+
+									undoRes( event );
+								}
+							});
+						},
+						finalize:	() => {
+							node.style.transition = '';
+							delete this.data.get( node ).storage.transitions[ id ];
+						}
+					};
+
+					let store = this.data.get( node ).storage;
+
+					if( store.transitions === undef ) {
+						store.transitions = Object.create( null );
+					}
+
+					store.transitions[ id ] = options;
+
+					res( options );
+				}
+			} else {
+				rej( 'node must be of type HTMLElement.' );
+			}
+		});
 	}
 };
 
@@ -220,64 +300,6 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 }
 /********************************************* DOMTools End ******************************************/
 
-function transition( { node, style, className, rules:{ delay = '0', duration = 200, property = 'all', timing = 'linear' } = { } } = { } ) {
-	let rules = { delay, duration, property, timing };
-
-	return new Promise(( res, rej ) => {
-		let oldStyleValues = Object.create( null );
-
-		if( node instanceof HTMLElement ) {
-			node.style.transition = `${ property } ${ duration }ms ${ timing } ${ delay }ms`;
-			node.style.offsetHeight = node.style.offsetHeight;
-
-			if( typeof style === 'object' ) {
-				for( let [ name, newValue ] of Object.entries( style ) ) {
-					oldStyleValues[ name ]	= node.style[ name ];
-					node.style[ name ]		= newValue;
-				}
-			}
-
-			if( typeof className === 'string' ) {
-				node.classList.add( className );
-			}
-
-			node.addEventListener('transitionend', transitionEndEvent, false );
-
-			function transitionEndEvent( event ) {
-				node.removeEventListener( 'transitionend', transitionEndEvent );
-
-				res({
-					undo:		() => {
-						return new Promise(( undoRes, undoRej ) => {
-							for( let [ name, oldValue ] of Object.entries( oldStyleValues ) ) {
-								node.style[ name ] = oldValue;
-							}
-
-							node.classList.remove( className );
-
-							node.style.offsetHeight = node.style.offsetHeight;
-
-							node.addEventListener('transitionend', undoEnd, false );
-
-							function undoEnd( event ) {
-								node.removeEventListener( 'transitionend', undoEnd );
-								node.style.transition = '';
-								undoRes( event );
-							}
-						});
-					},
-					finalize:	() => {
-						node.style.transition = '';
-					},
-					event:		event
-				});
-			}
-		} else {
-			rej( 'node must be of type HTMLElement.' );
-		}
-	});
-}
-
 /*****************************************************************************************************
  * query is a native, simple DOM selector API.
  *****************************************************************************************************/
@@ -325,4 +347,4 @@ if(!('console' in win) ) {
 	'debug error info log warn dir dirxml table trace group groupCollapsed groupEnd clear count assert markTimeline profile profileEnd timeline timelineEnd time timeEnd timeStamp memory'.split( /\s+/ ).forEach( fncName => win.console[ fncName ] = () => undef );
 }
 
-export { win, doc, query, transition, DOMTools, LogTools, NodeTools };
+export { win, doc, query, DOMTools, LogTools, NodeTools };

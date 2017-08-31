@@ -10,6 +10,11 @@ const	type		= input => Object.prototype.toString.call( input ).split( /\s/ )[ 1 
 
 const	undef		= void 0;
 
+/*****************************************************************************************************
+ * mix() should be used to augment an already existing class with multiple mixin-classes
+ * It can also be used to extend a class at declaration, therefore it will create a anonymous
+ * default class if none was passed.
+ *****************************************************************************************************/
 function mix( targetClass = class { } ) {
 	let composedClass;
 	return {
@@ -20,6 +25,19 @@ function mix( targetClass = class { } ) {
 	};
 }
 
+/*****************************************************************************************************
+ * compose() should be exclusively used, to extend a class with mixins at declaration.
+ * This is just sugar to not be forced to call mix().with() with empty arguments.
+ *****************************************************************************************************/
+function Composition( ...sources ) {
+	return sources.reduce( ( composition, mixinFnc ) => mixinFnc( composition ), class { } );
+}
+
+/*****************************************************************************************************
+ * makeClass() should be used if there is no class to augment, but you still want to
+ * use some features from mixin-functions. It will create+instantiate an anonymous class if nothing
+ * was passed in and returns the option to directly mixin() stuff.
+ *****************************************************************************************************/
 function makeClass( cls, args = { } ) {
 	let	composedClass;
 
@@ -91,4 +109,4 @@ function intToRGB( i = 0 ){
 	return '00000'.substring( 0, 6 - c.length ) + c;
 }
 
-export { mix, makeClass, extend, type, desc, defineProp, props, slice, hashCode, intToRGB };
+export { mix, makeClass, Composition, extend, type, desc, defineProp, props, slice, hashCode, intToRGB };
