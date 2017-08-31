@@ -100,8 +100,6 @@ class Component extends Composition( LogTools, Mediator, NodeTools ) {
 
 	await eventLoop.fire( 'waitForDOM.appEvents' );
 
-	console.log('CORE DOMReady Event. Injecting BarFoos world nodes into document body: ', nodes);
-
 	doc.body.appendChild( nodes[ 'div#world' ] );
 
 	// all eyes on us!
@@ -127,7 +125,6 @@ eventLoop.on( 'moduleLaunch.appEvents', (module, event) => {
 	}
 
 	console.log( `module ${module.id} was launched( ${modules.online[module.id]}x )` );
-	console.log( 'event object: ', event );
 });
 
 eventLoop.on( 'configApp.core', app => {

@@ -131,7 +131,6 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 
 	waitForDOM( event ) {
 		return doc.readyState === 'complete' || new Promise( (res, rej) => {
-			this.log(`waitForDOM: document readyState not complete(${doc.readyState}), adding to DCL.`);
 			doc.addEventListener( 'DOMContentLoaded', () => res( doc.readyState ) );
 		});
 	}
@@ -211,7 +210,6 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 
 	init() {
 		doc.onreadystatechange = () => {
-			this.log('onreadystatechange DOMContentLoaded..: ', doc.readyState);
 			if( doc.readyState === 'complete' ) {
 				this.fire( 'DOMReady.appEvents' );
 			}
