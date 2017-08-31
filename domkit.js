@@ -8,6 +8,60 @@ const		win			= window,
 			undef		= void 0,
 			query		= Object.create( null );
 
+let NodeTools = target => class extends target {
+	constructor() {
+		super( ...arguments );
+
+		this._alreadyDelegatedEvents = Object.create( null );
+
+		this._delegatedEventHandler = event => {
+			if( this.data.get( event.target ) && this.data.get( event.target ).events[ event.type ] ) {
+				this.data.get( event.target ).events[ event.type ].forEach( fnc => fnc.apply( event ) );
+			}
+		};
+	}
+
+	addNodeEvent( node, type, fnc ) {
+		if( node instanceof HTMLElement ) {
+			if(!( type in this._alreadyDelegatedEvents )) {
+				this._alreadyDelegatedEvents[ type ] = true;
+				this.nodes.root.addEventListener( type, this._delegatedEventHandler, false );
+			}
+
+			if( typeof this.data.get( node ).events[ type ] === 'undefined' ) {
+				this.data.get( node ).events[ type ] = [ ];
+			}
+
+			this.data.get( node ).events[ type ].push( fnc );
+		} else {
+			throw new Error( `node must be of type HTMLElement, received instead: ${ typeof node }` );
+		}
+	}
+
+	removeNodeEvent( node, type, fnc ) {
+		if( node instanceof HTMLElement ) {
+			if( typeof fnc === 'function' ) {
+				if( Array.isArray( this.data.get( node ).events[ type ] ) ) {
+					this.data.get( node ).events[ type ] = this.data.get( node ).events[ type ].filter( currentFnc => currentFnc !== fnc );
+				}
+			} else if( typeof fnc === 'undefined' ) {
+				if( Array.isArray( this.data.get( node ).events[ type ] ) ) {
+					this.data.get( node ).events[ type ] = [ ];
+				}
+			}
+		} else {
+			throw new Error( `node must be of type HTMLElement, received instead: ${ typeof node }` );
+		}
+	}
+
+	removeAllNodeEvents( type ) {
+		for( let [ key, node ] of Object.entries( this.nodes ) ) {
+			this.data.get( node ).events[ type ] = null;
+			delete this.data.get( node ).events[ type ];
+		}
+	}
+};
+
 /*****************************************************************************************************
  * Mixin Class LogTools: Provides a logging with hash-generated color from base class constructor name
  *****************************************************************************************************/
@@ -129,9 +183,9 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 					});
 				}
 
-				dataHash[ node ]			= Object.create( null );
-				dataHash[ node ].storage	= Object.create( null );
-				dataHash[ node ].events		= Object.create( null );
+				dataHash.set( node, Object.create( null ) );
+				dataHash.get( node ).storage	= Object.create( null );
+				dataHash.get( node ).events		= Object.create( null );
 
 				// loop over every childnode, if we have children of children, recursively call crawlNodes()
 				if( node.children.length ) {
@@ -273,4 +327,4 @@ if(!('console' in win) ) {
 	'debug error info log warn dir dirxml table trace group groupCollapsed groupEnd clear count assert markTimeline profile profileEnd timeline timelineEnd time timeEnd timeStamp memory'.split( /\s+/ ).forEach( fncName => win.console[ fncName ] = () => undef );
 }
 
-export { win, doc, query, transition, DOMTools, LogTools };
+export { win, doc, query, transition, DOMTools, LogTools, NodeTools };

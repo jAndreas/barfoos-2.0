@@ -1,7 +1,7 @@
 "use strict";
 
 import { extend, Composition, makeClass, type } from './toolkit.js';
-import { win, doc, undef, DOMTools, LogTools } from './domkit.js';
+import { win, doc, undef, DOMTools, LogTools, NodeTools } from './domkit.js';
 import { Mediator } from './mediator.js';
 import { BrowserKit } from './browserkit.js';
 import { moduleLocations } from './defs.js';
@@ -25,7 +25,7 @@ const [ nodes, data ]		= DOM.transpile( worldMarkup );
  * appending of module nodes, creating and waiting any async events (promises) to keep things in order and will
  * also be augmented with Log and Mediator classes for any GUI module
  *****************************************************************************************************/
-class Component extends Composition( LogTools, Mediator ) {
+class Component extends Composition( LogTools, Mediator, NodeTools ) {
 	constructor( options = { } ) {
 		super( ...arguments );
 
@@ -42,10 +42,11 @@ class Component extends Composition( LogTools, Mediator ) {
 				nodeLocation:	'beforeend'
 			});
 
-			let [ moduleNodes, moduleData ] = DOM.transpile( this.tmpl );
+			let [ nodeHash, dataHash ] = DOM.transpile( this.tmpl );
 
-			extend( this.nodes ).with( moduleNodes );
-			extend( this.data ).with( moduleData );
+			extend( this.nodes ).with( nodeHash );
+
+			this.data = dataHash;
 
 			if( typeof this.location === 'string' ) {
 				if( this.location in moduleLocations ) {
@@ -87,24 +88,6 @@ class Component extends Composition( LogTools, Mediator ) {
 
 	newChildModule( childNode, event ) {
 		this.nodes.defaultChildContainer.insertAdjacentElement( 'afterbegin', childNode );
-	}
-
-	nodeEvent( node, type, fnc ) {
-		if(!( type in this )) {
-			this[ `${ type }Handler` ] = event => {
-				if( this.data[ event.target ] && this.data[ event.target ].events[ event.type ] ) {
-					this.data[ event.target ].events[ event.type ].forEach( fnc => fnc.apply( event ) );
-				}
-			};
-
-			this.nodes.root.addEventListener( type, this[ `${ type }Handler` ], false );
-		}
-
-		if( typeof this.data[ node ].events[ type ] === 'undefined' ) {
-			this.data[ node ].events[ type ] = [ ];
-		}
-
-		this.data[ node ].events[ type ].push( fnc );
 	}
 }
 /****************************************** Component End ******************************************/
