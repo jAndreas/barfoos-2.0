@@ -89,6 +89,8 @@ let NodeTools = target => class extends target {
 				if( typeof className === 'string' ) {
 					className = className.split( /\s+/ );
 					className.forEach( cls => node.classList.add( cls ) );
+				} else {
+					className = [ ];
 				}
 
 				this.addNodeEvent( node, 'transitionend', transitionEndEvent );
