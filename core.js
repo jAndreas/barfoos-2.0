@@ -47,6 +47,7 @@ class Component extends Composition( LogTools, Mediator, NodeTools ) {
 			extend( this.nodes ).with( nodeHash );
 
 			this.data = dataHash;
+			this.data.set( this, Object.create( null ) );
 
 			if( typeof this.location === 'string' ) {
 				if( this.location in moduleLocations ) {

@@ -38,7 +38,7 @@ let NodeTools = target => class extends target {
 
 			this.data.get( node ).events[ type ].push( fnc );
 		} else {
-			throw new Error( `node must be of type HTMLElement, received instead: ${ typeof node }` );
+			throw new Error( `node must be of type HTMLElement, received ${ typeof node } instead.` );
 		}
 	}
 
@@ -58,7 +58,7 @@ let NodeTools = target => class extends target {
 				}
 			}
 		} else {
-			throw new Error( `node must be of type HTMLElement, received instead: ${ typeof node }` );
+			throw new Error( `node must be of type HTMLElement, received ${ typeof node } instead.` );
 		}
 	}
 
@@ -76,6 +76,16 @@ let NodeTools = target => class extends target {
 			let oldStyleValues = Object.create( null );
 
 			if( node instanceof HTMLElement ) {
+				let store = this.data.get( node ).storage;
+
+				if( store.transitions === undef ) {
+					store.transitions = Object.create( null );
+				}
+
+				if( store.transitions[ id ] ) {
+					rej( `It seems like there is a pending transition for ${ node } - ID: ${ id }.` );
+				}
+
 				node.style.transition = `${ property } ${ duration }ms ${ timing } ${ delay }ms`;
 				node.style.offsetHeight = node.style.offsetHeight;
 
@@ -127,18 +137,12 @@ let NodeTools = target => class extends target {
 						}
 					};
 
-					let store = this.data.get( node ).storage;
-
-					if( store.transitions === undef ) {
-						store.transitions = Object.create( null );
-					}
-
 					store.transitions[ id ] = options;
 
 					res( options );
 				}
 			} else {
-				rej( 'node must be of type HTMLElement.' );
+				rej( `node must be of type HTMLElement, received ${ typeof node } instead.` );
 			}
 		});
 	}
