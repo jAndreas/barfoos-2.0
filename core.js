@@ -11,7 +11,7 @@ import worldStyle from './css/world.scss';
 
 const	eventLoop	= makeClass().mixin( Mediator ),
 		console		= makeClass( class core{ }, { id: 'core'} ).mixin( LogTools ),
-		DOM			= new DOMTools(),
+		DOM			= makeClass( class DOM{}, { id: 'DOM'} ).mixin( Mediator, DOMTools ),
 		Browser		= new BrowserKit(),
 		modules		= Object.create( null );
 
@@ -25,7 +25,7 @@ const [ nodes, data ]		= DOM.transpile( worldMarkup );
  * appending of module nodes, creating and waiting any async events (promises) to keep things in order and will
  * also be augmented with Log and Mediator classes for any GUI module
  *****************************************************************************************************/
-class Component extends Composition( LogTools, Mediator, NodeTools ) {
+class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	constructor( options = { } ) {
 		super( ...arguments );
 
@@ -42,7 +42,7 @@ class Component extends Composition( LogTools, Mediator, NodeTools ) {
 				nodeLocation:	'beforeend'
 			});
 
-			let [ nodeHash, dataHash ] = DOM.transpile( this.tmpl );
+			let [ nodeHash, dataHash ] = this.transpile( this.tmpl );
 
 			extend( this.nodes ).with( nodeHash );
 

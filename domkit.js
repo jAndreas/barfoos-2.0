@@ -27,7 +27,7 @@ let NodeTools = target => class extends target {
 		}
 
 		if( node instanceof HTMLElement ) {
-			if(!( type in this._alreadyDelegatedEvents )) {
+			if(!this._alreadyDelegatedEvents[ type ] ) {
 				this._alreadyDelegatedEvents[ type ] = true;
 				this.nodes.root.addEventListener( type, this._delegatedEventHandler, false );
 			}
@@ -193,7 +193,7 @@ let LogTools = target => class extends target {
  * Class DOMTools: Provides a DOM toolset for transpiling html-strings into Node-References, watching
  * DOM ready events and providing request-events.
  *****************************************************************************************************/
-class DOMTools extends Composition( LogTools, Mediator ) {
+let DOMTools = target => class extends target {
 	constructor( data = { } ) {
 		super( ...arguments );
 
@@ -201,8 +201,6 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 			id:			this.constructor.name,
 			vDom:		doc.implementation.createHTMLDocument()
 		});
-
-		this.init();
 	}
 
 	transpile( html = '' )  {
@@ -219,6 +217,60 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 		return doc.readyState === 'complete' || new Promise( (res, rej) => {
 			doc.addEventListener( 'DOMContentLoaded', () => res( doc.readyState ) );
 		});
+	}
+
+	addNodes( nodeData, optionalName ) {
+		if( nodeData instanceof HTMLElement && typeof optionalName === 'string' ) {
+			if( optionalName in this.nodes ) {
+				this.error( `${ optionalName } already exists in Components Node Hash.` );
+			} else {
+				this.nodes[ optionalName ]			= nodeData;
+				
+				this.data.set( nodeData, Object.create( null ) );
+				this.data.get( nodeData ).storage	= Object.create( null );
+				this.data.get( nodeData ).events	= Object.create( null );
+
+				return nodeData;
+			}
+		} else if( typeof nodeData === 'object' ) {
+			for( let [ name, nodeRef ] of Object.entries( nodeData ) ) {
+				if( name in this.nodes ) {
+					this.error( `${ optionalName } already exists in Components Node Hash.` );
+				} else {
+					this.nodes[ name ]					= nodeRef;
+
+					this.data.set( nodeRef, Object.create( null ) );
+					this.data.get( nodeRef ).storage	= Object.create( null );
+					this.data.get( nodeRef ).events		= Object.create( null );
+				}
+			}
+		} else {
+			this.error( `addNodes was called with wrong arguments. You need to pass either a hash or nodes or provide a single node with a name as second argument.` );
+		}
+	}
+
+	removeNodes( name, removePhysically ) {
+		if( typeof name === 'string' ) {
+			if( name in this.nodes ) {
+				if( removePhysically ) {
+					this.nodes[ name ].remove();
+				}
+
+				this.data.delete( this.nodes[ name ] );
+				delete this.nodes[ name ];
+			}
+		} else if( Array.isArray( name ) ) {
+			name.forEach( n => {
+				if( removePhysically ) {
+					this.nodes[ n ].remove();
+				}
+
+				this.data.delete( this.nodes[ n ] );
+				delete this.nodes[ n ];
+			});
+		} else {
+			this.error( `removeNodes was called with wrong arguments. You need to pass either an array of names or a single name.` );
+		}
 	}
 
 	cacheNodes( rootNode ) {
@@ -280,10 +332,10 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 				}
 			} else if( node instanceof NodeList ) {
 				// handle each node of NodeList
-				self.log('NodeList not implemented yet');
+				self.error('NodeList not implemented yet');
 			} else if( node instanceof HTMLCollection ) {
 				// handle each node of HTMLCollection
-				self.log('HTMLCollection not implemented yet');
+				self.error('HTMLCollection not implemented yet');
 			}
 		}( rootNode ));
 
@@ -295,6 +347,8 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 	}
 
 	init() {
+		super.init && super.init( ...arguments );
+
 		doc.onreadystatechange = () => {
 			if( doc.readyState === 'complete' ) {
 				this.fire( 'DOMReady.appEvents' );
@@ -303,7 +357,7 @@ class DOMTools extends Composition( LogTools, Mediator ) {
 
 		this.on( 'waitForDOM.appEvents', this.waitForDOM, this );
 	}
-}
+};
 /********************************************* DOMTools End ******************************************/
 
 /*****************************************************************************************************
