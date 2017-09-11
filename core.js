@@ -11,7 +11,7 @@ import worldStyle from './css/world.scss';
 
 const	eventLoop	= makeClass().mixin( Mediator ),
 		console		= makeClass( class core{ }, { id: 'core'} ).mixin( LogTools ),
-		DOM			= makeClass( class DOM{}, { id: 'DOM'} ).mixin( Mediator, DOMTools ),
+		DOM			= makeClass( class DOM{ }, { id: 'DOM'} ).mixin( Mediator, DOMTools ),
 		Browser		= new BrowserKit(),
 		modules		= Object.create( null );
 
@@ -82,6 +82,12 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	}
 
 	init() {
+		if(!ENV_PROD ) {
+			win.bfdebug = () => {
+				console.log( this );
+			};
+		}
+
 		this.on( `newChildModule.${ this.id }`, this.newChildModule, this );
 
 		return Promise.all( this.runtimeDependencies );

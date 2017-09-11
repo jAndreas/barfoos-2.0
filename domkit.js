@@ -53,8 +53,12 @@ let NodeTools = target => class extends target {
 					this.data.get( node ).events[ type ] = this.data.get( node ).events[ type ].filter( currentFnc => currentFnc !== fnc );
 				}
 			} else if( typeof fnc === 'undefined' ) {
-				if( Array.isArray( this.data.get( node ).events[ type ] ) ) {
-					this.data.get( node ).events[ type ] = [ ];
+				if( type ) {
+					if( Array.isArray( this.data.get( node ).events[ type ] ) ) {
+						this.data.get( node ).events[ type ] = [ ];
+					}
+				} else {
+					this.data.get( node ).events = Object.create( null );
 				}
 			}
 		} else {
@@ -87,7 +91,6 @@ let NodeTools = target => class extends target {
 				}
 
 				node.style.transition = `${ property } ${ duration }ms ${ timing } ${ delay }ms`;
-				node.style.offsetHeight = node.style.offsetHeight;
 
 				if( typeof style === 'object' ) {
 					for( let [ name, newValue ] of Object.entries( style ) ) {
@@ -116,8 +119,6 @@ let NodeTools = target => class extends target {
 								}
 
 								className.forEach( cls => node.classList.remove( cls ) );
-
-								node.style.offsetHeight = node.style.offsetHeight;
 
 								this.addNodeEvent( node, 'transitionend', undoEnd );
 
@@ -225,7 +226,7 @@ let DOMTools = target => class extends target {
 				this.error( `${ optionalName } already exists in Components Node Hash.` );
 			} else {
 				this.nodes[ optionalName ]			= nodeData;
-				
+
 				this.data.set( nodeData, Object.create( null ) );
 				this.data.get( nodeData ).storage	= Object.create( null );
 				this.data.get( nodeData ).events	= Object.create( null );
@@ -250,27 +251,16 @@ let DOMTools = target => class extends target {
 	}
 
 	removeNodes( name, removePhysically ) {
-		if( typeof name === 'string' ) {
-			if( name in this.nodes ) {
-				if( removePhysically ) {
-					this.nodes[ name ].remove();
-				}
+		name = Array.isArray( name ) ? name : [ name ];
 
-				this.data.delete( this.nodes[ name ] );
-				delete this.nodes[ name ];
+		name.forEach( n => {
+			if( removePhysically ) {
+				this.nodes[ n ].remove();
 			}
-		} else if( Array.isArray( name ) ) {
-			name.forEach( n => {
-				if( removePhysically ) {
-					this.nodes[ n ].remove();
-				}
 
-				this.data.delete( this.nodes[ n ] );
-				delete this.nodes[ n ];
-			});
-		} else {
-			this.error( `removeNodes was called with wrong arguments. You need to pass either an array of names or a single name.` );
-		}
+			this.data.delete( this.nodes[ n ] );
+			delete this.nodes[ n ];
+		});
 	}
 
 	cacheNodes( rootNode ) {
@@ -344,6 +334,12 @@ let DOMTools = target => class extends target {
 		}
 
 		return [ nodeHash, dataHash ];
+	}
+
+	timeout( ms = 200 ) {
+		return new Promise(( res, rej ) => {
+			win.setTimeout( res, ms );
+		});
 	}
 
 	init() {
