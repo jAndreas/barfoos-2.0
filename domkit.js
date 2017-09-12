@@ -114,17 +114,25 @@ let NodeTools = target => class extends target {
 					let options = {
 						undo:		() => {
 							return new Promise(( undoRes, undoRej ) => {
+								this.addNodeEvent( node, 'transitionend', undoEnd );
+
+								console.log('now setting old values for: ', node);
 								for( let [ name, oldValue ] of Object.entries( oldStyleValues ) ) {
+									console.log('css style: ', name, ' to: ', oldValue, node );
 									node.style[ name ] = oldValue;
 								}
 
 								className.forEach( cls => node.classList.remove( cls ) );
 
-								this.addNodeEvent( node, 'transitionend', undoEnd );
 
 								function undoEnd( event ) {
+									console.log('undoEnd Event for: ', node);
 									this.removeNodeEvent( node, 'transitionend', undoEnd );
-									node.style.transition = '';
+
+									node.style.transitionDelay = '';
+									node.style.transitionDuration = '';
+									node.style.transitionProperty = '';
+									node.style.transitionTimingFunction = '';
 
 									delete this.data.get( node ).storage.transitions[ id ];
 
