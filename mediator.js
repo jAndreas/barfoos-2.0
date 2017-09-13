@@ -141,4 +141,4 @@ let Mediator = target => class extends target {
 	}
 }
 
-export { Mediator };
+export default Mediator;

@@ -1,10 +1,12 @@
 "use strict";
 
 import { extend, Composition, makeClass, type } from './toolkit.js';
-import { win, doc, undef, DOMTools, LogTools, NodeTools } from './domkit.js';
-import { Mediator } from './mediator.js';
+import { win, doc, undef, DOMTools } from './domkit.js';
 import { BrowserKit } from './browserkit.js';
 import { moduleLocations } from './defs.js';
+import Mediator from './mediator.js';
+import NodeTools from './nodetools.js';
+import LogTools from './logtools.js';
 import worldMarkup from './html/world.html';
 import normalize from './css/normalize.scss';
 import worldStyle from './css/world.scss';
