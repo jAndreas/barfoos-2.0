@@ -36,9 +36,13 @@ let NodeTools = target => class extends target {
 				this.data.get( node ).events[ type ] = [ ];
 			}
 
-			this.data.get( node ).events[ type ].push( fnc );
+			if( this.data.get( node ).events[ type ].indexOf( fnc ) === -1 ) {
+				this.data.get( node ).events[ type ].push( fnc );
+			} else {
+				this.error( `${ node }: identical event handlers are not allowed -> ${ fnc }` );
+			}
 		} else {
-			throw new Error( `node must be of type HTMLElement, received ${ typeof node } instead.` );
+			this.error( `node must be of type HTMLElement, received ${ typeof node } instead.` );
 		}
 	}
 
@@ -62,7 +66,7 @@ let NodeTools = target => class extends target {
 				}
 			}
 		} else {
-			throw new Error( `node must be of type HTMLElement, received ${ typeof node } instead.` );
+			this.error( `node must be of type HTMLElement, received ${ typeof node } instead.` );
 		}
 	}
 
@@ -73,10 +77,75 @@ let NodeTools = target => class extends target {
 		}
 	}
 
+	animate( { node, id = 'last', rules:{ delay = '0', duration = 200, timing = 'linear', iterations = 1, direction = 'normal', mode = 'forwards', name = '' } = { } } = { } ) {
+		let rules = { delay, duration, timing, iterations, direction, mode, name };
+
+		return new Promise(( res, rej ) => {
+			if( node instanceof HTMLElement ) {
+				let store = this.data.get( node ).storage;
+
+				if( store.animations === undef ) {
+					store.animations = Object.create( null );
+				}
+
+				if( store.animations[ id ] ) {
+					rej( `It seems like there is a pending transition for ${ node } - ID: ${ id }.` );
+				}
+
+				node.style.animation = `${ duration }ms ${ timing } ${ delay }ms ${ iterations } ${ direction } ${ mode } ${ name }`;
+
+				this.addNodeEvent( node, 'animationend', animationEndEvent );
+
+				function animationEndEvent( event ) {
+					this.removeNodeEvent( node, 'animationend', animationEndEvent );
+
+					let options = {
+						undo:		() => {
+							return new Promise(( undoRes, undoRej ) => {
+								let undoEnd = event => {
+									this.removeNodeEvent( node, 'animationend', undoEnd );
+
+									node.style.animationDelay = '';
+									node.style.animationDuration = '';
+									node.style.animationName = '';
+									node.style.animationTimingFunction = '';
+									node.style.animationIterationCount = '';
+									node.style.animationDirection = '';
+									node.style.animationFillMode = '';
+									node.style.animationPlayState = '';
+
+									delete this.data.get( node ).storage.animations[ id ];
+
+									undoRes( event );
+								};
+
+								this.addNodeEvent( node, 'animationend', undoEnd );
+
+								node.style.animation = '';
+								this.reflow();
+								node.style.animation = `${ name } ${ duration }ms ${ timing } ${ delay }ms ${ iterations } reverse ${ mode }`;
+							});
+						},
+						finalize:	() => {
+							node.style.animation = '';
+							delete this.data.get( node ).storage.animations[ id ];
+						}
+					};
+
+					store.animations[ id ] = options;
+
+					res( options );
+				}
+			} else {
+				rej( `node must be of type HTMLElement, received ${ typeof node } instead.` );
+			}
+		});
+	}
+
 	transition( { node, style, className, id = 'last', rules:{ delay = '0', duration = 200, property = 'all', timing = 'linear' } = { } } = { } ) {
 		let rules = { delay, duration, property, timing };
 
-		return new Promise(( res, rej ) => {
+		return new Promise(async ( res, rej ) => {
 			let oldStyleValues = Object.create( null );
 
 			if( node instanceof HTMLElement ) {
@@ -106,54 +175,46 @@ let NodeTools = target => class extends target {
 					className = [ ];
 				}
 
-				this.addNodeEvent( node, 'transitionend', transitionEndEvent );
+				await this.timeout( duration );
 
-				function transitionEndEvent( event ) {
-					this.removeNodeEvent( node, 'transitionend', transitionEndEvent );
+				let options = {
+					undo:		() => {
+						return new Promise(async ( undoRes, undoRej ) => {
+							for( let [ name, oldValue ] of Object.entries( oldStyleValues ) ) {
+								node.style[ name ] = oldValue;
+							}
 
-					let options = {
-						undo:		() => {
-							return new Promise(( undoRes, undoRej ) => {
-								this.addNodeEvent( node, 'transitionend', undoEnd );
+							className.forEach( cls => node.classList.remove( cls ) );
 
-								console.log('now setting old values for: ', node);
-								for( let [ name, oldValue ] of Object.entries( oldStyleValues ) ) {
-									console.log('css style: ', name, ' to: ', oldValue, node );
-									node.style[ name ] = oldValue;
-								}
+							await this.timeout( duration );
 
-								className.forEach( cls => node.classList.remove( cls ) );
+							node.style.transitionDelay = '';
+							node.style.transitionDuration = '';
+							node.style.transitionProperty = '';
+							node.style.transitionTimingFunction = '';
 
-
-								function undoEnd( event ) {
-									console.log('undoEnd Event for: ', node);
-									this.removeNodeEvent( node, 'transitionend', undoEnd );
-
-									node.style.transitionDelay = '';
-									node.style.transitionDuration = '';
-									node.style.transitionProperty = '';
-									node.style.transitionTimingFunction = '';
-
-									delete this.data.get( node ).storage.transitions[ id ];
-
-									undoRes( event );
-								}
-							});
-						},
-						finalize:	() => {
-							node.style.transition = '';
 							delete this.data.get( node ).storage.transitions[ id ];
-						}
-					};
 
-					store.transitions[ id ] = options;
+							undoRes();
+						});
+					},
+					finalize:	() => {
+						node.style.transition = '';
+						delete this.data.get( node ).storage.transitions[ id ];
+					}
+				};
 
-					res( options );
-				}
+				store.transitions[ id ] = options;
+
+				res( options );
 			} else {
 				rej( `node must be of type HTMLElement, received ${ typeof node } instead.` );
 			}
 		});
+	}
+
+	reflow( element ) {
+		doc.body.offsetHeight;
 	}
 };
 
