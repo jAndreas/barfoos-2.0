@@ -27,7 +27,7 @@ function mix( targetClass = class { } ) {
 
 /*****************************************************************************************************
  * compose() should be exclusively used, to extend a class with mixins at declaration.
- * This is just sugar to not be forced to call mix().with() with empty arguments.
+ * This is just sugar to not to be forced to call mix().with() with empty arguments.
  *****************************************************************************************************/
 function Composition( ...sources ) {
 	return sources.reduce( ( composition, mixinFnc ) => mixinFnc( composition ), class { } );
