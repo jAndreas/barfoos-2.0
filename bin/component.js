@@ -83,7 +83,9 @@ const mkdirSync = path => {
 }
 
 cmd
+	.version( '0.1.0' )
 	.arguments( '<moduleName>' )
+	.option( '-b, --blueprint', 'create blueprint templates' )
 	.action(name => {
 		mkdirSync( `${__dirname}/modules` );
 		mkdirSync( `${__dirname}/modules/${ name }` );
@@ -91,10 +93,12 @@ cmd
 		for( let [ folder, files ] of Object.entries( folders ) ) {
 			mkdirSync( `${__dirname}/modules/${ name }/${ folder }` );
 
-			for( let file of files ) {
-				Object.keys( file ).forEach( filename => {
-					fs.writeFileSync( `${__dirname}/modules/${ name }/${ folder }/${ filename }`, file[ filename ].replace( /MyModule/, name) );
-				});
+			if( cmd.blueprint ) {
+				for( let file of files ) {
+					Object.keys( file ).forEach( filename => {
+						fs.writeFileSync( `${__dirname}/modules/${ name }/${ folder }/${ filename }`, file[ filename ].replace( /MyModule/g, name) );
+					});
+				}
 			}
 		}
 	}).parse( process.argv );
