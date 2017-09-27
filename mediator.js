@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 import { extend } from './toolkit.js';
 
@@ -78,62 +78,62 @@ let Mediator = target => class extends target {
 
 			for( let singleLocation of eventLocators.split( /\s+/ ) ) {
 				[ eventName, eventNameSpace = 'global' ] = singleLocation.split( '.' );
-			}
 
-			if( namespaceContainer[ eventNameSpace ] && namespaceContainer[ eventNameSpace ][ eventName ] ) {
-				return new Promise(( res, rej ) => {
-					let container		= namespaceContainer[ eventNameSpace ][ eventName ],
-						listenersMax	= container.length - 1,
-						resultData		= [ ],
-						event			= Object.create( null ),
-						listener, result, start;
+				if( namespaceContainer[ eventNameSpace ] && namespaceContainer[ eventNameSpace ][ eventName ] ) {
+					return new Promise(( res, rej ) => {
+						let container		= namespaceContainer[ eventNameSpace ][ eventName ],
+							listenersMax	= container.length - 1,
+							resultData		= [ ],
+							event			= Object.create( null ),
+							listener, result, start;
 
-					extend( event ).with({
-						name:		eventName,
-						namespace:	eventNameSpace,
-						listeners:	container.length
-					});
+						extend( event ).with({
+							name:		eventName,
+							namespace:	eventNameSpace,
+							listeners:	container.length
+						});
 
-					(function _asyncLoop() {
-						start	= Date.now();
+						(function _asyncLoop() {
+							start	= Date.now();
 
-						do {
-							listener	= container[ listenersMax ];
-							result		= listener.handler( data, event );
+							do {
+								listener	= container[ listenersMax ];
+								result		= listener.handler( data, event );
 
-							// push whatever result was into data to our promises array
-							resultData.push( result );
+								// push whatever result was into data to our promises array
+								resultData.push( result );
 
-							// in case of a "per iteration" - callback, call it now with the current data
-							if( typeof callback === 'function' ) {
-								callback( result );
-							}
-
-							// setting "stopPropagation" to a truthy value within an means to stop any further propagation
-							if( event.stopPropagation ) {
-								listenersMax = -1;
-								break; // while()
-							}
-
-							listenersMax--;
-						} while( listenersMax > -1 && Date.now() - start < maxLoopTime );
-
-						// if there are still entries in our queue, we ran out of allowed dispatch time frame
-						if( listenersMax > -1 ) {
-							setTimeout( _asyncLoop, maxLoopTime );
-						} else {
-							Promise.all( resultData ).then( localResult => {
-								if( localResult.length === 1 ) {
-									res( localResult[ 0 ] );
-								} else {
-									res( localResult );
+								// in case of a "per iteration" - callback, call it now with the current data
+								if( typeof callback === 'function' ) {
+									callback( result );
 								}
-							}, rej );
-						}
-					}());
-				});
-			} else {
-				this.log && this.log( `There is no listener for ${eventName} in ${eventNameSpace} at present. Async The has Matrix you?` );
+
+								// setting "stopPropagation" to a truthy value within an means to stop any further propagation
+								if( event.stopPropagation ) {
+									listenersMax = -1;
+									break; // while()
+								}
+
+								listenersMax--;
+							} while( listenersMax > -1 && Date.now() - start < maxLoopTime );
+
+							// if there are still entries in our queue, we ran out of allowed dispatch time frame
+							if( listenersMax > -1 ) {
+								setTimeout( _asyncLoop, maxLoopTime );
+							} else {
+								Promise.all( resultData ).then( localResult => {
+									if( localResult.length === 1 ) {
+										res( localResult[ 0 ] );
+									} else {
+										res( localResult );
+									}
+								}, rej );
+							}
+						}());
+					});
+				} else {
+					this.log && this.log( `There is no listener for ${eventName} in ${eventNameSpace} at present. Async The has Matrix you?` );
+				}
 			}
 		} else { throw new TypeError( 'event name must be a string.' ); }
 

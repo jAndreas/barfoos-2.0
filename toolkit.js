@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const	type		= input => Object.prototype.toString.call( input ).split( /\s/ )[ 1 ].slice( 0, -1 ),
 		desc		= Object.getOwnPropertyDescriptor,

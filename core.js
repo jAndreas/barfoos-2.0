@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 import { extend, Composition, makeClass, type } from './toolkit.js';
 import { win, doc, undef, DOMTools } from './domkit.js';
@@ -95,8 +95,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		return Promise.all( this.runtimeDependencies );
 	}
 
-	newChildModule( childNode, event ) {
-		this.nodes.defaultChildContainer.insertAdjacentElement( 'afterbegin', childNode );
+	newChildModule( hookData, event ) {
+		this.nodes.defaultChildContainer.insertAdjacentElement( hookData.nodeLocation, hookData.node );
 	}
 }
 /****************************************** Component End ******************************************/

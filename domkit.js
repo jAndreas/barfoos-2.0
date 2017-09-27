@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 import { extend, type } from './toolkit.js';
 
@@ -42,11 +42,12 @@ let DOMTools = target => class extends target {
 			if( optionalName in this.nodes ) {
 				this.error( `${ optionalName } already exists in Components Node Hash.` );
 			} else {
-				this.nodes[ optionalName ]			= nodeData;
+				this.nodes[ optionalName ]				= nodeData;
 
 				this.data.set( nodeData, Object.create( null ) );
-				this.data.get( nodeData ).storage	= Object.create( null );
-				this.data.get( nodeData ).events	= Object.create( null );
+				this.data.get( nodeData ).storage		= Object.create( null );
+				this.data.get( nodeData ).events		= Object.create( null );
+				this.data.get( nodeData ).oneTimeEvents	= Object.create( null );
 
 				return nodeData;
 			}
@@ -55,11 +56,12 @@ let DOMTools = target => class extends target {
 				if( name in this.nodes ) {
 					this.error( `${ optionalName } already exists in Components Node Hash.` );
 				} else {
-					this.nodes[ name ]					= nodeRef;
+					this.nodes[ name ]						= nodeRef;
 
 					this.data.set( nodeRef, Object.create( null ) );
-					this.data.get( nodeRef ).storage	= Object.create( null );
-					this.data.get( nodeRef ).events		= Object.create( null );
+					this.data.get( nodeRef ).storage		= Object.create( null );
+					this.data.get( nodeRef ).events			= Object.create( null );
+					this.data.get( nodeRef ).oneTimeEvents	= Object.create( null );
 				}
 			}
 		} else {
@@ -128,8 +130,9 @@ let DOMTools = target => class extends target {
 				}
 
 				dataHash.set( node, Object.create( null ) );
-				dataHash.get( node ).storage	= Object.create( null );
-				dataHash.get( node ).events		= Object.create( null );
+				dataHash.get( node ).storage		= Object.create( null );
+				dataHash.get( node ).events			= Object.create( null );
+				dataHash.get( node ).oneTimeEvents	= Object.create( null );
 
 				// loop over every childnode, if we have children of children, recursively call crawlNodes()
 				if( node.children.length ) {

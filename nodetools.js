@@ -1,3 +1,5 @@
+'use strict'
+
 const		win			= window,
 			doc			= win.document,
 			undef		= void 0;
@@ -12,8 +14,15 @@ let NodeTools = target => class extends target {
 		this._alreadyDelegatedEvents = Object.create( null );
 
 		this._delegatedEventHandler = event => {
-			if( this.data.get( event.target ) && this.data.get( event.target ).events[ event.type ] ) {
-				this.data.get( event.target ).events[ event.type ].forEach( fnc => fnc.call( this, event ) );
+			if( this.data.get( event.target ) ) {
+				if( this.data.get( event.target ).events[ event.type ] ) {
+					this.data.get( event.target ).events[ event.type ].forEach( fnc => fnc.call( this, event ) );
+				}
+
+				if( this.data.get( event.target ).oneTimeEvents[ event.type ] ) {
+					this.data.get( event.target ).oneTimeEvents[ event.type ].forEach( fnc => fnc.call( this, event ) );
+					this.data.get( event.target ).oneTimeEvents[ event.type ] = [ ];
+				}
 			}
 		};
 	}
@@ -35,6 +44,31 @@ let NodeTools = target => class extends target {
 
 			if( this.data.get( node ).events[ type ].indexOf( fnc ) === -1 ) {
 				this.data.get( node ).events[ type ].push( fnc );
+			} else {
+				this.error( `${ node }: identical event handlers are not allowed -> ${ fnc }` );
+			}
+		} else {
+			this.error( `node must be of type HTMLElement, received ${ typeof node } instead.` );
+		}
+	}
+
+	addNodeEventOnce( node, type, fnc ) {
+		if( typeof node === 'string' ) {
+			node = this.nodes[ node ];
+		}
+
+		if( node instanceof HTMLElement ) {
+			if(!this._alreadyDelegatedEvents[ type ] ) {
+				this._alreadyDelegatedEvents[ type ] = true;
+				this.nodes.root.addEventListener( type, this._delegatedEventHandler, false );
+			}
+
+			if( this.data.get( node ).oneTimeEvents[ type ] === undef ) {
+				this.data.get( node ).oneTimeEvents[ type ] = [ ];
+			}
+
+			if( this.data.get( node ).oneTimeEvents[ type ].indexOf( fnc ) === -1 ) {
+				this.data.get( node ).oneTimeEvents[ type ].push( fnc );
 			} else {
 				this.error( `${ node }: identical event handlers are not allowed -> ${ fnc }` );
 			}
@@ -91,17 +125,13 @@ let NodeTools = target => class extends target {
 
 				node.style.animation = `${ duration }ms ${ timing } ${ delay }ms ${ iterations } ${ direction } ${ mode } ${ name }`;
 
-				this.addNodeEvent( node, 'animationend', animationEndEvent );
+				this.addNodeEventOnce( node, 'animationend', animationEndEvent );
 
 				function animationEndEvent( event ) {
-					this.removeNodeEvent( node, 'animationend', animationEndEvent );
-
 					let options = {
 						undo:		() => {
 							return new Promise(( undoRes, undoRej ) => {
 								let undoEnd = event => {
-									this.removeNodeEvent( node, 'animationend', undoEnd );
-
 									node.style.animationDelay = '';
 									node.style.animationDuration = '';
 									node.style.animationName = '';
@@ -116,7 +146,7 @@ let NodeTools = target => class extends target {
 									undoRes( event );
 								};
 
-								this.addNodeEvent( node, 'animationend', undoEnd );
+								this.addNodeEventOnce( node, 'animationend', undoEnd );
 
 								node.style.animation = '';
 								this.reflow();
