@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+'use strict';
+
+const	{ execSync }	= require( 'child_process' ),
+		cmd				= require( 'commander' ),
+		olddir			= __dirname;
+
+
+cmd
+	.version( '0.1.0' )
+	.option( '-p, --production', 'compile barfoos for production usage' )
+	.option( '-d, --development', 'compile barfoos for development usage' )
+	.option( '-l, --legacy', 'compile barfoos for legacy usage' )
+	.parse( process.argv );
+
+if( cmd.production ) {
+	process.chdir( __dirname );
+	execSync( 'npm run es7' );
+}
+
+if( cmd.legacy ) {
+	process.chdir( __dirname );
+	execSync( 'npm run compile' );
+}
+
+if( cmd.development ) {
+	process.chdir( __dirname );
+	execSync( 'npm run es7' );
+}
+
+process.chdir( olddir );

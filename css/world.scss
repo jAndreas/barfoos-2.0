@@ -1,4 +1,4 @@
-$iPadPortrait:768px;
+@import 'viewportDefinitions';
 
 div#world {
 	display:flex;
@@ -7,10 +7,12 @@ div#world {
 	flex-direction:row;
 	flex-wrap:wrap;
 
+	height:100vh;
+	overflow-x:hidden;
+	overflow-y:scroll;
+
 	transition:all 1s linear;
 	background-color:rgba(10,10,10,1);
-
-	overflow: hidden;
 
 	> section {
 		position:relative;
@@ -25,6 +27,12 @@ div#world {
 		flex-direction:row;
 		flex-wrap:wrap;
 
+		> .BFComponent {
+			flex-basis:100%;
+			display:flex;
+			flex-direction:column;
+			flex-wrap:nowrap;
+		}
 		/*
 		DEBUG BORDER
 		box-sizing:border-box;
@@ -76,7 +84,7 @@ div#world {
 }
 
 div.backgroundImage {
-	position:absolute;
+	position:fixed;
 	top:0;
 	left:0;
 	right:0;
@@ -87,7 +95,7 @@ div.backgroundImage {
 	z-index:0;
 }
 
-@media all and (min-width:800px) {
+@media all and (min-width:$iPadPortrait) {
 	#world > section.content {
 		flex-grow:10;
 		flex-basis:0%;

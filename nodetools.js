@@ -22,6 +22,7 @@ let NodeTools = target => class extends target {
 				if( this.data.get( event.target ).oneTimeEvents[ event.type ] ) {
 					this.data.get( event.target ).oneTimeEvents[ event.type ].forEach( fnc => fnc.call( this, event ) );
 					this.data.get( event.target ).oneTimeEvents[ event.type ] = [ ];
+					this.cleanDelegations();
 				}
 			}
 		};
@@ -45,7 +46,7 @@ let NodeTools = target => class extends target {
 			if( this.data.get( node ).events[ type ].indexOf( fnc ) === -1 ) {
 				this.data.get( node ).events[ type ].push( fnc );
 			} else {
-				this.error( `${ node }: identical event handlers are not allowed -> ${ fnc }` );
+				this.error( node, `identical event handlers are not allowed ->`, fnc );
 			}
 		} else {
 			this.error( `node must be of type HTMLElement, received ${ typeof node } instead.` );
@@ -70,7 +71,7 @@ let NodeTools = target => class extends target {
 			if( this.data.get( node ).oneTimeEvents[ type ].indexOf( fnc ) === -1 ) {
 				this.data.get( node ).oneTimeEvents[ type ].push( fnc );
 			} else {
-				this.error( `${ node }: identical event handlers are not allowed -> ${ fnc }` );
+				this.error( node, `identical event handlers are not allowed ->`, fnc );
 			}
 		} else {
 			this.error( `node must be of type HTMLElement, received ${ typeof node } instead.` );
@@ -96,6 +97,8 @@ let NodeTools = target => class extends target {
 					this.data.get( node ).events = Object.create( null );
 				}
 			}
+
+			this.cleanDelegations();
 		} else {
 			this.error( `node must be of type HTMLElement, received ${ typeof node } instead.` );
 		}
@@ -105,6 +108,35 @@ let NodeTools = target => class extends target {
 		for( let [ key, node ] of Object.entries( this.nodes ) ) {
 			this.data.get( node ).events[ type ] = null;
 			delete this.data.get( node ).events[ type ];
+		}
+
+		if( this._alreadyDelegatedEvents[ type ] ) {
+			delete this._alreadyDelegatedEvents[ type ];
+		}
+
+		this.cleanDelegations();
+	}
+
+	cleanDelegations() {
+		let validDelegation;
+
+		for( let delegatedEvent in this._alreadyDelegatedEvents ) {
+			validDelegation = false;
+
+			for( let [ key, node ] of Object.entries( this.nodes ) ) {
+				let persistEvents	= this.data.get( node ).events[ delegatedEvent ],
+					oneTimeEvents	= this.data.get( node ).oneTimeEvents[ delegatedEvent ];
+
+				if( (persistEvents && persistEvents.length) || (oneTimeEvents && oneTimeEvents.length) ) {
+					validDelegation = true;
+					break;
+				}
+			}
+
+			if(!validDelegation ) {
+				delete this._alreadyDelegatedEvents[ delegatedEvent ];
+				this.nodes.root.removeEventListener( delegatedEvent, this._delegatedEventHandler );
+			}
 		}
 	}
 

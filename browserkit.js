@@ -20,11 +20,12 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 	}
 
 	async init() {
-		doc.addEventListener( 'visibilitychange', this.visibilityChange, false );
-		doc.addEventListener( 'focus', this.focusin, false );
-		doc.addEventListener( 'blur', this.focusout, false );
-		doc.addEventListener( 'focusin', this.focusin, false );
-		doc.addEventListener( 'focusout', this.focusout, false );
+		doc.addEventListener( 'visibilitychange', this.visibilityChange.bind( this ), false );
+		doc.addEventListener( 'focus', this.focusin.bind( this ), false );
+		doc.addEventListener( 'blur', this.focusout.bind( this ), false );
+		doc.addEventListener( 'focusin', this.focusin.bind( this ), false );
+		doc.addEventListener( 'focusout', this.focusout.bind( this ), false );
+		doc.addEventListener( 'mousewheel', this.mousewheel.bind( this ), false );
 
 		this.on( 'isAppHidden.appEvents', () => doc.hidden );
 		this.on( 'isAppFocused.appEvents', () => doc.hasFocus() );
@@ -42,16 +43,24 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		}
 	}
 
-	visibilityChange = event => {
+	visibilityChange( event ) {
 		this.fire( 'appVisibilityChange.appEvents', !doc.hidden );
 	}
 
-	focusin = event => {
+	focusin( event ) {
 		this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
 	}
 
-	focusout = event => {
+	focusout( event ) {
 		this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
+	}
+
+	mousewheel( event ) {
+		if( event.wheelDelta / 120 > 0 ) {
+			this.fire( 'mouseWheelUp.appEvents' );
+		} else {
+			this.fire( 'mouseWheelDown.appEvents' );
+		}
 	}
 }
 /****************************************** BrowserKit End ******************************************/

@@ -8,8 +8,8 @@ import { Component } from 'barfoos2.0/core.js';
 import { moduleLocations } from 'barfoos2.0/defs.js';
 import { extend } from 'barfoos2.0/toolkit.js';
 
-import { htmlx } from '../markup/main.htmlx';
-import { style } from '../style/main.scss';
+import htmlx from '../markup/main.htmlx';
+import style from '../style/main.scss';
 
 /*****************************************************************************************************
  *  "description here"
@@ -26,7 +26,7 @@ class MyModule extends Components {
 		super( options );
 
 		this.runtimeDependencies.push(
-			this.fire( 'waitforHLSSupport.appEvents' )
+			this.fire( 'SomeEvent.appEvents' ) // or any promise
 		);
 
 		return this.init();
@@ -52,26 +52,20 @@ async function start() {
 
 export { start };`;
 
-const cssviewport =
-`$defaultTextColor:rgba(220,220,220,0.95);
-$defaultHoverColor:rgba(30, 40, 70, 0.8);
-$iPhone6Portrait:415px;
-$iPhone6Landscape:736px;
-$iPadPortrait:768px;`;
-
-const cssmain = `@import 'viewportDefinitions';`;
+const cssmain = `@import '~barfoos2.0/css/viewportDefinitions';`;
 
 const htmlmain = `<div id="MyModule"></div>`;
 
 const	path	= require( 'path' ),
 		fs		= require( 'fs' ),
 		cmd		= require( 'commander' ),
+		root	= path.resolve(),
 		folders = {
 			fonts:	[ ],
 			images:	[ ],
 			markup: [ { 'main.htmlx': htmlmain } ],
 			js:		[ { 'main.js': jsblueprint } ],
-			style:	[ { '_viewportDefinitions.scss': cssviewport, 'main.scss': cssmain } ]
+			style:	[ { 'main.scss': cssmain } ]
 		};
 
 const mkdirSync = path => {
@@ -87,16 +81,21 @@ cmd
 	.arguments( '<moduleName>' )
 	.option( '-b, --blueprint', 'create blueprint templates' )
 	.action(name => {
-		mkdirSync( `${__dirname}/modules` );
-		mkdirSync( `${__dirname}/modules/${ name }` );
+		console.log( `creating structure:` );
+		console.log( `./modules` );
+		mkdirSync( `${root}/modules` );
+		console.log( `./modules/${ name }` );
+		mkdirSync( `${root}/modules/${ name }` );
 
 		for( let [ folder, files ] of Object.entries( folders ) ) {
-			mkdirSync( `${__dirname}/modules/${ name }/${ folder }` );
+			console.log( `./modules/${ name }/${ folder }` );
+			mkdirSync( `${root}/modules/${ name }/${ folder }` );
 
 			if( cmd.blueprint ) {
 				for( let file of files ) {
 					Object.keys( file ).forEach( filename => {
-						fs.writeFileSync( `${__dirname}/modules/${ name }/${ folder }/${ filename }`, file[ filename ].replace( /MyModule/g, name) );
+						console.log( `./modules/${ name }/${ folder }/${ filename }` );
+						fs.writeFileSync( `${root}/modules/${ name }/${ folder }/${ filename }`, file[ filename ].replace( /MyModule/g, name) );
 					});
 				}
 			}

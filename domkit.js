@@ -13,6 +13,7 @@ const		win			= window,
  *****************************************************************************************************/
 let DOMTools = target => class extends target {
 	constructor( data = { } ) {
+		console.log('ROFLCOPTER');
 		super( ...arguments );
 
 		extend( this ).with( data ).and({
@@ -223,4 +224,4 @@ if(!('console' in win) ) {
 	'debug error info log warn dir dirxml table trace group groupCollapsed groupEnd clear count assert markTimeline profile profileEnd timeline timelineEnd time timeEnd timeStamp memory'.split( /\s+/ ).forEach( fncName => win.console[ fncName ] = () => undef );
 }
 
-export { win, doc, query, DOMTools };
+export { win, doc, undef, query, DOMTools };

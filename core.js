@@ -53,6 +53,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 			if( typeof this.location === 'string' ) {
 				if( this.location in moduleLocations ) {
+					this.nodes.root.classList.add( 'BFComponent' );
 					nodes[ `section.${ this.location }` ].appendChild( this.nodes.root );
 				} else if( this.location in modules.online ) {
 					this.fire( `newChildModule.${ this.location }`, {
@@ -91,12 +92,22 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		}
 
 		this.on( `newChildModule.${ this.id }`, this.newChildModule, this );
+		this.on( 'mouseWheelUp.appEvents', this.onMouseWheelUp, this );
+		this.on( 'mouseWheelDown.appEvents', this.onMouseWheelDown, this );
 
 		return Promise.all( this.runtimeDependencies );
 	}
 
 	newChildModule( hookData, event ) {
 		this.nodes.defaultChildContainer.insertAdjacentElement( hookData.nodeLocation, hookData.node );
+	}
+
+	onMouseWheelUp() {
+		nodes[ 'div#world' ].scrollTop -= 20;
+	}
+
+	onMouseWheelDown() {
+		nodes[ 'div#world' ].scrollTop += 20;
 	}
 }
 /****************************************** Component End ******************************************/

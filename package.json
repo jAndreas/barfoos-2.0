@@ -1,19 +1,20 @@
 {
-  "name": "barfoos2.0",
-  "version": "0.2.3",
-  "description": "A little helper framework",
-  "main": "core.js",
-  "scripts": {
-    "compile": "babel *.js --out-dir ../dvg_website/node_modules/barfoos2.0/ | cp -R ./html/ ../dvg_website/node_modules/barfoos2.0/ | cp -R ./css/ ../dvg_website/node_modules/barfoos2.0/"
-  },
-  "author": "Andreas Goebel",
-  "license": "ISC",
-  "dependencies": {
-    "babel-plugin-syntax-dynamic-import": "^6.18.0",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-regenerator": "^6.26.0",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-es2015": "^6.24.1",
-    "babel-preset-es2017": "^6.24.1"
-  }
+	"name": "barfoos2.0",
+	"version": "0.2.3",
+	"description": "A little helper framework",
+	"main": "core.js",
+	"scripts": {
+		"compile": "babel *.js --out-dir ../dvg_website/node_modules/barfoos2.0/ | cp -R ./html/ ../dvg_website/node_modules/barfoos2.0/ | cp -R ./css/ ../dvg_website/node_modules/barfoos2.0/",
+		"es7": "cp *.js ../dvg_website/node_modules/barfoos2.0/ | cp -R ./html/ ../dvg_website/node_modules/barfoos2.0/ | cp -R ./css/ ../dvg_website/node_modules/barfoos2.0/"
+	},
+	"author": "Andreas Goebel",
+	"license": "ISC",
+	"dependencies": {
+		"babel-plugin-syntax-dynamic-import": "^6.18.0",
+		"babel-plugin-transform-class-properties": "^6.24.1",
+		"babel-plugin-transform-regenerator": "^6.26.0",
+		"babel-plugin-transform-runtime": "^6.23.0",
+		"babel-preset-es2015": "^6.24.1",
+		"babel-preset-es2017": "^6.24.1"
+	}
 }
