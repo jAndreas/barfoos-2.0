@@ -65,4 +65,4 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 }
 /****************************************** BrowserKit End ******************************************/
 
-export { BrowserKit };
+export default BrowserKit;

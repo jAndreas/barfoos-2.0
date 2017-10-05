@@ -13,7 +13,6 @@ const		win			= window,
  *****************************************************************************************************/
 let DOMTools = target => class extends target {
 	constructor( data = { } ) {
-		console.log('ROFLCOPTER');
 		super( ...arguments );
 
 		extend( this ).with( data ).and({

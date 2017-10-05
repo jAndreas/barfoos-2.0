@@ -2,7 +2,6 @@
 
 import { extend, Composition, makeClass, type } from './toolkit.js';
 import { win, doc, undef, DOMTools } from './domkit.js';
-import { BrowserKit } from './browserkit.js';
 import { moduleLocations } from './defs.js';
 import Mediator from './mediator.js';
 import NodeTools from './nodetools.js';
@@ -14,7 +13,6 @@ import worldStyle from './css/world.scss';
 const	eventLoop	= makeClass().mixin( Mediator ),
 		console		= makeClass( class core{ }, { id: 'core'} ).mixin( LogTools ),
 		DOM			= makeClass( class DOM{ }, { id: 'DOM'} ).mixin( Mediator, DOMTools ),
-		Browser		= new BrowserKit(),
 		modules		= Object.create( null );
 
 		modules.online		= Object.create( null );
@@ -153,22 +151,17 @@ eventLoop.on( 'configApp.core', app => {
 	doc.title	= app.title || 'BarFoos Application';
 
 	if( app.background ) {
-		if( typeof app.background.image === 'string' ) {
-			Browser.loadImage( app.background.image ).then( objURL => {
-				let bgImage = document.createElement( 'div' );
+		if( typeof app.background.objURL === 'string' ) {
+			nodes[ 'div#world' ].style.background = `url( ${ app.background.objURL } )`;
+			nodes[ 'div#world' ].classList.add( 'backgroundImage' );
 
-				bgImage.style.backgroundImage = 'url(' + objURL + ')';
-				bgImage.classList.add( 'backgroundImage' );
+			for( let [ prop, value ] of Object.entries( app.background.css ) ) {
+				nodes[ 'div#world' ].style[ prop ] = value;
+			}
 
-				for( let [ prop, value ] of Object.entries( app.background.css ) ) {
-					bgImage.style[ prop ] = value;
-				}
+			nodes[ 'div#world' ].classList.remove( 'blurred' );
 
-				nodes[ 'div#world' ].insertAdjacentElement( 'beforeBegin', bgImage );
-
-				eventLoop.fire( 'backgroundImageLoaded.core' );
-			});
-
+			//eventLoop.fire( 'backgroundImageLoaded.core' )
 		}
 	}
 });

@@ -9,9 +9,9 @@ div#world {
 
 	height:100vh;
 	overflow-x:hidden;
-	overflow-y:scroll;
+	overflow-y:hidden;
 
-	transition:all 1s linear;
+	transition:all 600ms linear;
 	background-color:rgba(10,10,10,1);
 
 	> section {
@@ -83,16 +83,26 @@ div#world {
 	}
 }
 
-div.backgroundImage {
-	position:fixed;
-	top:0;
+div#world.backgroundImage {
+	background-attachment:fixed !important;
+	background-size:cover !important;
+	background-repeat:no-repeat !important;
+	background-blend-mode:multiply !important;
+}
+
+div#world.backgroundImage:before {
+	background:inherit;
+	position:absolute;
 	left:0;
 	right:0;
+	top:0;
 	bottom:0;
-	background-attachment:fixed;
-	background-size:cover;
-	background-repeat:no-repeat;
-	z-index:0;
+	content:'';
+	filter:blur(8px) grayscale(50%);
+}
+
+div#world.blurred {
+	filter:blur(50px);
 }
 
 @media all and (min-width:$iPadPortrait) {
