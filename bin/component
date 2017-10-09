@@ -44,10 +44,10 @@ class MyModule extends Components {
 }
 /****************************************** MyModule End ******************************************/
 
-async function start() {
+async function start( ...args ) {
 	[ style ].forEach( style => style.use() );
 
-	const instance = await new MyModule();
+	const instance = await new MyModule( ...args );
 }
 
 export { start };`;

@@ -92,13 +92,16 @@ div#world.backgroundImage {
 
 div#world.backgroundImage:before {
 	background:inherit;
-	position:absolute;
+	background-attachment:scroll;
+	background-size:cover;
+	position:fixed;
 	left:0;
 	right:0;
 	top:0;
 	bottom:0;
 	content:'';
 	filter:blur(8px) grayscale(50%);
+	transition:filter 600ms linear;
 }
 
 div#world.blurred {

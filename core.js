@@ -49,27 +49,6 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			this.data = dataHash;
 			this.data.set( this, Object.create( null ) );
 
-			if( typeof this.location === 'string' ) {
-				if( this.location in moduleLocations ) {
-					this.nodes.root.classList.add( 'BFComponent' );
-					nodes[ `section.${ this.location }` ].appendChild( this.nodes.root );
-				} else if( this.location in modules.online ) {
-					this.fire( `newChildModule.${ this.location }`, {
-						node:			this.nodes.root,
-						nodeLocation:	this.nodeLocation
-					});
-				} else {
-					if( typeof modules.awaiting[ this.location ] === undef ) {
-						modules.awaiting[ this.location ] = [ ];
-					}
-
-					modules.awaiting[ this.location ].push({
-						node:			this.nodes.root,
-						nodeLocation:	this.nodeLocation
-					});
-				}
-			}
-
 			this.runtimeDependencies.push(
 				this.fire( 'waitForDOM.appEvents' )
 			);
@@ -90,22 +69,36 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		}
 
 		this.on( `newChildModule.${ this.id }`, this.newChildModule, this );
-		this.on( 'mouseWheelUp.appEvents', this.onMouseWheelUp, this );
-		this.on( 'mouseWheelDown.appEvents', this.onMouseWheelDown, this );
+		this.installModule();
 
 		return Promise.all( this.runtimeDependencies );
 	}
 
+	installModule() {
+		if( typeof this.location === 'string' ) {
+			if( this.location in moduleLocations ) {
+				this.nodes.root.classList.add( 'BFComponent' );
+				nodes[ `section.${ this.location }` ].appendChild( this.nodes.root );
+			} else if( this.location in modules.online ) {
+				this.fire( `newChildModule.${ this.location }`, {
+					node:			this.nodes.root,
+					nodeLocation:	this.nodeLocation
+				});
+			} else {
+				if( typeof modules.awaiting[ this.location ] === undef ) {
+					modules.awaiting[ this.location ] = [ ];
+				}
+
+				modules.awaiting[ this.location ].push({
+					node:			this.nodes.root,
+					nodeLocation:	this.nodeLocation
+				});
+			}
+		}
+	}
+
 	newChildModule( hookData, event ) {
 		this.nodes.defaultChildContainer.insertAdjacentElement( hookData.nodeLocation, hookData.node );
-	}
-
-	onMouseWheelUp() {
-		nodes[ 'div#world' ].scrollTop -= 20;
-	}
-
-	onMouseWheelDown() {
-		nodes[ 'div#world' ].scrollTop += 20;
 	}
 }
 /****************************************** Component End ******************************************/
@@ -127,6 +120,14 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 /*****************************************************************************************************
  * Core Event handling
  *****************************************************************************************************/
+eventLoop.on( 'mouseWheelUp.appEvents', () => {
+	nodes[ 'div#world' ].scrollTop -= 20;
+});
+
+eventLoop.on( 'mouseWheelDown.appEvents', () => {
+	nodes[ 'div#world' ].scrollTop += 20;
+});
+
 eventLoop.on( 'moduleLaunch.appEvents', (module, event) => {
 	if( module.id in modules.online ) {
 		modules.online[ module.id ]++;
@@ -160,8 +161,6 @@ eventLoop.on( 'configApp.core', app => {
 			}
 
 			nodes[ 'div#world' ].classList.remove( 'blurred' );
-
-			//eventLoop.fire( 'backgroundImageLoaded.core' )
 		}
 	}
 });
