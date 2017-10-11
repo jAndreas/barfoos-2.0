@@ -1,57 +1,83 @@
 $handleBorderColor:rgba(200,200,200,0.55);
 $dialogMinWidth:100px;
-$radius:12px;
+$dialogMinHeight:18px;
+$radius:0px;
+$themeColorA:rgba(40,20,10,0.9);
+$themeColorB:rgba(70,90,110,0.9);
+$themeTextColor:rgba(220,220,190,1);
 
 div.bfDialogWrapper {
 	position:absolute;
 	border:1px solid rgba(15,15,15,0.45);
 	border-radius:$radius;
-	box-shadow:0 0 64px 0px rgba(255,255,255,0.65);
+	box-shadow:0 0 48px 8px rgba(220,220,220,0.85), 0 0 164px 100px rgba(255, 255, 255, 0.45);
 	overflow:hidden;
-
+	z-index:101;
 	background:inherit;
 
 	> div.bfDialogHandle {
 		position:relative;
 		min-width:$dialogMinWidth;
-		height:20px;
+		min-height:$dialogMinHeight;
 		display:flex;
 		flex-direction:row;
 		flex-wrap:nowrap;
-		border-top:1px solid $handleBorderColor;
-		border-left:1px solid $handleBorderColor;
-		border-right:1px solid $handleBorderColor;
+		border-bottom:1px solid $handleBorderColor;
 		overflow:hidden;
+		background:linear-gradient(115deg, $themeColorA, $themeColorB);
+		color:$themeTextColor;
+		padding:2px;
+		cursor:move;
+		user-select:none;
 
 		> div.title {
-			align-self:center;
-			flex-grow:4;
+			flex-grow:1;
 			overflow:hidden;
 			text-overflow:ellipsis;
 			white-space:nowrap;
+			position:relative;
 		}
 
 		> div.mini {
-			align-self:center;
-			flex-grow:1;
 			cursor:pointer;
+			width:10%;
+			max-width:15px;
+			top:-2px;
+			right:4px;
+			position:relative;
+			text-align:right;
+			font-weight:bold;
 		}
 
 		> div.close {
-			align-self:center;
-			flex-grow:1;
 			cursor:pointer;
+			margin-right:2px;
+			position:relative;
+			text-align:center;
 		}
 	}
 
-	> div.bfDialogBody {
+	> div.bfContentDialogBody {
 		position:relative;
 		min-width:$dialogMinWidth;
 		height:80px;
+		border-radius:$radius;
+		z-index:2;
+		color:white;
+	}
+
+	> div.bfBlurDialogBody {
+		position:absolute;
+		top:23px;
+		left:0;
+		right:0;
+		bottom:0;
+
 		overflow:hidden;
 		transition:height 400ms ease-in-out;
 		border-radius:$radius;
 		filter:blur(6px);
+		z-index:1;
 
 		background:inherit;
 

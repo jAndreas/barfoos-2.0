@@ -24,7 +24,10 @@ class Overlay extends Component {
 	}
 
 	installModule() {
-		//SWAP this.nodes.root HERE WITH DIALOG/OVERLAY TEMPLATE WITH INJECTED NODES
+		//let dialogWrapper = nodes.root.cloneNode( true );
+		nodes[ 'div.bfContentDialogBody' ].insertAdjacentElement( 'beforeend', this.nodes.root.cloneNode( true ) );
+		this.nodes.root = nodes.root;
+
 		super.installModule && super.installModule();
 	}
 }
