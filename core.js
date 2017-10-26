@@ -18,7 +18,7 @@ const	eventLoop	= makeClass().mixin( Mediator ),
 		modules.online		= Object.create( null );
 		modules.awaiting	= Object.create( null );
 
-const [ nodes, data ]		= DOM.transpile( worldMarkup );
+const 	nodes		= DOM.transpile({ htmlData: worldMarkup });
 
 /*****************************************************************************************************
  * Class Component is the basic GUI Module set of BarFoos 2. It provides automatic html-string transpiling,
@@ -36,17 +36,11 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 		if( typeof this.tmpl === 'string' ) {
 			extend( this ).with({
-				nodes:			Object.create( null ),
-				data:			Object.create( null ),
+				nodes:			this.transpile({ htmlData: this.tmpl }),
 				location:		this.location,
 				nodeLocation:	'beforeend'
 			});
 
-			let [ nodeHash, dataHash ] = this.transpile( this.tmpl );
-
-			extend( this.nodes ).with( nodeHash );
-
-			this.data = dataHash;
 			this.data.set( this, Object.create( null ) );
 
 			this.runtimeDependencies.push(

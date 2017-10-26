@@ -8,7 +8,7 @@ import dialogStyle from './css/dialog.scss';
 import dialogMarkup from './html/dialog.html';
 
 const DOM				= makeClass( class DOM{ }, { id: 'DOM'} ).mixin( Mediator, DOMTools );
-const [ nodes, data ]	= DOM.transpile( dialogMarkup );
+const nodes				= DOM.transpile({ htmlData: dialogMarkup });
 
 class Overlay extends Component {
 	constructor( input = { }, options = { } ) {

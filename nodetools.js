@@ -140,6 +140,14 @@ let NodeTools = target => class extends target {
 		}
 	}
 
+	resolveNodeNameByRef( ref ) {
+		for( let [ name, nodeRef ] of Object.entries( this.nodes ) ) {
+			if( nodeRef === ref ) {
+				return name;
+			}
+		}
+	}
+
 	animate( { node, id = 'last', rules:{ delay = '0', duration = 200, timing = 'linear', iterations = 1, direction = 'normal', mode = 'forwards', name = '' } = { } } = { } ) {
 		let rules = { delay, duration, timing, iterations, direction, mode, name };
 

@@ -17,18 +17,30 @@ let DOMTools = target => class extends target {
 
 		extend( this ).with( data ).and({
 			id:			this.constructor.name,
-			vDom:		doc.implementation.createHTMLDocument()
+			vDom:		doc.implementation.createHTMLDocument(),
+			data:		new WeakMap(),
+			nodes:		Object.create( null )
 		});
 	}
 
-	transpile( html = '' )  {
-		this.vDom.body.innerHTML = html;
+	transpile({ nodeData, nodeName, htmlData, renderInstructions = { } })  {
+		let nodes;
 
-		let [ nodes, dataHash ] = this.cacheNodes( this.vDom.body.firstChild.cloneNode( true ) );
+		if( typeof htmlData === 'string' ) {
+			this.vDom.body.innerHTML = htmlData;
 
-		this.vDom.body.firstChild.remove();
+			nodes = this.cacheNodes( this.vDom.body.firstChild.cloneNode( true ) );
 
-		return [ nodes, dataHash ];
+			this.vDom.body.firstChild.remove();
+		} else if( nodeData instanceof HTMLElement && typeof nodeName === 'string' ) {
+			nodes = this.cacheNodes( nodeData, nodeName );
+		}
+
+		// performance virtual DOM manipulation based on renderInstructions HERE
+		// YES RIGHT HERE
+		// before the cloning of the whole thing !!!!!
+
+		return nodes;
 	}
 
 	waitForDOM( event ) {
@@ -37,64 +49,64 @@ let DOMTools = target => class extends target {
 		});
 	}
 
-	addNodes( nodeData, optionalName ) {
-		if( nodeData instanceof HTMLElement && typeof optionalName === 'string' ) {
-			if( optionalName in this.nodes ) {
-				this.error( `${ optionalName } already exists in Components Node Hash.` );
-			} else {
-				this.nodes[ optionalName ]				= nodeData;
-
-				this.data.set( nodeData, Object.create( null ) );
-				this.data.get( nodeData ).storage		= Object.create( null );
-				this.data.get( nodeData ).events		= Object.create( null );
-				this.data.get( nodeData ).oneTimeEvents	= Object.create( null );
-
-				return nodeData;
-			}
-		} else if( typeof nodeData === 'object' ) {
-			for( let [ name, nodeRef ] of Object.entries( nodeData ) ) {
-				if( name in this.nodes ) {
-					this.error( `${ optionalName } already exists in Components Node Hash.` );
+	addNodes({ nodeData, htmlData, reference = { }, nodeName, renderInstructions } = { }) {
+		if( nodeData instanceof HTMLElement ) {
+			if( typeof nodeName === 'string' && reference.node instanceof HTMLElement && typeof reference.position === 'string' ) {
+				if( nodeName in this.nodes ) {
+					this.error( `${ nodeName } already exists in Components Node Hash.` );
 				} else {
-					this.nodes[ name ]						= nodeRef;
+					extend( this.nodes ).with( this.transpile({ nodeData, nodeName, renderInstructions }) );
 
-					this.data.set( nodeRef, Object.create( null ) );
-					this.data.get( nodeRef ).storage		= Object.create( null );
-					this.data.get( nodeRef ).events			= Object.create( null );
-					this.data.get( nodeRef ).oneTimeEvents	= Object.create( null );
+					reference.node.insertAdjacentElement( reference.position, nodeData );
 				}
+			} else {
+				this.error( `addNodes was called with wrong arguments. When passing in a node reference, you need to specify a node name and a reference-node with position.` );
 			}
-		} else {
-			this.error( `addNodes was called with wrong arguments. You need to pass either a hash or nodes or provide a single node with a name as second argument.` );
 		}
+
+		if( typeof htmlData === 'string' ) {
+			extend( this.nodes ).with( this.transpile({ nodeData, nodeName, renderInstructions }) );
+		}
+
+		return this;
 	}
 
 	removeNodes( name, removePhysically ) {
 		name = Array.isArray( name ) ? name : [ name ];
 
 		name.forEach( n => {
-			if( removePhysically ) {
-				this.nodes[ n ].remove();
-			}
+			if( this.nodes[ n ] ) {
+				// if there are any children of this node, remove them aswell from all structures
+				for( let i = 0, len = this.nodes[ n ].children.length; i < len; i++ ) {
+					this.removeNodes( this.resolveNodeNameByRef( this.nodes[ n ].children[ i ] ), removePhysically );
+				}
 
-			this.data.delete( this.nodes[ n ] );
-			delete this.nodes[ n ];
+				// if removePhysically is set, the node will get removed from the live DOM
+				if( removePhysically ) {
+					this.nodes[ n ].remove();
+				}
+
+				// delete all data- and events for this node from internal structures
+				this.data.delete( this.nodes[ n ] );
+				delete this.nodes[ n ];
+			}
 		});
 	}
 
-	cacheNodes( rootNode ) {
+	cacheNodes( rootNode, nodeName ) {
 		let nodeHash		= Object.create( null ),
 			availableNames	= Object.create( null ),
-			dataHash		= new WeakMap(),
 			self			= this;
 
-		nodeHash.root = rootNode;
+		if( nodeName === undef ) {
+			nodeHash.root = rootNode;
+		}
 
-		(function crawlNodes( node ) {
+		(function crawlNodes( node, nodeName ) {
 			let currentTag = null;
 
 			if( node instanceof HTMLElement ) {
-				currentTag = node.nodeName.toLowerCase() + ( node.id ? ('#' + node.id) : node.className ? ('.' + node.className.split( /\s+/ )[ 0 ]) : '' );
+				currentTag = nodeName || node.nodeName.toLowerCase() + ( node.id ? ('#' + node.id) : node.className ? ('.' + node.className.split( /\s+/ )[ 0 ]) : '' );
 				currentTag = currentTag.replace( /\s+/, '' );
 
 				// avoid duplicates, keep track on the number of identical identifiers
@@ -129,16 +141,14 @@ let DOMTools = target => class extends target {
 					});
 				}
 
-				dataHash.set( node, Object.create( null ) );
-				dataHash.get( node ).storage		= Object.create( null );
-				dataHash.get( node ).events			= Object.create( null );
-				dataHash.get( node ).oneTimeEvents	= Object.create( null );
+				self.data.set( node, Object.create( null ) );
+				self.data.get( node ).storage			= Object.create( null );
+				self.data.get( node ).events			= Object.create( null );
+				self.data.get( node ).oneTimeEvents		= Object.create( null );
 
 				// loop over every childnode, if we have children of children, recursively call crawlNodes()
-				if( node.children.length ) {
-					for( let i = 0, len = node.children.length; i < len; i++ ) {
-						crawlNodes( node.children[ i ] );
-					}
+				for( let i = 0, len = node.children.length; i < len; i++ ) {
+					crawlNodes( node.children[ i ] );
 				}
 			} else if( node instanceof NodeList ) {
 				// handle each node of NodeList
@@ -147,13 +157,13 @@ let DOMTools = target => class extends target {
 				// handle each node of HTMLCollection
 				self.error('HTMLCollection not implemented yet');
 			}
-		}( rootNode ));
+		}( rootNode, nodeName ));
 
-		if(!nodeHash.defaultChildContainer ) {
+		if(!nodeHash.defaultChildContainer && !nodeName ) {
 			nodeHash.defaultChildContainer = nodeHash.root;
 		}
 
-		return [ nodeHash, dataHash ];
+		return nodeHash;
 	}
 
 	timeout( ms = 200 ) {
