@@ -49,7 +49,7 @@ let NodeTools = target => class extends target {
 				this.error( node, `identical event handlers are not allowed ->`, fnc );
 			}
 		} else {
-			this.error( `node must be of type HTMLElement, received ${ typeof node } instead.` );
+			this.error( `Parameter "node" must be of type HTMLElement or String (referencing a valid node-name).` );
 		}
 	}
 
@@ -140,7 +140,7 @@ let NodeTools = target => class extends target {
 		}
 	}
 
-	resolveNodeNameByRef( ref ) {
+	resolveNodeNameFrom( ref ) {
 		for( let [ name, nodeRef ] of Object.entries( this.nodes ) ) {
 			if( nodeRef === ref ) {
 				return name;

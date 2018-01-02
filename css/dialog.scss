@@ -1,7 +1,7 @@
 $handleBorderColor:rgba(200,200,200,0.55);
 $dialogMinWidth:100px;
 $dialogMinHeight:18px;
-$radius:0px;
+$radius:8px;
 $themeColorA:rgba(40,20,10,0.9);
 $themeColorB:rgba(70,90,110,0.9);
 $themeTextColor:rgba(220,220,190,1);
@@ -19,7 +19,7 @@ div.bfDialogWrapper {
 		position:relative;
 		min-width:$dialogMinWidth;
 		min-height:$dialogMinHeight;
-		display:flex;
+		display:none;
 		flex-direction:row;
 		flex-wrap:nowrap;
 		border-bottom:1px solid $handleBorderColor;
@@ -68,7 +68,7 @@ div.bfDialogWrapper {
 
 	> div.bfBlurDialogBody {
 		position:absolute;
-		top:20px;
+		top:22px;
 		left:-6px;
 		right:-6px;
 		bottom:-6px;

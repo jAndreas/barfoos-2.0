@@ -1,6 +1,6 @@
 'use strict';
 
-import { extend, Composition, makeClass, type } from './toolkit.js';
+import { extend, Composition, makeClass, props, type } from './toolkit.js';
 import { win, doc, undef, DOMTools } from './domkit.js';
 import { moduleLocations } from './defs.js';
 import Mediator from './mediator.js';
@@ -18,12 +18,15 @@ const	eventLoop	= makeClass().mixin( Mediator ),
 		modules.online		= Object.create( null );
 		modules.awaiting	= Object.create( null );
 
-const 	nodes		= DOM.transpile({ htmlData: worldMarkup });
+const 	nodes		= DOM.transpile({ htmlData: worldMarkup }),
+		scrollSpeed	= 20;
+
+let		overlayInstances = 0;
 
 /*****************************************************************************************************
  * Class Component is the basic GUI Module set of BarFoos 2. It provides automatic html-string transpiling,
  * appending of module nodes, creating and waiting any async events (promises) to keep things in order and will
- * also be augmented with Log and Mediator classes for any GUI module
+ * also be augmented with other classes to support GUI modules (Logging, internal Events, DOM utilities)
  *****************************************************************************************************/
 class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	constructor( options = { } ) {
@@ -36,7 +39,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 		if( typeof this.tmpl === 'string' ) {
 			extend( this ).with({
-				nodes:			this.transpile({ htmlData: this.tmpl }),
+				nodes:			this.transpile({ htmlData: this.tmpl, moduleRoot: true }),
 				location:		this.location,
 				nodeLocation:	'beforeend'
 			});
@@ -68,6 +71,30 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		return Promise.all( this.runtimeDependencies );
 	}
 
+	destroy() {
+		this.fire( 'moduleDestruction.appEvents', {
+			id:	this.id
+		});
+
+		this.removeAllNodeEvents();
+		this.removeNodes( 'root', true );
+		this.data.delete( this );
+		this.data	= null;
+		this.nodes	= null;
+
+		let refList	= props( this ),
+			len		= refList.length;
+
+		while( len-- ) {
+			this[ refList[ len ] ] = null;
+			delete this[ refList[ len ] ];
+		}
+
+		this.__proto__ = null;
+
+		console.log('That is all what remains: ', this);
+	}
+
 	installModule() {
 		if( typeof this.location === 'string' ) {
 			if( this.location in moduleLocations ) {
@@ -75,7 +102,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				nodes[ `section.${ this.location }` ].appendChild( this.nodes.root );
 			} else if( this.location in modules.online ) {
 				this.fire( `newChildModule.${ this.location }`, {
-					node:			this.nodes.root,
+					node:			this.nodes.dialogRoot || this.nodes.root,
 					nodeLocation:	this.nodeLocation
 				});
 			} else {
@@ -114,15 +141,25 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 /*****************************************************************************************************
  * Core Event handling
  *****************************************************************************************************/
+eventLoop.on( 'OverlayInit.core', () => {
+	// keep track of overlay instances
+	overlayInstances++;
+});
+
+eventLoop.on( 'OverlayDestroy.core', () => {
+	// keep track of overlay instances
+	overlayInstances--;
+});
+
 eventLoop.on( 'mouseWheelUp.appEvents', () => {
-	nodes[ 'div#world' ].scrollTop -= 20;
+	nodes[ 'div#world' ].scrollTop -= scrollSpeed;
 });
 
 eventLoop.on( 'mouseWheelDown.appEvents', () => {
-	nodes[ 'div#world' ].scrollTop += 20;
+	nodes[ 'div#world' ].scrollTop += scrollSpeed;
 });
 
-eventLoop.on( 'moduleLaunch.appEvents', (module, event) => {
+eventLoop.on( 'moduleLaunch.appEvents', ( module, event ) => {
 	if( module.id in modules.online ) {
 		modules.online[ module.id ]++;
 	} else {
@@ -138,6 +175,14 @@ eventLoop.on( 'moduleLaunch.appEvents', (module, event) => {
 	}
 
 	console.log( `module ${module.id} was launched( ${modules.online[module.id]}x )` );
+});
+
+eventLoop.on( 'moduleDestruction.appEvents', ( module, event ) => {
+	if( module.id in modules.online ) {
+		modules.online[ module.id ]--;
+	} else {
+
+	}
 });
 
 eventLoop.on( 'configApp.core', app => {

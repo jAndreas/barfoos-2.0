@@ -33,7 +33,7 @@ let LogTools = target => class extends target {
 	error( ...args ) {
 		let prefixed = args.slice( 0 );
 
-		prefixed.unshift( `%c${this.id}: `, `color: #${this.color};font-weight: normal;text-shadow: 1px 1px 1px white,-1px -1px 1px black;` );
+		prefixed.unshift( `%c${this.id}: `, `color: #${this.color};background-color:red;font-weight:normal;text-shadow: 1px 1px 1px white,-1px -1px 1px black;` );
 
 		console.groupCollapsed( ...prefixed );
 		this.nodes && console.log( this.nodes.root );
@@ -41,6 +41,19 @@ let LogTools = target => class extends target {
 		console.groupEnd();
 
 		super.error && super.error( ...args );
+	}
+
+	warn( ...args ) {
+		let prefixed = args.slice( 0 );
+
+		prefixed.unshift( `%c${this.id}: `, `color: #${this.color};background-color:yellow;font-weight:normal;text-shadow: 1px 1px 1px white,-1px -1px 1px black;` );
+
+		console.groupCollapsed( ...prefixed );
+		this.nodes && console.log( this.nodes.root );
+		console.trace();
+		console.groupEnd();
+
+		super.warn && super.warn( ...args );
 	}
 };
 /********************************************* LogTools End ******************************************/

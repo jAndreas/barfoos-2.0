@@ -2,10 +2,11 @@
 
 import { extend, type } from './toolkit.js';
 
-const		win			= window,
-			doc			= win.document,
-			undef		= void 0,
-			query		= Object.create( null );
+// private data
+const		win				= window,
+			doc				= win.document,
+			undef			= void 0,
+			query			= Object.create( null );
 
 /*****************************************************************************************************
  * Class DOMTools: Provides a DOM toolset for transpiling html-strings into Node-References, watching
@@ -16,29 +17,30 @@ let DOMTools = target => class extends target {
 		super( ...arguments );
 
 		extend( this ).with( data ).and({
-			id:			this.constructor.name,
-			vDom:		doc.implementation.createHTMLDocument(),
-			data:		new WeakMap(),
-			nodes:		Object.create( null )
+			id:					this.constructor.name,
+			vDom:				doc.implementation.createHTMLDocument(),
+			data:				new WeakMap(),
+			nodes:				Object.create( null ),
+			availableNames:		Object.create( null )
 		});
 	}
 
-	transpile({ nodeData, nodeName, htmlData, renderInstructions = { } })  {
+	transpile({ nodeData, nodeName, htmlData, moduleRoot })  {
 		let nodes;
 
 		if( typeof htmlData === 'string' ) {
 			this.vDom.body.innerHTML = htmlData;
 
-			nodes = this.cacheNodes( this.vDom.body.firstChild.cloneNode( true ) );
+			nodes = this.cacheNodes({ rootNode: this.vDom.body.firstChild.cloneNode( true ), moduleRoot });
 
-			this.vDom.body.firstChild.remove();
+			this.vDom.body.firstElementChild.remove();
 		} else if( nodeData instanceof HTMLElement && typeof nodeName === 'string' ) {
-			nodes = this.cacheNodes( nodeData, nodeName );
+			this.vDom.body.insertAdjacentElement( 'afterbegin', nodeData );
+
+			nodes = this.cacheNodes({ rootNode: this.vDom.body.firstChild.cloneNode( true ), nodeName, moduleRoot });
 		}
 
-		// performance virtual DOM manipulation based on renderInstructions HERE
-		// YES RIGHT HERE
-		// before the cloning of the whole thing !!!!!
+		this.vDom.body.innerHTML = '';
 
 		return nodes;
 	}
@@ -49,15 +51,27 @@ let DOMTools = target => class extends target {
 		});
 	}
 
-	addNodes({ nodeData, htmlData, reference = { }, nodeName, renderInstructions } = { }) {
+	addNodes({ nodeData, htmlData, reference = { }, nodeName } = { }) {
+		if( typeof reference.node === 'string' ) {
+			reference.node = this.nodes[ reference.node ];
+		}
+
+		if( reference.node instanceof HTMLElement === false ) {
+			this.error( );
+		}
+
 		if( nodeData instanceof HTMLElement ) {
-			if( typeof nodeName === 'string' && reference.node instanceof HTMLElement && typeof reference.position === 'string' ) {
+			if( typeof nodeName === 'string' && typeof reference.position === 'string' ) {
 				if( nodeName in this.nodes ) {
 					this.error( `${ nodeName } already exists in Components Node Hash.` );
 				} else {
-					extend( this.nodes ).with( this.transpile({ nodeData, nodeName, renderInstructions }) );
+					let nodeHash = this.transpile({ nodeData, nodeName });
 
-					reference.node.insertAdjacentElement( reference.position, nodeData );
+					reference.node.insertAdjacentElement( reference.position, nodeHash.localRoot );
+
+					delete nodeHash.localRoot;
+
+					extend( this.nodes ).with( nodeHash );
 				}
 			} else {
 				this.error( `addNodes was called with wrong arguments. When passing in a node reference, you need to specify a node name and a reference-node with position.` );
@@ -65,7 +79,13 @@ let DOMTools = target => class extends target {
 		}
 
 		if( typeof htmlData === 'string' ) {
-			extend( this.nodes ).with( this.transpile({ nodeData, nodeName, renderInstructions }) );
+			let nodeHash = this.transpile({ htmlData });
+
+			reference.node.insertAdjacentElement( reference.position, nodeHash.localRoot );
+
+			delete nodeHash.localRoot;
+
+			extend( this.nodes ).with( nodeHash );
 		}
 
 		return this;
@@ -78,7 +98,7 @@ let DOMTools = target => class extends target {
 			if( this.nodes[ n ] ) {
 				// if there are any children of this node, remove them aswell from all structures
 				for( let i = 0, len = this.nodes[ n ].children.length; i < len; i++ ) {
-					this.removeNodes( this.resolveNodeNameByRef( this.nodes[ n ].children[ i ] ), removePhysically );
+					this.removeNodes( this.resolveNodeNameFrom( this.nodes[ n ].children[ i ] ), removePhysically );
 				}
 
 				// if removePhysically is set, the node will get removed from the live DOM
@@ -89,19 +109,21 @@ let DOMTools = target => class extends target {
 				// delete all data- and events for this node from internal structures
 				this.data.delete( this.nodes[ n ] );
 				delete this.nodes[ n ];
+				delete this.availableNames[ n ];
 			}
 		});
 	}
 
-	cacheNodes( rootNode, nodeName ) {
+	cacheNodes({ rootNode, nodeName, moduleRoot }) {
 		let nodeHash		= Object.create( null ),
-			availableNames	= Object.create( null ),
 			self			= this;
 
-		if( nodeName === undef ) {
-			nodeHash.root = rootNode;
+		if( moduleRoot ) {
+			nodeHash.root		= rootNode;
+		} else {
+			nodeHash.localRoot	= rootNode;
 		}
-
+		
 		(function crawlNodes( node, nodeName ) {
 			let currentTag = null;
 
@@ -110,19 +132,20 @@ let DOMTools = target => class extends target {
 				currentTag = currentTag.replace( /\s+/, '' );
 
 				// avoid duplicates, keep track on the number of identical identifiers
-				if( typeof availableNames[ currentTag ] === 'undefined' ) {
-					availableNames[ currentTag ] = 1;
+				if( typeof self.availableNames[ currentTag ] === 'undefined' ) {
+					self.availableNames[ currentTag ] = 1;
 				}
 				else {
-					availableNames[ currentTag ]++;
+					self.availableNames[ currentTag ]++;
 				}
 
 				// fill nodeHash lookup
-				if( typeof nodeHash[ currentTag ] === 'undefined' ) {
+				if( self.availableNames[ currentTag ] === 1 ) {
 					nodeHash[ currentTag ] = node;
 				}
 				else {
-					nodeHash[ currentTag + '_' + availableNames[ currentTag ] ] = node;
+					nodeHash[ currentTag + '_' + self.availableNames[ currentTag ] ] = node;
+					self.warn( `cacheNodes(): Duplicate node identifier on ${ currentTag }(${ self.availableNames[ currentTag ] }) -> `, node );
 				}
 
 				let alias					= node.getAttribute( 'alias' ),
@@ -159,7 +182,7 @@ let DOMTools = target => class extends target {
 			}
 		}( rootNode, nodeName ));
 
-		if(!nodeHash.defaultChildContainer && !nodeName ) {
+		if(!nodeHash.defaultChildContainer && moduleRoot ) {
 			nodeHash.defaultChildContainer = nodeHash.root;
 		}
 

@@ -11,6 +11,12 @@ import { extend } from 'barfoos2.0/toolkit.js';
 import htmlx from '../markup/main.htmlx';
 import style from '../style/main.scss';
 
+// private to module
+const	priv_var1		= 'the',
+		priv_var2		= 'game';
+
+let		instance		= null;
+
 /*****************************************************************************************************
  *  "description here"
  *****************************************************************************************************/
@@ -47,7 +53,13 @@ class MyModule extends Components {
 async function start( ...args ) {
 	[ style ].forEach( style => style.use() );
 
-	const instance = await new MyModule( ...args );
+	instance = await new MyModule( ...args );
+}
+
+function stop() {
+	if( instance ) {
+		instance.destroy();
+	}
 }
 
 export { start };`;

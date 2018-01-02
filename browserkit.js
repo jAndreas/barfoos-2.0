@@ -14,6 +14,7 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		super( ...arguments );
 
 		extend( this ).with({
+			mouseMoveHandlers:	[ ]
 		});
 
 		this.init();
@@ -26,6 +27,11 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		doc.addEventListener( 'focusin', this.focusin.bind( this ), false );
 		doc.addEventListener( 'focusout', this.focusout.bind( this ), false );
 		doc.addEventListener( 'mousewheel', this.mousewheel.bind( this ), false );
+		doc.addEventListener( 'mousedown', this.mousedown.bind( this ), false );
+		doc.addEventListener( 'mouseup', this.mouseup.bind( this ), false );
+
+		this.on( 'pushMouseMoveListener.appEvents', this.pushMouseMoveListener, this );
+		this.on( 'removeMouseMoveListener.appEvents', this.removeMouseMoveListener, this );
 
 		this.on( 'isAppHidden.appEvents', () => doc.hidden );
 		this.on( 'isAppFocused.appEvents', () => doc.hasFocus() );
@@ -33,6 +39,32 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		// mediaQuery
 		// resize
 		// scroll
+	}
+
+	pushMouseMoveListener( data ) {
+		if( typeof data.fnc === 'function' ) {
+			if( this.mouseMoveHandlers.indexOf( data ) === -1 ) {
+				this.mouseMoveHandlers.push( data );
+			}
+		} else {
+			this.error( `Parameter "data.fnc" must be of type Function, received ${ data.fnc } instead.` );
+		}
+
+		if( this.mouseMoveHandlers.length === 1 ) {
+			doc.addEventListener( 'mousemove', this.mousemove.bind( this ), false );
+		}
+	}
+
+	removeMouseMoveListener( data ) {
+		if( typeof data.fnc === 'function' ) {
+			this.mouseMoveHandlers.splice( this.mouseMoveHandlers.indexOf( data.fnc ), 1 );
+		} else {
+			this.error( `Parameter "data.fnc" must be of type Function, received ${ data.fnc } instead.` );
+		}
+
+		if( this.mouseMoveHandlers.length === 0 ) {
+			doc.removeEventListener( 'mousemove', data.fnc );
+		}
 	}
 
 	loadImage( url ) {
@@ -45,6 +77,12 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 
 	visibilityChange( event ) {
 		this.fire( 'appVisibilityChange.appEvents', !doc.hidden );
+	}
+
+	mousemove( event ) {
+		for( let data of this.mouseMoveHandlers ) {
+			data.fnc.call( data.ctx, event );
+		}
 	}
 
 	focusin( event ) {
@@ -61,6 +99,14 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		} else {
 			this.fire( 'mouseWheelDown.appEvents' );
 		}
+	}
+
+	mousedown( event ) {
+		this.fire( 'mousedown.appEvents', event );
+	}
+
+	mouseup( event ) {
+		this.fire( 'mouseup.appEvents', event );
 	}
 }
 /****************************************** BrowserKit End ******************************************/

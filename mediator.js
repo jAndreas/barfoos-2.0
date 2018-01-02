@@ -41,6 +41,18 @@ let Mediator = target => class extends target {
 		return this;
 	}
 
+	once( eventLocators, handler, scope ) {
+		let that = this;
+
+		let patch = function() {
+			console.log('patched event listener for once()');
+			handler( ...arguments );
+			that.off( eventLocators, patch );
+		}
+
+		this.on( eventLocators, patch, scope );
+	}
+
 	off( eventLocators, handler ) {
 		if( typeof eventLocators === 'string' ) {
 			let eventName, eventNameSpace;
@@ -52,6 +64,10 @@ let Mediator = target => class extends target {
 					if( eventName.trim().length ) {
 						if( typeof handler === 'function' ) {
 							namespaceContainer[ eventNameSpace ][ eventName ] = namespaceContainer[ eventNameSpace ][ eventName ].filter( eventData => eventData.handler !== handler );
+
+							if( namespaceContainer[ eventNameSpace ][ eventName ].length === 0 ) {
+								delete namespaceContainer[ eventNameSpace ][ eventName ];
+							}
 						} else {
 							delete namespaceContainer[ eventNameSpace ][ eventName ];
 						}
