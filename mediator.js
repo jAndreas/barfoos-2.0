@@ -29,7 +29,7 @@ let Mediator = target => class extends target {
 						namespaceContainer[ eventNameSpace ][ eventName ] = [ ];
 					}
 
-					namespaceContainer[ eventNameSpace ][ eventName ].unshift({ handler: scope ? handler.bind( scope ) : handler });
+					namespaceContainer[ eventNameSpace ][ eventName ].unshift({ handler: scope ? handler.bind( scope ) : handler, registrar: this });
 				} else {
 					throw new SyntaxError( 'an event name is mandatory for on() locators.' );
 				}
@@ -79,7 +79,15 @@ let Mediator = target => class extends target {
 				}
 			}
 		} else {
-			throw new TypeError( 'off() was called with wrong arguments.' );
+			for( let [ namespace, content ] of Object.entries( namespaceContainer ) ) {
+				for( let [ eventName, listeners ] of Object.entries( content ) ) {
+					listeners.forEach( ( eventData, index ) => {
+						if( eventData.registrar === this ) {
+							listeners.splice( index, 1 );
+						}
+					});
+				}
+			}
 		}
 	}
 

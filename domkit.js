@@ -25,6 +25,20 @@ let DOMTools = target => class extends target {
 		});
 	}
 
+	makeNode( htmlData ) {
+		if( typeof htmlData === 'string' ) {
+			this.vDom.body.innerHTML = htmlData;
+			
+			let node	= this.vDom.body.firstChild.cloneNode( true );
+
+			this.vDom.body.innerHTML = '';
+
+			return node;
+		} else {
+			this.error && this.error( 'makeNode was called with wrong arguments, htmlData needs to be a String.' );
+		}
+	}
+
 	transpile({ nodeData, nodeName, htmlData, moduleRoot })  {
 		let nodes;
 
@@ -57,13 +71,13 @@ let DOMTools = target => class extends target {
 		}
 
 		if( reference.node instanceof HTMLElement === false ) {
-			this.error( );
+			this.error( `addNodes requires a valid node identifier as String or a HTMLElement reference.` );
 		}
 
 		if( nodeData instanceof HTMLElement ) {
 			if( typeof nodeName === 'string' && typeof reference.position === 'string' ) {
 				if( nodeName in this.nodes ) {
-					this.error( `${ nodeName } already exists in Components Node Hash.` );
+					this.error && this.error( `${ nodeName } already exists in Components Node Hash.` );
 				} else {
 					let nodeHash = this.transpile({ nodeData, nodeName });
 
@@ -74,7 +88,7 @@ let DOMTools = target => class extends target {
 					extend( this.nodes ).with( nodeHash );
 				}
 			} else {
-				this.error( `addNodes was called with wrong arguments. When passing in a node reference, you need to specify a node name and a reference-node with position.` );
+				this.error && this.error( `addNodes was called with wrong arguments. When passing in a node reference, you need to specify a node name and a reference-node with position.` );
 			}
 		}
 
@@ -123,7 +137,7 @@ let DOMTools = target => class extends target {
 		} else {
 			nodeHash.localRoot	= rootNode;
 		}
-		
+
 		(function crawlNodes( node, nodeName ) {
 			let currentTag = null;
 
@@ -145,7 +159,7 @@ let DOMTools = target => class extends target {
 				}
 				else {
 					nodeHash[ currentTag + '_' + self.availableNames[ currentTag ] ] = node;
-					self.warn( `cacheNodes(): Duplicate node identifier on ${ currentTag }(${ self.availableNames[ currentTag ] }) -> `, node );
+					self.warn && self.warn( `cacheNodes(): Duplicate node identifier on ${ currentTag }(${ self.availableNames[ currentTag ] }) -> `, node );
 				}
 
 				let alias					= node.getAttribute( 'alias' ),
@@ -175,10 +189,10 @@ let DOMTools = target => class extends target {
 				}
 			} else if( node instanceof NodeList ) {
 				// handle each node of NodeList
-				self.error('NodeList not implemented yet');
+				self.error && self.error('NodeList not implemented yet');
 			} else if( node instanceof HTMLCollection ) {
 				// handle each node of HTMLCollection
-				self.error('HTMLCollection not implemented yet');
+				self.error && self.error('HTMLCollection not implemented yet');
 			}
 		}( rootNode, nodeName ));
 

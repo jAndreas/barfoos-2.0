@@ -17,18 +17,21 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 			mouseMoveHandlers:	[ ]
 		});
 
+		this._boundMouseMove = this.mousemove.bind( this );
+
 		this.init();
 	}
 
 	async init() {
 		doc.addEventListener( 'visibilitychange', this.visibilityChange.bind( this ), false );
-		doc.addEventListener( 'focus', this.focusin.bind( this ), false );
-		doc.addEventListener( 'blur', this.focusout.bind( this ), false );
+		win.addEventListener( 'focus', this.focusin.bind( this ), false );
+		win.addEventListener( 'blur', this.focusout.bind( this ), false );
 		doc.addEventListener( 'focusin', this.focusin.bind( this ), false );
 		doc.addEventListener( 'focusout', this.focusout.bind( this ), false );
 		doc.addEventListener( 'mousewheel', this.mousewheel.bind( this ), false );
 		doc.addEventListener( 'mousedown', this.mousedown.bind( this ), false );
 		doc.addEventListener( 'mouseup', this.mouseup.bind( this ), false );
+		doc.addEventListener( 'touchend', this.mouseup.bind( this ), false );
 
 		this.on( 'pushMouseMoveListener.appEvents', this.pushMouseMoveListener, this );
 		this.on( 'removeMouseMoveListener.appEvents', this.removeMouseMoveListener, this );
@@ -41,29 +44,33 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		// scroll
 	}
 
-	pushMouseMoveListener( data ) {
-		if( typeof data.fnc === 'function' ) {
-			if( this.mouseMoveHandlers.indexOf( data ) === -1 ) {
-				this.mouseMoveHandlers.push( data );
+	pushMouseMoveListener( fnc ) {
+		if( typeof fnc === 'function' ) {
+			if( this.mouseMoveHandlers.indexOf( fnc ) === -1 ) {
+				this.mouseMoveHandlers.push( fnc );
 			}
 		} else {
-			this.error( `Parameter "data.fnc" must be of type Function, received ${ data.fnc } instead.` );
+			this.error( `Parameter "fnc" must be of type Function, received ${ fnc } instead.` );
 		}
 
 		if( this.mouseMoveHandlers.length === 1 ) {
-			doc.addEventListener( 'mousemove', this.mousemove.bind( this ), false );
+			doc.addEventListener( 'mousemove', this._boundMouseMove, false );
+			doc.addEventListener( 'touchmove', this._boundMouseMove, false );
 		}
+
+		return fnc;
 	}
 
-	removeMouseMoveListener( data ) {
-		if( typeof data.fnc === 'function' ) {
-			this.mouseMoveHandlers.splice( this.mouseMoveHandlers.indexOf( data.fnc ), 1 );
+	removeMouseMoveListener( fnc ) {
+		if( typeof fnc === 'function' ) {
+			this.mouseMoveHandlers.splice( this.mouseMoveHandlers.indexOf( fnc ), 1 );
 		} else {
-			this.error( `Parameter "data.fnc" must be of type Function, received ${ data.fnc } instead.` );
+			this.error( `Parameter "fnc" must be of type Function, received ${ fnc } instead.` );
 		}
 
 		if( this.mouseMoveHandlers.length === 0 ) {
-			doc.removeEventListener( 'mousemove', data.fnc );
+			doc.removeEventListener( 'mousemove', this._boundMouseMove );
+			doc.removeEventListener( 'touchmove', this._boundMouseMove );
 		}
 	}
 
@@ -80,8 +87,8 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 	}
 
 	mousemove( event ) {
-		for( let data of this.mouseMoveHandlers ) {
-			data.fnc.call( data.ctx, event );
+		for( let fnc of this.mouseMoveHandlers ) {
+			fnc( event );
 		}
 	}
 

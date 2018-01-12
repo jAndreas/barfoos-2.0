@@ -14,87 +14,155 @@ let NodeTools = target => class extends target {
 		this._alreadyDelegatedEvents = Object.create( null );
 
 		this._delegatedEventHandler = event => {
+			let callbackResult;
 			if( this.data.get( event.target ) ) {
 				if( this.data.get( event.target ).events[ event.type ] ) {
-					this.data.get( event.target ).events[ event.type ].forEach( fnc => fnc.call( this, event ) );
+					this.data.get( event.target ).events[ event.type ].forEach( fnc => callbackResult = fnc.call( this, event ) );
+				}
+
+				if( callbackResult === false ) {
+					return;
 				}
 
 				if( this.data.get( event.target ).oneTimeEvents[ event.type ] ) {
-					this.data.get( event.target ).oneTimeEvents[ event.type ].forEach( fnc => fnc.call( this, event ) );
+					this.data.get( event.target ).oneTimeEvents[ event.type ].forEach( fnc => callbackResult = fnc.call( this, event ) );
 					this.data.get( event.target ).oneTimeEvents[ event.type ] = [ ];
 					this.cleanDelegations();
 				}
+
+				if( callbackResult === false ) {
+					return;
+				}
 			}
+
+			/*if( event.target && event.target.parentElement ) {
+				let root	= Object.keys( this.dialogElements ).length ? this.dialogElements.root : this.nodes.root,
+					ev		= Object.create( null );
+
+				ev.target	= event.target;
+				ev.type		= event.type;
+				ev.clientX	= event.clientX;
+				ev.clientY	= event.clientY;
+
+				while( ev.target !== root ) {
+					ev.target	= ev.target.parentElement;
+
+					this._delegatedEventHandler( ev );
+				}
+			}*/
 		};
 	}
 
-	addNodeEvent( node, type, fnc ) {
+	addNodeEvent( node, types, fnc ) {
 		if( typeof node === 'string' ) {
-			node = this.nodes[ node ];
+			node = this.nodes[ node ] || this.dialogElements[ node ];
+		}
+
+		if( typeof types === 'string' ) {
+			types = types.split( /\s+/ );
+		} else {
+			this.error( `Parameter "types" must be a String (possibly separated by whitespaces), received ${typeof type} instead.` );
 		}
 
 		if( node instanceof HTMLElement ) {
-			if(!this._alreadyDelegatedEvents[ type ] ) {
-				this._alreadyDelegatedEvents[ type ] = true;
-				this.nodes.root.addEventListener( type, this._delegatedEventHandler, false );
-			}
+			for( let type of types ) {
+				if(!this._alreadyDelegatedEvents[ type ] ) {
+					this._alreadyDelegatedEvents[ type ] = true;
 
-			if( this.data.get( node ).events[ type ] === undef ) {
-				this.data.get( node ).events[ type ] = [ ];
-			}
+					if( Object.keys( this.dialogElements ).length ) {
+						this.dialogElements.root.addEventListener( type, this._delegatedEventHandler, false );
+					} else {
+						this.nodes.root.addEventListener( type, this._delegatedEventHandler, false );
+					}
+				}
 
-			if( this.data.get( node ).events[ type ].indexOf( fnc ) === -1 ) {
-				this.data.get( node ).events[ type ].push( fnc );
-			} else {
-				this.error( node, `identical event handlers are not allowed ->`, fnc );
+				if( this.data.get( node ).events[ type ] === undef ) {
+					this.data.get( node ).events[ type ] = [ ];
+				}
+
+				if( this.data.get( node ).events[ type ].indexOf( fnc ) === -1 ) {
+					this.data.get( node ).events[ type ].push( fnc );
+				} else {
+					this.error( node, `identical event handlers are not allowed ->`, fnc );
+				}
 			}
 		} else {
 			this.error( `Parameter "node" must be of type HTMLElement or String (referencing a valid node-name).` );
 		}
 	}
 
-	addNodeEventOnce( node, type, fnc ) {
+	addNodeEventOnce( node, types, fnc ) {
 		if( typeof node === 'string' ) {
-			node = this.nodes[ node ];
+			node = this.nodes[ node ] || this.dialogElements[ node ];
+		}
+
+		if( typeof types === 'string' ) {
+			types = types.split( /\s+/ );
+		} else {
+			this.error( `Parameter "types" must be a String (possibly separated by whitespaces), received ${typeof type} instead.` );
 		}
 
 		if( node instanceof HTMLElement ) {
-			if(!this._alreadyDelegatedEvents[ type ] ) {
-				this._alreadyDelegatedEvents[ type ] = true;
-				this.nodes.root.addEventListener( type, this._delegatedEventHandler, false );
-			}
+			for( let type of types ) {
+				if(!this._alreadyDelegatedEvents[ type ] ) {
+					this._alreadyDelegatedEvents[ type ] = true;
 
-			if( this.data.get( node ).oneTimeEvents[ type ] === undef ) {
-				this.data.get( node ).oneTimeEvents[ type ] = [ ];
-			}
+					if( Object.keys( this.dialogElements ).length ) {
+						this.dialogElements.root.addEventListener( type, this._delegatedEventHandler, false );
+					} else {
+						this.nodes.root.addEventListener( type, this._delegatedEventHandler, false );
+					}
+				}
 
-			if( this.data.get( node ).oneTimeEvents[ type ].indexOf( fnc ) === -1 ) {
-				this.data.get( node ).oneTimeEvents[ type ].push( fnc );
-			} else {
-				this.error( node, `identical event handlers are not allowed ->`, fnc );
+				if( this.data.get( node ).oneTimeEvents[ type ] === undef ) {
+					this.data.get( node ).oneTimeEvents[ type ] = [ ];
+				}
+
+				if( this.data.get( node ).oneTimeEvents[ type ].indexOf( fnc ) === -1 ) {
+					this.data.get( node ).oneTimeEvents[ type ].push( fnc );
+				} else {
+					this.error( node, `identical event handlers are not allowed ->`, fnc );
+				}
 			}
 		} else {
 			this.error( `node must be of type HTMLElement, received ${ typeof node } instead.` );
 		}
 	}
 
-	removeNodeEvent( node, type, fnc ) {
+	removeNodeEvent( node, types, fnc ) {
 		if( typeof node === 'string' ) {
-			node = this.nodes[ node ];
+			node = this.nodes[ node ] || this.dialogElements[ node ];
+		}
+
+		if( typeof types === 'string' ) {
+			types = types.split( /\s+/ );
+		} else {
+			this.error( `Parameter "types" must be a String (possibly separated by whitespaces), received ${typeof type} instead.` );
 		}
 
 		if( node instanceof HTMLElement ) {
-			if( typeof fnc === 'function' ) {
-				if( Array.isArray( this.data.get( node ).events[ type ] ) ) {
-					this.data.get( node ).events[ type ] = this.data.get( node ).events[ type ].filter( currentFnc => currentFnc !== fnc );
-				}
-			} else if( fnc === undef ) {
-				if( type ) {
+			for( let type of types ) {
+				if( typeof fnc === 'function' ) {
 					if( Array.isArray( this.data.get( node ).events[ type ] ) ) {
-						this.data.get( node ).events[ type ] = [ ];
+						this.data.get( node ).events[ type ] = this.data.get( node ).events[ type ].filter( currentFnc => currentFnc !== fnc );
 					}
-				} else {
-					this.data.get( node ).events = Object.create( null );
+
+					if( Array.isArray( this.data.get( node ).oneTimeEvents[ type ] ) ) {
+						this.data.get( node ).oneTimeEvents[ type ] = this.data.get( node ).oneTimeEvents[ type ].filter( currentFnc => currentFnc !== fnc );
+					}
+				} else if( fnc === undef ) {
+					if( type ) {
+						if( Array.isArray( this.data.get( node ).events[ type ] ) ) {
+							this.data.get( node ).events[ type ] = [ ];
+						}
+
+						if( Array.isArray( this.data.get( node ).oneTimeEvents[ type ] ) ) {
+							this.data.get( node ).oneTimeEvents[ type ] = [ ];
+						}
+					} else {
+						this.data.get( node ).events = Object.create( null );
+						this.data.get( node ).oneTimeEvents = Object.create( null );
+					}
 				}
 			}
 
@@ -104,14 +172,39 @@ let NodeTools = target => class extends target {
 		}
 	}
 
-	removeAllNodeEvents( type ) {
-		for( let [ key, node ] of Object.entries( this.nodes ) ) {
-			this.data.get( node ).events[ type ] = null;
-			delete this.data.get( node ).events[ type ];
+	removeAllNodeEvents( types = '' ) {
+		if( typeof types === 'string' ) {
+			types = types.split( /\s+/ );
+		} else {
+			this.error( `Parameter "types" must be a String (possibly separated by whitespaces), received ${typeof type} instead.` );
 		}
 
-		if( this._alreadyDelegatedEvents[ type ] ) {
-			delete this._alreadyDelegatedEvents[ type ];
+		for( let type of types ) {
+			for( let [ key, node ] of Object.entries( this.nodes ) ) {
+				if( types.length ) {
+					if( this.data.get( node ).events[ type ] ) {
+						this.data.get( node ).events[ type ] = null;
+						delete this.data.get( node ).events[ type ];
+					}
+				} else {
+					this.data.get( node ).events = Object.create( null );
+				}
+			}
+
+			for( let [ key, node ] of Object.entries( this.dialogElements ) ) {
+				if( types.length ) {
+					if( this.data.get( node ).events[ type ] ) {
+						this.data.get( node ).events[ type ] = null;
+						delete this.data.get( node ).events[ type ];
+					}
+				} else {
+					this.data.get( node ).events = Object.create( null );
+				}
+			}
+
+			if( this._alreadyDelegatedEvents[ type ] ) {
+				delete this._alreadyDelegatedEvents[ type ];
+			}
 		}
 
 		this.cleanDelegations();
@@ -133,9 +226,24 @@ let NodeTools = target => class extends target {
 				}
 			}
 
+			for( let [ key, node ] of Object.entries( this.dialogElements ) ) {
+				let persistEvents	= this.data.get( node ).events[ delegatedEvent ],
+					oneTimeEvents	= this.data.get( node ).oneTimeEvents[ delegatedEvent ];
+
+				if( (persistEvents && persistEvents.length) || (oneTimeEvents && oneTimeEvents.length) ) {
+					validDelegation = true;
+					break;
+				}
+			}
+
 			if(!validDelegation ) {
 				delete this._alreadyDelegatedEvents[ delegatedEvent ];
-				this.nodes.root.removeEventListener( delegatedEvent, this._delegatedEventHandler );
+
+				if( Object.keys( this.dialogElements ).length ) {
+					this.dialogElements.root.removeEventListener( delegatedEvent, this._delegatedEventHandler );
+				} else {
+					this.nodes.root.removeEventListener( delegatedEvent, this._delegatedEventHandler );
+				}
 			}
 		}
 	}

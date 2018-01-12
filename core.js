@@ -21,8 +21,6 @@ const	eventLoop	= makeClass().mixin( Mediator ),
 const 	nodes		= DOM.transpile({ htmlData: worldMarkup }),
 		scrollSpeed	= 20;
 
-let		overlayInstances = 0;
-
 /*****************************************************************************************************
  * Class Component is the basic GUI Module set of BarFoos 2. It provides automatic html-string transpiling,
  * appending of module nodes, creating and waiting any async events (promises) to keep things in order and will
@@ -40,6 +38,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		if( typeof this.tmpl === 'string' ) {
 			extend( this ).with({
 				nodes:			this.transpile({ htmlData: this.tmpl, moduleRoot: true }),
+				dialogElements:	Object.create( null ),
 				location:		this.location,
 				nodeLocation:	'beforeend'
 			});
@@ -66,6 +65,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		}
 
 		this.on( `newChildModule.${ this.id }`, this.newChildModule, this );
+		this.on( `getModuleRootElement.${ this.id }`, this.getModuleRootElement, this );
+		this.on( `dialogMode.core`, this.onDialogModeChange, this );
 		this.installModule();
 
 		return Promise.all( this.runtimeDependencies );
@@ -78,9 +79,12 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 		this.removeAllNodeEvents();
 		this.removeNodes( 'root', true );
+		this.removeNodes( 'dialogRoot', true );
 		this.data.delete( this );
 		this.data	= null;
 		this.nodes	= null;
+
+		this.off();
 
 		let refList	= props( this ),
 			len		= refList.length;
@@ -121,6 +125,18 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	newChildModule( hookData, event ) {
 		this.nodes.defaultChildContainer.insertAdjacentElement( hookData.nodeLocation, hookData.node );
 	}
+
+	getModuleRootElement() {
+		return this.nodes.root;
+	}
+
+	onDialogModeChange( active ) {
+		if( active ) {
+			this.nodes.root.style.background	= 'inherit';
+		} else {
+			this.nodes.root.style.background	= '';
+		}
+	}
 }
 /****************************************** Component End ******************************************/
 
@@ -141,14 +157,12 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 /*****************************************************************************************************
  * Core Event handling
  *****************************************************************************************************/
-eventLoop.on( 'OverlayInit.core', () => {
-	// keep track of overlay instances
-	overlayInstances++;
-});
-
-eventLoop.on( 'OverlayDestroy.core', () => {
-	// keep track of overlay instances
-	overlayInstances--;
+eventLoop.on( 'dialogMode.core', active => {
+	if( active ) {
+		nodes[ 'section.center' ].style.background	= 'inherit';
+	} else {
+		nodes[ 'section.center' ].style.background	= '';
+	}
 });
 
 eventLoop.on( 'mouseWheelUp.appEvents', () => {

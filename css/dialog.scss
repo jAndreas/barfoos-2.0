@@ -2,15 +2,15 @@ $handleBorderColor:rgba(200,200,200,0.55);
 $dialogMinWidth:100px;
 $dialogMinHeight:18px;
 $radius:8px;
-$themeColorA:rgba(40,20,10,0.9);
-$themeColorB:rgba(70,90,110,0.9);
+$themeColorA:rgba(60,60,60,0.7);
+$themeColorB:rgba(0,0,0,0.85);
 $themeTextColor:rgba(220,220,190,1);
 
 div.bfDialogWrapper {
 	position:absolute;
-	border:1px solid rgba(15,15,15,0.45);
+	border:1px solid rgba(225, 235, 245, 0.55);
 	border-radius:$radius;
-	box-shadow:0 0 48px 8px rgba(220,220,220,0.85), 0 0 164px 100px rgba(255, 255, 255, 0.45);
+	box-shadow:2px 4px 20px 3px black;
 	overflow:hidden;
 	z-index:101;
 	background:inherit;
@@ -24,7 +24,7 @@ div.bfDialogWrapper {
 		flex-wrap:nowrap;
 		border-bottom:1px solid $handleBorderColor;
 		overflow:hidden;
-		background:linear-gradient(115deg, $themeColorA, $themeColorB);
+		background:linear-gradient(45deg, $themeColorA, $themeColorB);
 		color:$themeTextColor;
 		padding:2px;
 		cursor:move;
@@ -64,19 +64,23 @@ div.bfDialogWrapper {
 		border-radius:$radius;
 		z-index:2;
 		color:white;
+
+		&.minified {
+			height:0;
+		}
 	}
 
 	> div.bfBlurDialogBody {
 		position:absolute;
 		top:22px;
-		left:-6px;
-		right:-6px;
-		bottom:-6px;
+		left:-10px;
+		right:-10px;
+		bottom:-10px;
 
 		overflow:hidden;
 		transition:height 400ms ease-in-out;
 		border-radius:$radius;
-		filter:blur(6px);
+		filter:blur(12px);
 		z-index:1;
 
 		background:inherit;
@@ -85,7 +89,7 @@ div.bfDialogWrapper {
 			content:'';
 			position:absolute;
 			z-index:-1;
-			mix-blend-mode:hard-light;
+			mix-blend-mode:screen;
 			top:0;
 			left:0;
 			right:0;
