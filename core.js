@@ -7,10 +7,12 @@ import Mediator from './mediator.js';
 import NodeTools from './nodetools.js';
 import LogTools from './logtools.js';
 import worldMarkup from './html/world.html';
-import normalize from './css/normalize.scss';
+import spinnerStyle from './css/spinner.scss';
+import overlayStyle from './css/modaloverlay.scss';
+import normalizeStyle from './css/normalize.scss';
 import worldStyle from './css/world.scss';
 
-const	eventLoop	= makeClass().mixin( Mediator ),
+const	eventLoop	= makeClass( class coreEventLoop{ }, { id: 'coreEventLoop' } ).mixin( Mediator ),
 		console		= makeClass( class core{ }, { id: 'core'} ).mixin( LogTools ),
 		DOM			= makeClass( class DOM{ }, { id: 'DOM'} ).mixin( Mediator, DOMTools ),
 		modules		= Object.create( null );
@@ -39,6 +41,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			extend( this ).with({
 				nodes:			this.transpile({ htmlData: this.tmpl, moduleRoot: true }),
 				dialogElements:	Object.create( null ),
+				spinnerNode:	this.makeNode( '<div class="loading-spinner"></div>' ),
+				overlayNode:	this.makeNode( '<div class="BFModalOverlay"></div>' ),
 				location:		this.location,
 				nodeLocation:	'beforeend'
 			});
@@ -66,6 +70,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 		this.on( `newChildModule.${ this.id }`, this.newChildModule, this );
 		this.on( `getModuleRootElement.${ this.id }`, this.getModuleRootElement, this );
+		this.on( `getModuleDimensions.${ this.id }`, this.getModuleDimensions, this );
 		this.on( `dialogMode.core`, this.onDialogModeChange, this );
 		this.installModule();
 
@@ -130,11 +135,47 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		return this.nodes.root;
 	}
 
+	getModuleDimensions() {
+		return this.nodes.root.getBoundingClientRect();
+	}
+
 	onDialogModeChange( active ) {
 		if( active ) {
 			this.nodes.root.style.background	= 'inherit';
 		} else {
 			this.nodes.root.style.background	= '';
+		}
+	}
+
+	activateSpinner( { at, opts: { location = 'afterbegin' } = { } } = { } ) {
+		let opts = { location };
+
+		if( typeof at === 'string' ) {
+			at = this.nodes[ at ] || this.dialogElements[ at ];
+		}
+
+		if( at instanceof HTMLElement ) {
+			at.insertAdjacentElement( opts.location, this.spinnerNode.cloneNode() );
+		} else {
+			this.error( `Parameter "at" must be of type HTMLElement or String (referencing a valid node-name).` );
+		}
+	}
+
+	createModalOverlay( at = '' ) {
+		if( typeof at === 'string' ) {
+			at = this.nodes[ at ] || this.dialogElements[ at ];
+		}
+
+		if( at instanceof HTMLElement ) {
+			let overlayClone	= this.overlayNode.cloneNode(),
+				targetRect		= at.getBoundingClientRect();
+
+			overlayClone.style.width	= `${ targetRect.width }px`;
+			overlayClone.style.height	= `${ targetRect.height }px`;
+
+			at.insertAdjacentElement( 'afterbegin', overlayClone );
+		} else {
+			this.error( `Parameter "at" must be of type HTMLElement or String (referencing a valid node-name).` );
 		}
 	}
 }
@@ -144,7 +185,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
  * Core entry point
  *****************************************************************************************************/
 (async function main() {
-	[ normalize, worldStyle ].forEach( style => style.use() );
+	[ normalizeStyle, worldStyle, spinnerStyle, overlayStyle ].forEach( style => style.use() );
 
 	await eventLoop.fire( 'waitForDOM.appEvents' );
 

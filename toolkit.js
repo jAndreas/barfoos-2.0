@@ -17,6 +17,7 @@ const	undef		= void 0;
  *****************************************************************************************************/
 function mix( targetClass = class { } ) {
 	let composedClass;
+
 	return {
 		with: function( ...sources ) {
 			composedClass = sources.reduce( ( composition, mixinFnc ) => mixinFnc( composition ), targetClass );
@@ -26,7 +27,7 @@ function mix( targetClass = class { } ) {
 }
 
 /*****************************************************************************************************
- * compose() should be exclusively used, to extend a class with mixins at declaration.
+ * Composition() should be exclusively used, to extend a class with mixins at declaration.
  * This is just sugar to not to be forced to call mix().with() with empty arguments.
  *****************************************************************************************************/
 function Composition( ...sources ) {

@@ -44,6 +44,10 @@ let LogTools = target => class extends target {
 	}
 
 	warn( ...args ) {
+		if( ENV_PROD ) {
+			return;
+		}
+		
 		let prefixed = args.slice( 0 );
 
 		prefixed.unshift( `%c${this.id}: `, `color: #${this.color};background-color:yellow;font-weight:normal;text-shadow: 1px 1px 1px white,-1px -1px 1px black;` );

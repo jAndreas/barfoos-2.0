@@ -24,9 +24,7 @@ class MyModule extends Components {
 	constructor( input = { }, options = { } ) {
 		extend( options ).with({
 			location:		moduleLocations.center,
-			tmpl:			htmlx({
-
-			})
+			tmpl:			htmlx({})
 		}).and( input );
 
 		super( options );
@@ -57,16 +55,18 @@ async function start( ...args ) {
 }
 
 function stop() {
+	[ style ].forEach( style => style.unuse() );
+
 	if( instance ) {
 		instance.destroy();
 	}
 }
 
-export { start };`;
+export { start, stop };`;
 
 const cssmain = `@import '~barfoos2.0/css/viewportDefinitions';`;
 
-const htmlmain = `<div id="MyModule"></div>`;
+const htmlmain = `<div class="MyModule"></div>`;
 
 const	path	= require( 'path' ),
 		fs		= require( 'fs' ),

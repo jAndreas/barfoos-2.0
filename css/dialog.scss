@@ -60,19 +60,20 @@ div.bfDialogWrapper {
 	> div.bfContentDialogBody {
 		position:relative;
 		min-width:$dialogMinWidth;
-		height:80px;
+		min-height:80px;
 		border-radius:$radius;
 		z-index:2;
 		color:white;
 
 		&.minified {
 			height:0;
+			min-height:0;
 		}
 	}
 
 	> div.bfBlurDialogBody {
 		position:absolute;
-		top:22px;
+		top:0px;
 		left:-10px;
 		right:-10px;
 		bottom:-10px;
@@ -80,7 +81,7 @@ div.bfDialogWrapper {
 		overflow:hidden;
 		transition:height 400ms ease-in-out;
 		border-radius:$radius;
-		filter:blur(12px);
+		filter:blur(8px);
 		z-index:1;
 
 		background:inherit;
@@ -88,14 +89,15 @@ div.bfDialogWrapper {
 		&:after {
 			content:'';
 			position:absolute;
-			z-index:-1;
-			mix-blend-mode:screen;
+			z-index:2;
+			/*mix-blend-mode:screen;*/
 			top:0;
 			left:0;
 			right:0;
 			bottom:0;
 
 			background:inherit;
+			background-image:linear-gradient(to bottom, rgba(0,0,0,0.85), rgba(10,10,10,0.5));
 		}
 	}
 }

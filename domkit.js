@@ -28,7 +28,7 @@ let DOMTools = target => class extends target {
 	makeNode( htmlData ) {
 		if( typeof htmlData === 'string' ) {
 			this.vDom.body.innerHTML = htmlData;
-			
+
 			let node	= this.vDom.body.firstChild.cloneNode( true );
 
 			this.vDom.body.innerHTML = '';
@@ -179,9 +179,12 @@ let DOMTools = target => class extends target {
 				}
 
 				self.data.set( node, Object.create( null ) );
-				self.data.get( node ).storage			= Object.create( null );
-				self.data.get( node ).events			= Object.create( null );
-				self.data.get( node ).oneTimeEvents		= Object.create( null );
+				self.data.get( node ).storage				= Object.create( null );
+				self.data.get( node ).events				= Object.create( null );
+				self.data.get( node ).oneTimeEvents			= Object.create( null );
+
+				self.data.get( node ).storage.animations	= Object.create( null );
+				self.data.get( node ).storage.animations.running = [ ];
 
 				// loop over every childnode, if we have children of children, recursively call crawlNodes()
 				for( let i = 0, len = node.children.length; i < len; i++ ) {

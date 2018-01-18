@@ -3,11 +3,9 @@
 import { Component } from './core.js';
 import { extend, makeClass } from './toolkit.js';
 import { win, doc, undef } from './domkit.js';
-import Mediator from './mediator.js';
-import LogTools from './logtools.js';
 
 import dialogStyle from './css/dialog.scss';
-import dialogMarkup from './html/dialog.html';
+import dialogMarkup from './html/dialog.htmlx';
 
 let overlayInstances = 0;
 
@@ -18,7 +16,7 @@ class Overlay extends Component {
 		extend( this ).with({
 			relativeCursorPositionLeft:		0,
 			relativeCursorPositionTop:		0,
-			dialogElements:					this.transpile({ htmlData: dialogMarkup, moduleRoot: true })
+			dialogElements:					this.transpile({ htmlData: dialogMarkup({ title: this.title || '' }), moduleRoot: true })
 		});
 	}
 
@@ -32,6 +30,9 @@ class Overlay extends Component {
 		if( overlayInstances === 1 ) {
 			this.fire( 'dialogMode.core', true );
 		}
+
+		this.on( 'appOrientationChange.appEvents', this.orientationChange, this );
+		this.on( 'mousedown.appEvents', this.onBackgroundMouseDown, this );
 
 		super.init && super.init();
 	}
@@ -55,6 +56,30 @@ class Overlay extends Component {
 		if( this.position ) {
 			this.nodes.dialogRoot.style.left	= `${this.position.left}px`;
 			this.nodes.dialogRoot.style.top		= `${this.position.top}px`;
+		}
+
+		if( this.center ) {
+			this.centerOverlay();
+		}
+	}
+
+	async centerOverlay() {
+		let rootRect	= await this.fire( `getModuleDimensions.${ this.location }` ),
+			ownRect		= this.nodes.dialogRoot.getBoundingClientRect();
+
+		this.nodes.dialogRoot.style.left	= `${ (rootRect.width / 2) - (ownRect.width / 2) }px`;
+		this.nodes.dialogRoot.style.top		= `${ (rootRect.height / 2) - (ownRect.height / 2) }px`;
+	}
+
+	orientationChange() {
+		this.centerOverlay();
+
+		super.orientationChange && super.orientationChange( ...arguments );
+	}
+
+	onBackgroundMouseDown( event ) {
+		if(!this.nodes.dialogRoot.contains( event.target ) ) {
+			this.destroy();
 		}
 	}
 }
@@ -95,9 +120,10 @@ let Dialog = target => class extends target {
 	}
 
 	onDialogHandleMouseDown( event ) {
+		super.onDialogHandleMouseDown && super.onDialogHandleMouseDown( ...arguments );
+
 		this.removeNodeEvent( 'div.bfContentDialogBody', 'mouseup' );
-		this.addNodeEventOnce( 'div.title', 'mouseup', this.onMouseUp.bind( this ) );
-		this.addNodeEventOnce( 'div.title', 'touchend', this.onMouseUp.bind( this ) );
+		this.addNodeEventOnce( 'div.title', 'mouseup touchend', this.onMouseUp.bind( this ) );
 	}
 };
 
@@ -121,7 +147,7 @@ let Draggable = target => class extends target {
 		this.relativeCursorPositionTop		= event.pageY - clRect.y - doc.body.scrollTop;
 
 		this.fire( 'pushMouseMoveListener.appEvents', this._boundMouseMoveHandler, () => {} );
-		this.addNodeEventOnce( 'div.bfContentDialogBody', 'mouseup', this.onMouseUp.bind( this ) );
+		this.addNodeEventOnce( 'div.bfContentDialogBody', 'mouseup touchend', this.onMouseUp.bind( this ) );
 
 		super.onDialogHandleMouseDown && super.onDialogHandleMouseDown( ...arguments );
 
@@ -130,11 +156,13 @@ let Draggable = target => class extends target {
 	}
 
 	mouseMoveHandler( event ) {
+		super.mouseMoveHandler && super.mouseMoveHandler( ...arguments );
+
 		this.dialogElements[ 'div.bfDialogWrapper' ].style.left	= `${event.pageX - this.relativeCursorPositionLeft}px`;
 		this.dialogElements[ 'div.bfDialogWrapper' ].style.top	= `${event.pageY - this.relativeCursorPositionTop}px`;
 
-		event.preventDefault();
 		event.stopPropagation();
+		event.preventDefault();
 	}
 
 	onMouseUp( event ) {
@@ -157,13 +185,21 @@ let GlasEffect = target => class extends target {
 		});
 	}
 
-	onDialogHandleMouseDown() {
-		super.onDialogHandleMouseDown && super.onDialogHandleMouseDown( ...arguments );
+	installModule() {
+		super.installModule && super.installModule();
+
+		if( this._DialogClass ) {
+			this.dialogElements[ 'div.bfBlurDialogBody' ].style.top = this.dialogElements[ 'div.bfDialogHandle' ].offsetHeight + 'px';
+		}
 
 		this.initCloneElements();
 	}
 
-	async initCloneElements() {
+	onDialogHandleMouseDown( event ) {
+		super.onDialogHandleMouseDown && super.onDialogHandleMouseDown( ...arguments );
+	}
+
+	async initCloneElements( event ) {
 		let rootElementFromParent = await this.fire( `getModuleRootElement.${ this.location }` );
 
 		Array.from( rootElementFromParent.children )
@@ -172,6 +208,16 @@ let GlasEffect = target => class extends target {
 				let clone	= this.makeNode( `<div>${ child.outerHTML }</div>` );
 
 				clone.style.position	= 'absolute';
+				clone.style.top			= `${ (this.nodes.dialogRoot.offsetTop + this.dialogElements[ 'div.bfBlurDialogBody' ].offsetTop ) * -1 }px`;
+				clone.style.left		= `${ (this.nodes.dialogRoot.offsetLeft + this.dialogElements[ 'div.bfBlurDialogBody' ].offsetLeft ) * -1 }px`;
+
+				if( clone.firstElementChild.children ) {
+					for( let child of Array.from( clone.firstElementChild.children ) ) {
+						child.style.zIndex	= 5;
+						child.style.filter	= 'sepia(50%)';
+						child.style.opacity	= 0.5;
+					}
+				}
 
 				this.clonedBackgroundElements.push( clone );
 				this.dialogElements[ 'div.bfBlurDialogBody' ].appendChild( clone );
@@ -180,8 +226,8 @@ let GlasEffect = target => class extends target {
 
 	updateCloneElements( event ) {
 		for( let child of this.clonedBackgroundElements ) {
-			child.style.left	= `${ (event.pageX - this.relativeCursorPositionLeft + this.dialogElements[ 'div.bfBlurDialogBody' ].offsetLeft) * -1 }px`;
-			child.style.top		= `${ (event.pageY - this.relativeCursorPositionTop + this.dialogElements[ 'div.bfBlurDialogBody' ].offsetTop) * -1 }px`;
+			child.style.left	= `${ (event.pageX - this.relativeCursorPositionLeft + this.dialogElements[ 'div.bfBlurDialogBody' ].offsetLeft ) * -1 }px`;
+			child.style.top		= `${ (event.pageY - this.relativeCursorPositionTop + this.dialogElements[ 'div.bfBlurDialogBody' ].offsetTop ) * -1 }px`;
 		}
 	}
 
@@ -198,12 +244,18 @@ let GlasEffect = target => class extends target {
 	}
 
 	resetClones() {
-		console.log( 'resetting clones...');
 		this.dialogElements[ 'div.bfBlurDialogBody' ].innerHTML = '';
 		this.clonedBackgroundElements = [ ];
 	}
 
-	onMouseUp() {
+	orientationChange() {
+		super.orientationChange && super.orientationChange( ...arguments );
+
+		this.fire( 'resetClones.overlay' );
+		this.initCloneElements();
+	}
+
+	onMouseUp( event ) {
 		this.firstMove = true;
 		super.onMouseUp && super.onMouseUp( ...arguments );
 	}

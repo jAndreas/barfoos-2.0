@@ -1,8 +1,12 @@
 'use strict'
 
+import { extend } from './toolkit.js';
+
 const		win			= window,
 			doc			= win.document,
 			undef		= void 0;
+
+const		skippedPropagationElements = /INPUT|BUTTON/;
 
 /*****************************************************************************************************
  * Mixin Class NodeTools: Provides some HTMLElement helper tools and magic trickery
@@ -15,6 +19,7 @@ let NodeTools = target => class extends target {
 
 		this._delegatedEventHandler = event => {
 			let callbackResult;
+
 			if( this.data.get( event.target ) ) {
 				if( this.data.get( event.target ).events[ event.type ] ) {
 					this.data.get( event.target ).events[ event.type ].forEach( fnc => callbackResult = fnc.call( this, event ) );
@@ -35,21 +40,38 @@ let NodeTools = target => class extends target {
 				}
 			}
 
-			/*if( event.target && event.target.parentElement ) {
-				let root	= Object.keys( this.dialogElements ).length ? this.dialogElements.root : this.nodes.root,
-					ev		= Object.create( null );
+			if( event.target && event.target.parentElement ) {
+				if( skippedPropagationElements.test( event.target.nodeName ) ) {
+					return;
+				}
 
-				ev.target	= event.target;
-				ev.type		= event.type;
-				ev.clientX	= event.clientX;
-				ev.clientY	= event.clientY;
+				let root	= Object.keys( this.dialogElements ).length ? this.dialogElements.root : this.nodes.root,
+					shadow	= Object.create( null ),
+					filter	= {
+						get:	function( target, prop ) {
+							if( prop in shadow ) {
+								return shadow[ prop ];
+							} else {
+								if( typeof target[ prop ] === 'function' ) {
+									return target[ prop ].bind( event );
+								} else {
+									return target[ prop ];
+								}
+							}
+							return prop in shadow ? shadow[ prop ] : target[ prop ];
+						},
+						set:	function( target, prop, value ) {
+							shadow[ prop ] = value;
+							return true;
+						}
+					},
+					ev		= new Proxy( event, filter );
 
 				while( ev.target !== root ) {
 					ev.target	= ev.target.parentElement;
-
-					this._delegatedEventHandler( ev );
+					this._delegatedEventHandler( ev, event );
 				}
-			}*/
+			}
 		};
 	}
 
@@ -259,17 +281,15 @@ let NodeTools = target => class extends target {
 	animate( { node, id = 'last', rules:{ delay = '0', duration = 200, timing = 'linear', iterations = 1, direction = 'normal', mode = 'forwards', name = '' } = { } } = { } ) {
 		let rules = { delay, duration, timing, iterations, direction, mode, name };
 
-		return new Promise(( res, rej ) => {
+		let promise = new Promise(( res, rej ) => {
 			if( node instanceof HTMLElement ) {
 				let store = this.data.get( node ).storage;
-
-				if( store.animations === undef ) {
-					store.animations = Object.create( null );
-				}
 
 				if( store.animations[ id ] ) {
 					rej( `It seems like there is a pending transition for ${ node } - ID: ${ id }.` );
 				}
+
+				store.animations.running = store.animations.running || [ ];
 
 				node.style.animation = `${ duration }ms ${ timing } ${ delay }ms ${ iterations } ${ direction } ${ mode } ${ name }`;
 
@@ -278,7 +298,7 @@ let NodeTools = target => class extends target {
 				function animationEndEvent( event ) {
 					let options = {
 						undo:		() => {
-							return new Promise(( undoRes, undoRej ) => {
+							let undoPromise = new Promise(( undoRes, undoRej ) => {
 								let undoEnd = event => {
 									node.style.animationDelay = '';
 									node.style.animationDuration = '';
@@ -300,6 +320,13 @@ let NodeTools = target => class extends target {
 								this.reflow();
 								node.style.animation = `${ name } ${ duration }ms ${ timing } ${ delay }ms ${ iterations } reverse ${ mode }`;
 							});
+
+							let running = this.data.get( node ).storage.animations.running;
+							undoPromise.then(() => running.splice( running.indexOf( undoPromise ), 1 ), () => running.splice( running.indexOf( undoPromise ), 1 ) );
+
+							this.data.get( node ).storage.animations.running.push( undoPromise );
+
+							return undoPromise;
 						},
 						finalize:	() => {
 							node.style.animation = '';
@@ -315,6 +342,13 @@ let NodeTools = target => class extends target {
 				rej( `node must be of type HTMLElement, received ${ typeof node } instead.` );
 			}
 		});
+
+		let running = this.data.get( node ).storage.animations.running;
+		promise.then(() => running.splice( running.indexOf( promise ), 1 ), () => running.splice( running.indexOf( promise ), 1 ) );
+
+		this.data.get( node ).storage.animations.running.push( promise );
+
+		return promise;
 	}
 
 	transition( { node, style, className, id = 'last', rules:{ delay = '0', duration = 200, property = 'all', timing = 'linear' } = { } } = { } ) {

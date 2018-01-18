@@ -23,9 +23,10 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 	}
 
 	async init() {
-		doc.addEventListener( 'visibilitychange', this.visibilityChange.bind( this ), false );
 		win.addEventListener( 'focus', this.focusin.bind( this ), false );
 		win.addEventListener( 'blur', this.focusout.bind( this ), false );
+		win.addEventListener( 'orientationchange', this.orientationChange.bind( this ), false );
+		doc.addEventListener( 'visibilitychange', this.visibilityChange.bind( this ), false );
 		doc.addEventListener( 'focusin', this.focusin.bind( this ), false );
 		doc.addEventListener( 'focusout', this.focusout.bind( this ), false );
 		doc.addEventListener( 'mousewheel', this.mousewheel.bind( this ), false );
@@ -84,6 +85,10 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 
 	visibilityChange( event ) {
 		this.fire( 'appVisibilityChange.appEvents', !doc.hidden );
+	}
+
+	orientationChange( event ) {
+		this.fire( 'appOrientationChange.appEvents' );
 	}
 
 	mousemove( event ) {

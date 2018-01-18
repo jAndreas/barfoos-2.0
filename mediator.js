@@ -120,26 +120,28 @@ let Mediator = target => class extends target {
 						(function _asyncLoop() {
 							start	= Date.now();
 
-							do {
-								listener	= container[ listenersMax ];
-								result		= listener.handler( data, event );
+							if( listenersMax > -1 ) {
+								do {
+									listener	= container[ listenersMax ];
+									result		= listener.handler( data, event );
 
-								// push whatever result was into data to our promises array
-								resultData.push( result );
+									// push whatever result was into data to our promises array
+									resultData.push( result );
 
-								// in case of a "per iteration" - callback, call it now with the current data
-								if( typeof callback === 'function' ) {
-									callback( result );
-								}
+									// in case of a "per iteration" - callback, call it now with the current data
+									if( typeof callback === 'function' ) {
+										callback( result );
+									}
 
-								// setting "stopPropagation" to a truthy value within an means to stop any further propagation
-								if( event.stopPropagation ) {
-									listenersMax = -1;
-									break; // while()
-								}
+									// setting "stopPropagation" to a truthy value within an means to stop any further propagation
+									if( event.stopPropagation ) {
+										listenersMax = -1;
+										break; // while()
+									}
 
-								listenersMax--;
-							} while( listenersMax > -1 && Date.now() - start < maxLoopTime );
+									listenersMax--;
+								} while( listenersMax > -1 && Date.now() - start < maxLoopTime );
+							}
 
 							// if there are still entries in our queue, we ran out of allowed dispatch time frame
 							if( listenersMax > -1 ) {

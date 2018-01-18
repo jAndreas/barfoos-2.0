@@ -1,6 +1,6 @@
 <div class="bfDialogWrapper">
 	<div class="bfDialogHandle">
-		<div class="title"></div>
+		<div class="title">${ scope.title }</div>
 		<div class="mini">_</div>
 		<div class="close">✘</div>
 	</div>
