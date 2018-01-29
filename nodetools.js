@@ -20,32 +20,34 @@ let NodeTools = target => class extends target {
 		this._delegatedEventHandler = event => {
 			let callbackResult;
 
-			if( this.data.get( event.target ) ) {
-				if( this.data.get( event.target ).events[ event.type ] ) {
-					this.data.get( event.target ).events[ event.type ].forEach( fnc => callbackResult = fnc.call( this, event ) );
+			if( this && this.data ) {
+				if( this.data.get( event.target ) ) {
+					if( this.data.get( event.target ).events[ event.type ] ) {
+						this.data.get( event.target ).events[ event.type ].forEach( fnc => callbackResult = fnc.call( this, event ) );
+
+						if( callbackResult === false ) {
+							return false;
+						}
+					}
+
+					if( this.data.get( event.target ).oneTimeEvents[ event.type ] ) {
+						this.data.get( event.target ).oneTimeEvents[ event.type ].forEach( fnc => callbackResult = fnc.call( this, event ) );
+
+						if( callbackResult === false ) {
+							return false;
+						}
+
+						this.data.get( event.target ).oneTimeEvents[ event.type ] = [ ];
+						this.cleanDelegations();
+					}
 				}
 
-				if( callbackResult === false ) {
-					return;
-				}
+				if( event.target && event.target.parentElement ) {
+					if( skippedPropagationElements.test( event.target.nodeName ) ) {
+						return;
+					}
 
-				if( this.data.get( event.target ).oneTimeEvents[ event.type ] ) {
-					this.data.get( event.target ).oneTimeEvents[ event.type ].forEach( fnc => callbackResult = fnc.call( this, event ) );
-					this.data.get( event.target ).oneTimeEvents[ event.type ] = [ ];
-					this.cleanDelegations();
-				}
-
-				if( callbackResult === false ) {
-					return;
-				}
-			}
-
-			if( event.target && event.target.parentElement ) {
-				if( skippedPropagationElements.test( event.target.nodeName ) ) {
-					return;
-				}
-
-				let root	= Object.keys( this.dialogElements ).length ? this.dialogElements.root : this.nodes.root,
+					let root	= Object.keys( this.dialogElements ).length ? this.dialogElements.root : this.nodes.root,
 					shadow	= Object.create( null ),
 					filter	= {
 						get:	function( target, prop ) {
@@ -67,9 +69,12 @@ let NodeTools = target => class extends target {
 					},
 					ev		= new Proxy( event, filter );
 
-				while( ev.target !== root ) {
-					ev.target	= ev.target.parentElement;
-					this._delegatedEventHandler( ev, event );
+					while( ev.target && ev.target !== root ) {
+						ev.target	= ev.target.parentElement;
+						if( this._delegatedEventHandler( ev, event ) === false ) {
+							break;
+						}
+					}
 				}
 			}
 		};
@@ -326,7 +331,7 @@ let NodeTools = target => class extends target {
 
 							this.data.get( node ).storage.animations.running.push( undoPromise );
 
-							return undoPromise;
+							return false;
 						},
 						finalize:	() => {
 							node.style.animation = '';
@@ -337,6 +342,8 @@ let NodeTools = target => class extends target {
 					store.animations[ id ] = options;
 
 					res( options );
+
+					return false;
 				}
 			} else {
 				rej( `node must be of type HTMLElement, received ${ typeof node } instead.` );

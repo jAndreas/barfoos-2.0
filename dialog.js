@@ -5,7 +5,7 @@ import { extend, makeClass } from './toolkit.js';
 import { win, doc, undef } from './domkit.js';
 
 import dialogStyle from './css/dialog.scss';
-import dialogMarkup from './html/dialog.htmlx';
+import dialogMarkup from './html/dialog.html';
 
 let overlayInstances = 0;
 
@@ -16,8 +16,10 @@ class Overlay extends Component {
 		extend( this ).with({
 			relativeCursorPositionLeft:		0,
 			relativeCursorPositionTop:		0,
-			dialogElements:					this.transpile({ htmlData: dialogMarkup({ title: this.title || '' }), moduleRoot: true })
+			dialogElements:					this.transpile({ htmlData: dialogMarkup, moduleRoot: true })
 		});
+
+		this.dialogElements[ 'div.title' ].textContent = this.title || '';
 	}
 
 	init() {
@@ -122,7 +124,7 @@ let Dialog = target => class extends target {
 	onDialogHandleMouseDown( event ) {
 		super.onDialogHandleMouseDown && super.onDialogHandleMouseDown( ...arguments );
 
-		this.removeNodeEvent( 'div.bfContentDialogBody', 'mouseup' );
+		//this.removeNodeEvent( 'div.bfContentDialogBody', 'mouseup' );
 		this.addNodeEventOnce( 'div.title', 'mouseup touchend', this.onMouseUp.bind( this ) );
 	}
 };
@@ -153,6 +155,7 @@ let Draggable = target => class extends target {
 
 		event.stopPropagation();
 		event.preventDefault();
+		return false;
 	}
 
 	mouseMoveHandler( event ) {
@@ -163,13 +166,14 @@ let Draggable = target => class extends target {
 
 		event.stopPropagation();
 		event.preventDefault();
+		return false;
 	}
 
 	onMouseUp( event ) {
 		super.onMouseUp && super.onMouseUp( ...arguments );
 
 		this.fire( 'removeMouseMoveListener.appEvents', this._boundMouseMoveHandler, () => {} );
-		return this._boundMouseMoveHandler;
+		return false;
 	}
 };
 
@@ -183,6 +187,10 @@ let GlasEffect = target => class extends target {
 			clonedBackgroundElements:	[ ],
 			firstMove:					true
 		});
+	}
+
+	init() {
+		super.init && super.init();
 	}
 
 	installModule() {

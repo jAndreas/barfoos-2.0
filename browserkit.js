@@ -26,6 +26,7 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		win.addEventListener( 'focus', this.focusin.bind( this ), false );
 		win.addEventListener( 'blur', this.focusout.bind( this ), false );
 		win.addEventListener( 'orientationchange', this.orientationChange.bind( this ), false );
+		win.addEventListener( 'hashchange', this.hashChange.bind( this ), false );
 		doc.addEventListener( 'visibilitychange', this.visibilityChange.bind( this ), false );
 		doc.addEventListener( 'focusin', this.focusin.bind( this ), false );
 		doc.addEventListener( 'focusout', this.focusout.bind( this ), false );
@@ -39,6 +40,7 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 
 		this.on( 'isAppHidden.appEvents', () => doc.hidden );
 		this.on( 'isAppFocused.appEvents', () => doc.hasFocus() );
+		this.on( 'getHash.appEvents', () => win.location.hash.slice( 1 ) );
 		// onbeforeunload
 		// mediaQuery
 		// resize
@@ -89,6 +91,10 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 
 	orientationChange( event ) {
 		this.fire( 'appOrientationChange.appEvents' );
+	}
+
+	hashChange( event ) {
+		this.fire( 'hashChange.appEvents', win.location.hash.slice( 1 ) );
 	}
 
 	mousemove( event ) {

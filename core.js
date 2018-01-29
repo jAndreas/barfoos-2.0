@@ -39,12 +39,13 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 		if( typeof this.tmpl === 'string' ) {
 			extend( this ).with({
-				nodes:			this.transpile({ htmlData: this.tmpl, moduleRoot: true }),
-				dialogElements:	Object.create( null ),
-				spinnerNode:	this.makeNode( '<div class="loading-spinner"></div>' ),
-				overlayNode:	this.makeNode( '<div class="BFModalOverlay"></div>' ),
-				location:		this.location,
-				nodeLocation:	'beforeend'
+				nodes:				this.transpile({ htmlData: this.tmpl, moduleRoot: true }),
+				dialogElements:		Object.create( null ),
+				spinnerNode:		this.makeNode( '<div class="loading-spinner"></div>' ),
+				overlayNode:		this.makeNode( '<div class="BFModalOverlay"></div>' ),
+				confirmNode:		this.makeNode( '<div class="BFConfirm"></div>' ),
+				location:			this.location,
+				nodeLocation:		'beforeend'
 			});
 
 			this.data.set( this, Object.create( null ) );
@@ -147,36 +148,102 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		}
 	}
 
-	activateSpinner( { at, opts: { location = 'afterbegin' } = { } } = { } ) {
-		let opts = { location };
+	activateSpinner( { at, opts: { location = 'afterbegin', position = { x:0, y:0 }, anchorRect = { }, fitToSize = true } = { } } = { } ) {
+		let opts = { location, position, fitToSize, anchorRect };
 
-		if( typeof at === 'string' ) {
-			at = this.nodes[ at ] || this.dialogElements[ at ];
+		this.addNodes({
+			nodeData:	this.spinnerNode.cloneNode(),
+			nodeName:	'overlaySpinner',
+			reference:	{
+				node:		at,
+				position:	location
+			}
+		});
+
+		if( opts.fitToSize ) {
+			let calcSize					= opts.anchorRect.height / 2;
+			this.nodes.overlaySpinner.style.width		= `${calcSize}px`;
+			this.nodes.overlaySpinner.style.height		= `${calcSize}px`;
+			this.nodes.overlaySpinner.style.borderWidth	= `${calcSize / 10}px`;
 		}
 
-		if( at instanceof HTMLElement ) {
-			at.insertAdjacentElement( opts.location, this.spinnerNode.cloneNode() );
-		} else {
-			this.error( `Parameter "at" must be of type HTMLElement or String (referencing a valid node-name).` );
-		}
+		return {
+			fulfill:	() => {
+				this.removeNodes( 'overlaySpinner', true );
+				this.addNodes({
+					nodeData:	this.confirmNode.cloneNode(),
+					nodeName:	'overlayConfirm',
+					reference:	{
+						node:		at,
+						position:	location
+					}
+				});
+				this.animate({
+					node:	this.nodes.overlayConfirm,
+					rules:	{
+						duration:	1000,
+						name:		'unfold'
+					}
+				});
+			},
+			cleanup:	() => {
+				this.removeNodes( 'overlaySpinner', true );
+			}
+		};
 	}
 
-	createModalOverlay( at = '' ) {
-		if( typeof at === 'string' ) {
-			at = this.nodes[ at ] || this.dialogElements[ at ];
+	createModalOverlay( { at, opts: { location = 'afterbegin', spinner = false } = { } } = { } ) {
+		let opts				= { location, spinner },
+			controlInterface	= Object.create( null );
+
+		this.addNodes({
+			nodeData:	this.overlayNode.cloneNode(),
+			nodeName:	'modalOverlay',
+			reference:	{
+				node:		at,
+				position:	location
+			}
+		});
+
+		if( spinner ) {
+			this.nodes.modalOverlay.classList.add( 'flex' );
+
+			controlInterface.spinner = this.activateSpinner({
+				at:			this.nodes.modalOverlay,
+				opts:		{
+					fitToSize:	true,
+					anchorRect:	at.getBoundingClientRect()
+				}
+			});
 		}
 
-		if( at instanceof HTMLElement ) {
-			let overlayClone	= this.overlayNode.cloneNode(),
-				targetRect		= at.getBoundingClientRect();
+		controlInterface.cleanup = () => {
+			this.removeNodes( 'modalOverlay', true );
+		};
 
-			overlayClone.style.width	= `${ targetRect.width }px`;
-			overlayClone.style.height	= `${ targetRect.height }px`;
+		controlInterface.fulfill = async () => {
+			this.nodes.modalOverlay.classList.add( 'fulfilled' );
 
-			at.insertAdjacentElement( 'afterbegin', overlayClone );
-		} else {
-			this.error( `Parameter "at" must be of type HTMLElement or String (referencing a valid node-name).` );
-		}
+			if( this.nodes.overlayConfirm ) {
+				await Promise.all( this.data.get( this.nodes.overlayConfirm ).storage.animations.running );
+			}
+
+			let fadeOut = this.animate({
+				node:	this.nodes.modalOverlay,
+				rules:	{
+					duration:	1000,
+					name:		'fadeOutOverlay'
+				}
+			});
+
+			fadeOut.then(() => {
+				controlInterface.cleanup();
+			});
+
+			return fadeOut;
+		};
+
+		return controlInterface;
 	}
 }
 /****************************************** Component End ******************************************/
