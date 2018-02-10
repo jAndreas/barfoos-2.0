@@ -108,8 +108,11 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	installModule() {
 		if( typeof this.location === 'string' ) {
 			if( this.location in moduleLocations ) {
-				this.nodes.root.classList.add( 'BFComponent' );
-				nodes[ `section.${ this.location }` ].appendChild( this.nodes.root );
+				if(!this.nodes.dialogRoot ) {
+					this.nodes.root.classList.add( 'BFComponent' );
+				}
+
+				nodes[ `section.${ this.location }` ].appendChild( this.nodes.dialogRoot || this.nodes.root );
 			} else if( this.location in modules.online ) {
 				this.fire( `newChildModule.${ this.location }`, {
 					node:			this.nodes.dialogRoot || this.nodes.root,
@@ -271,6 +274,14 @@ eventLoop.on( 'dialogMode.core', active => {
 	} else {
 		nodes[ 'section.center' ].style.background	= '';
 	}
+});
+
+eventLoop.on( 'getRootNodeOfSection.core', sectionName => {
+	return nodes[ `section.${ sectionName }` ];
+});
+
+eventLoop.on( 'getSectionDimensions.core', sectionName => {
+	return nodes[ `section.${ sectionName }` ].getBoundingClientRect();
 });
 
 eventLoop.on( 'mouseWheelUp.appEvents', () => {

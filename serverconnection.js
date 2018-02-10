@@ -3,7 +3,7 @@
 import { win, doc, undef } from './domkit.js';
 import io from 'socket.io-client';
 
-const	socket = io( 'http://der-vegane-germane.de', {
+const	socket = io( ENV_PROD ? 'http://der-vegane-germane.de' : 'http://dev.der-vegane-germane.de', {
 			transports:	[ 'websocket' ]
 		}),
 		maxTimeout	= 3000;

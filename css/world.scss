@@ -108,10 +108,12 @@ div#world.blurred {
 	filter:blur(50px);
 }
 
-@media all and (min-width:$iPadPortrait) {
+/*
+Took this out because it caused trouble when creating Dialog Modules within the Center directly
+@media screen and (min-width:$iPadPortrait) {
 	#world > section.content {
 		flex-grow:10;
 		flex-basis:0%;
 		order: 1;
 	}
-}
+}*/

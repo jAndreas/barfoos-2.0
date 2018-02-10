@@ -8,7 +8,7 @@ import { Component } from 'barfoos2.0/core.js';
 import { moduleLocations } from 'barfoos2.0/defs.js';
 import { extend } from 'barfoos2.0/toolkit.js';
 
-import htmlx from '../markup/main.htmlx';
+import html from '../markup/main.html';
 import style from '../style/main.scss';
 
 // private to module
@@ -24,7 +24,7 @@ class MyModule extends Components {
 	constructor( input = { }, options = { } ) {
 		extend( options ).with({
 			location:		moduleLocations.center,
-			tmpl:			htmlx({})
+			tmpl:			html
 		}).and( input );
 
 		super( options );
@@ -75,7 +75,7 @@ const	path	= require( 'path' ),
 		folders = {
 			fonts:	[ ],
 			images:	[ ],
-			markup: [ { 'main.htmlx': htmlmain } ],
+			markup: [ { 'main.html': htmlmain } ],
 			js:		[ { 'main.js': jsblueprint } ],
 			style:	[ { 'main.scss': cssmain } ]
 		};

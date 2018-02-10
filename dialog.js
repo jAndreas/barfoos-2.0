@@ -34,7 +34,10 @@ class Overlay extends Component {
 		}
 
 		this.on( 'appOrientationChange.appEvents', this.orientationChange, this );
-		this.on( 'mousedown.appEvents', this.onBackgroundMouseDown, this );
+
+		if(!this.avoidOutsideClickClose ) {
+			this.on( 'mousedown.appEvents', this.onBackgroundMouseDown, this );
+		}
 
 		super.init && super.init();
 	}
@@ -66,11 +69,22 @@ class Overlay extends Component {
 	}
 
 	async centerOverlay() {
-		let rootRect	= await this.fire( `getModuleDimensions.${ this.location }` ),
-			ownRect		= this.nodes.dialogRoot.getBoundingClientRect();
+		let ownRect		= this.nodes.dialogRoot.getBoundingClientRect(),
+			rootRect;
 
-		this.nodes.dialogRoot.style.left	= `${ (rootRect.width / 2) - (ownRect.width / 2) }px`;
-		this.nodes.dialogRoot.style.top		= `${ (rootRect.height / 2) - (ownRect.height / 2) }px`;
+		rootRect = await this.fire( `getModuleDimensions.${ this.location }` );
+
+		if( rootRect === null ) {
+			rootRect = await this.fire( `getSectionDimensions.core`, this.location );
+		}
+
+		if( rootRect ) {
+			this.nodes.dialogRoot.style.left	= `${ (rootRect.width / 2) - (ownRect.width / 2) }px`;
+			this.nodes.dialogRoot.style.top		= `${ (rootRect.height / 2) - (ownRect.height / 2) }px`;
+		}
+		else {
+			this.warning( 'Unable to receive parent Element dimensions.' );
+		}
 	}
 
 	orientationChange() {
@@ -208,28 +222,38 @@ let GlasEffect = target => class extends target {
 	}
 
 	async initCloneElements( event ) {
-		let rootElementFromParent = await this.fire( `getModuleRootElement.${ this.location }` );
+		let rootElementFromParent;
 
-		Array.from( rootElementFromParent.children )
-			.filter( child => child !== this.dialogElements[ 'div.bfDialogWrapper' ] && child.nodeName !== 'VIDEO' )
-			.forEach( child => {
-				let clone	= this.makeNode( `<div>${ child.outerHTML }</div>` );
+		rootElementFromParent = await this.fire( `getModuleRootElement.${ this.location }` );
 
-				clone.style.position	= 'absolute';
-				clone.style.top			= `${ (this.nodes.dialogRoot.offsetTop + this.dialogElements[ 'div.bfBlurDialogBody' ].offsetTop ) * -1 }px`;
-				clone.style.left		= `${ (this.nodes.dialogRoot.offsetLeft + this.dialogElements[ 'div.bfBlurDialogBody' ].offsetLeft ) * -1 }px`;
+		if( rootElementFromParent === null ) {
+			rootElementFromParent = await this.fire( `getRootNodeOfSection.core`, this.location );
+		}
 
-				if( clone.firstElementChild.children ) {
-					for( let child of Array.from( clone.firstElementChild.children ) ) {
-						child.style.zIndex	= 5;
-						child.style.filter	= 'sepia(50%)';
-						child.style.opacity	= 0.5;
+		if( rootElementFromParent instanceof HTMLElement ) {
+			Array.from( rootElementFromParent.children )
+				.filter( child => child !== this.dialogElements[ 'div.bfDialogWrapper' ] && child.nodeName !== 'VIDEO' )
+				.forEach( child => {
+					let clone	= this.makeNode( `<div>${ child.outerHTML }</div>` );
+
+					clone.style.position	= 'absolute';
+					clone.style.top			= `${ (this.nodes.dialogRoot.offsetTop + this.dialogElements[ 'div.bfBlurDialogBody' ].offsetTop ) * -1 }px`;
+					clone.style.left		= `${ (this.nodes.dialogRoot.offsetLeft + this.dialogElements[ 'div.bfBlurDialogBody' ].offsetLeft ) * -1 }px`;
+
+					if( clone.firstElementChild.children ) {
+						for( let child of Array.from( clone.firstElementChild.children ) ) {
+							child.style.zIndex	= 5;
+							child.style.filter	= 'sepia(50%)';
+							child.style.opacity	= 0.5;
+						}
 					}
-				}
 
-				this.clonedBackgroundElements.push( clone );
-				this.dialogElements[ 'div.bfBlurDialogBody' ].appendChild( clone );
-			});
+					this.clonedBackgroundElements.push( clone );
+					this.dialogElements[ 'div.bfBlurDialogBody' ].appendChild( clone );
+				});
+		} else {
+			this.error( 'Unable to resolve parent Element.' );
+		}
 	}
 
 	updateCloneElements( event ) {

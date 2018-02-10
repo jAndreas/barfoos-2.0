@@ -48,31 +48,31 @@ let NodeTools = target => class extends target {
 					}
 
 					let root	= Object.keys( this.dialogElements ).length ? this.dialogElements.root : this.nodes.root,
-					shadow	= Object.create( null ),
-					filter	= {
-						get:	function( target, prop ) {
-							if( prop in shadow ) {
-								return shadow[ prop ];
-							} else {
-								if( typeof target[ prop ] === 'function' ) {
-									return target[ prop ].bind( event );
+						shadow	= Object.create( null ),
+						filter	= {
+							get:	function( target, prop ) {
+								if( prop in shadow ) {
+									return shadow[ prop ];
 								} else {
-									return target[ prop ];
+									if( typeof target[ prop ] === 'function' ) {
+										return target[ prop ].bind( event );
+									} else {
+										return target[ prop ];
+									}
 								}
+								return prop in shadow ? shadow[ prop ] : target[ prop ];
+							},
+							set:	function( target, prop, value ) {
+								shadow[ prop ] = value;
+								return true;
 							}
-							return prop in shadow ? shadow[ prop ] : target[ prop ];
 						},
-						set:	function( target, prop, value ) {
-							shadow[ prop ] = value;
-							return true;
-						}
-					},
 					ev		= new Proxy( event, filter );
 
 					while( ev.target && ev.target !== root ) {
 						ev.target	= ev.target.parentElement;
 						if( this._delegatedEventHandler( ev, event ) === false ) {
-							break;
+							return false;
 						}
 					}
 				}

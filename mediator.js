@@ -163,7 +163,7 @@ let Mediator = target => class extends target {
 			}
 		} else { throw new TypeError( 'event name must be a string.' ); }
 
-		return Promise.resolve( 'fire() warning' );
+		return Promise.resolve( null );
 	}
 }
 

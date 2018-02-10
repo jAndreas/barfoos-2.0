@@ -40,7 +40,7 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 
 		this.on( 'isAppHidden.appEvents', () => doc.hidden );
 		this.on( 'isAppFocused.appEvents', () => doc.hasFocus() );
-		this.on( 'getHash.appEvents', () => win.location.hash.slice( 1 ) );
+		this.on( 'getHash.appEvents', () => new win.URLSearchParams( win.location.hash.slice( 1 ) ) );
 		// onbeforeunload
 		// mediaQuery
 		// resize
@@ -94,7 +94,7 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 	}
 
 	hashChange( event ) {
-		this.fire( 'hashChange.appEvents', win.location.hash.slice( 1 ) );
+		this.fire( 'hashChange.appEvents', new win.URLSearchParams( location.hash.slice( 1 ) ) );
 	}
 
 	mousemove( event ) {

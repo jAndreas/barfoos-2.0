@@ -18,7 +18,7 @@ let DOMTools = target => class extends target {
 
 		extend( this ).with( data ).and({
 			id:					this.constructor.name,
-			vDom:				doc.implementation.createHTMLDocument(),
+			vDom:				doc.implementation.createHTMLDocument( null ),
 			data:				new WeakMap(),
 			nodes:				Object.create( null ),
 			availableNames:		Object.create( null )
