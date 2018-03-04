@@ -3,8 +3,9 @@
 import { win, doc, undef } from './domkit.js';
 import io from 'socket.io-client';
 
-const	socket = io( ENV_PROD ? 'http://der-vegane-germane.de' : 'http://dev.der-vegane-germane.de', {
-			transports:	[ 'websocket' ]
+const	socket = io( ENV_PROD ? 'https://der-vegane-germane.de' : 'https://dev.der-vegane-germane.de', {
+			transports:	[ 'websocket' ],
+			secure:		true
 		}),
 		maxTimeout	= 3000;
 
@@ -49,49 +50,45 @@ let ServerConnection = target => class extends target {
 		super.init && super.init( ...arguments );
 	}
 
-	send( data = { } ) {
-		if( typeof data.type === 'string' && 'payload' in data ) {
-			return new Promise( ( resolve, reject ) => {
-				let responseTimeout = win.setTimeout(() => {
+	send( { type = '', payload = { } } = { }, { noTimeout = false } = { } ) {
+		let responseTimeout;
+
+		return new Promise( ( resolve, reject ) => {
+			if(!noTimeout ) {
+				responseTimeout = win.setTimeout(() => {
 					if( this.id ) {
-						reject( `Server answer for ${ data.type } timed out.` );
+						reject( `Server answer for ${ type } timed out.` );
 					}
 				}, maxTimeout);
+			}
 
-				socket.emit( data.type, data.payload, response => {
-					win.clearTimeout( responseTimeout );
+			socket.emit( type, payload, response => {
+				win.clearTimeout( responseTimeout );
 
-					try {
-						this.handleServerReponse( response );
-					} catch( ex ) {
-						reject( ex );
-					}
-
-					if( this.id ) {
-						resolve( response );
-					}
-				});
-			});
-		} else {
-			this.error( `send() requires a type as string and a payload property.` );
-		}
-	}
-
-	recv( data ) {
-		return new Promise( ( resolve, reject ) => {
-			socket.on( data.type, recvData => {
 				try {
 					this.handleServerReponse( response );
 				} catch( ex ) {
-					if( this.id ) {
-						reject( ex );
-					}
+					reject( ex );
 				}
 
 				if( this.id ) {
-					resolve( recvData );
+					resolve( response );
 				}
 			});
+		});
+	}
+
+	recv( type, callback ) {
+		socket.on( type, recvData => {
+			try {
+				this.handleServerReponse( recvData );
+			} catch( ex ) {
+				throw new Error( ex );
+			}
+
+			if( this.id ) {
+				callback( recvData );
+			}
 		});
 	}
 

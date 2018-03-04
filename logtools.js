@@ -23,7 +23,7 @@ let LogTools = target => class extends target {
 		prefixed.unshift( `%c${this.id}: `, `color: #${this.color};font-weight: normal;text-shadow: 1px 1px 1px white,-1px -1px 1px black;` );
 
 		console.groupCollapsed( ...prefixed );
-		this.nodes && console.log( this.nodes.root );
+		this.nodes && console.log( this.nodes.root, prefixed.slice( 2 ) );
 		console.trace();
 		console.groupEnd();
 
@@ -36,7 +36,7 @@ let LogTools = target => class extends target {
 		prefixed.unshift( `%c${this.id}: `, `color: #${this.color};background-color:red;font-weight:normal;text-shadow: 1px 1px 1px white,-1px -1px 1px black;` );
 
 		console.groupCollapsed( ...prefixed );
-		this.nodes && console.log( this.nodes.root );
+		this.nodes && console.log( this.nodes.root, prefixed.slice( 2 ) );
 		throw new Error( args );
 		console.groupEnd();
 
@@ -47,13 +47,13 @@ let LogTools = target => class extends target {
 		if( ENV_PROD ) {
 			return;
 		}
-		
+
 		let prefixed = args.slice( 0 );
 
 		prefixed.unshift( `%c${this.id}: `, `color: #${this.color};background-color:yellow;font-weight:normal;text-shadow: 1px 1px 1px white,-1px -1px 1px black;` );
 
 		console.groupCollapsed( ...prefixed );
-		this.nodes && console.log( this.nodes.root );
+		this.nodes && console.log( this.nodes.root, prefixed.slice( 2 ) );
 		console.trace();
 		console.groupEnd();
 

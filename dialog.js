@@ -79,11 +79,12 @@ class Overlay extends Component {
 		}
 
 		if( rootRect ) {
-			this.nodes.dialogRoot.style.left	= `${ (rootRect.width / 2) - (ownRect.width / 2) }px`;
-			this.nodes.dialogRoot.style.top		= `${ (rootRect.height / 2) - (ownRect.height / 2) }px`;
+			this.nodes.dialogRoot.style.left		= `${ (rootRect.width / 2) - (ownRect.width / 2) }px`;
+			this.nodes.dialogRoot.style.top			= `${ (rootRect.height / 2) - (ownRect.height / 2) }px`;
+			this.nodes.dialogRoot.style.alignSelf	= 'center';
 		}
 		else {
-			this.warning( 'Unable to receive parent Element dimensions.' );
+			this.warn( 'Unable to receive parent Element dimensions.' );
 		}
 	}
 

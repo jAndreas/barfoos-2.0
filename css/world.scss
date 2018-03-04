@@ -7,9 +7,7 @@ div#world {
 	flex-direction:row;
 	flex-wrap:wrap;
 
-	height:100vh;
-	overflow-x:hidden;
-	overflow-y:hidden;
+	overflow:hidden;
 
 	transition:all 600ms linear;
 	background-color:rgba(10,10,10,1);
@@ -47,6 +45,10 @@ div#world {
 
 	> section.content.center {
 		justify-content:space-around;
+		width:100vw;
+		height:100vh;
+		overflow-x:hidden;
+		overflow-y:scroll;
 	}
 
 	> section.footer {

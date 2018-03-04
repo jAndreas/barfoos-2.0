@@ -30,7 +30,7 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		doc.addEventListener( 'visibilitychange', this.visibilityChange.bind( this ), false );
 		doc.addEventListener( 'focusin', this.focusin.bind( this ), false );
 		doc.addEventListener( 'focusout', this.focusout.bind( this ), false );
-		doc.addEventListener( 'mousewheel', this.mousewheel.bind( this ), false );
+		//doc.addEventListener( 'mousewheel', this.mousewheel.bind( this ), false );
 		doc.addEventListener( 'mousedown', this.mousedown.bind( this ), false );
 		doc.addEventListener( 'mouseup', this.mouseup.bind( this ), false );
 		doc.addEventListener( 'touchend', this.mouseup.bind( this ), false );
@@ -111,13 +111,13 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
 	}
 
-	mousewheel( event ) {
+	/*mousewheel( event ) {
 		if( event.wheelDelta / 120 > 0 ) {
 			this.fire( 'mouseWheelUp.appEvents' );
 		} else {
 			this.fire( 'mouseWheelDown.appEvents' );
 		}
-	}
+	}*/
 
 	mousedown( event ) {
 		this.fire( 'mousedown.appEvents', event );

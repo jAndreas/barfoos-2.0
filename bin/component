@@ -20,7 +20,7 @@ let		instance		= null;
 /*****************************************************************************************************
  *  "description here"
  *****************************************************************************************************/
-class MyModule extends Components {
+class MyModule extends Component {
 	constructor( input = { }, options = { } ) {
 		extend( options ).with({
 			location:		moduleLocations.center,
@@ -44,6 +44,11 @@ class MyModule extends Components {
 		// any component related stuff which should wait on dependencies resolve before executing (waitForDOM at least or additional async data)
 
 		return this;
+	}
+
+	async destroy() {
+		super.destroy && super.destroy();
+		[ style ].forEach( s => s.unuse() );
 	}
 }
 /****************************************** MyModule End ******************************************/

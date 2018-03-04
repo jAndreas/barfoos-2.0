@@ -124,6 +124,8 @@ let DOMTools = target => class extends target {
 				this.data.delete( this.nodes[ n ] );
 				delete this.nodes[ n ];
 				delete this.availableNames[ n ];
+			} else {
+				this.warn( `${ n } could not be found in local node hash and therefore could not be removed.` );
 			}
 		});
 	}
@@ -178,13 +180,22 @@ let DOMTools = target => class extends target {
 					});
 				}
 
-				self.data.set( node, Object.create( null ) );
-				self.data.get( node ).storage				= Object.create( null );
-				self.data.get( node ).events				= Object.create( null );
-				self.data.get( node ).oneTimeEvents			= Object.create( null );
+				self.data.set(node, {
+					storage:		{
+						animations:		{
+							running:	[ ]
+						}
+					},
+					events:			Object.create( null ),
+					oneTimeEvents:	Object.create( null )
+				});
 
-				self.data.get( node ).storage.animations	= Object.create( null );
-				self.data.get( node ).storage.animations.running = [ ];
+				for( let { name, value } of Array.from( node.attributes ).slice( 0 ) ) {
+					if( name.startsWith( 'on' ) ) {
+						self.addNodeEvent( node, name.slice( 2 ), self[ value ] );
+						node.removeAttribute( name );
+					}
+				}
 
 				// loop over every childnode, if we have children of children, recursively call crawlNodes()
 				for( let i = 0, len = node.children.length; i < len; i++ ) {

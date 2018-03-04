@@ -44,7 +44,9 @@ let NodeTools = target => class extends target {
 
 				if( event.target && event.target.parentElement ) {
 					if( skippedPropagationElements.test( event.target.nodeName ) ) {
-						return;
+						if( event.target.getAttribute( 'type' ) !== 'text') {
+							return;
+						}
 					}
 
 					let root	= Object.keys( this.dialogElements ).length ? this.dialogElements.root : this.nodes.root,
@@ -291,7 +293,8 @@ let NodeTools = target => class extends target {
 				let store = this.data.get( node ).storage;
 
 				if( store.animations[ id ] ) {
-					rej( `It seems like there is a pending transition for ${ node } - ID: ${ id }.` );
+					this.warn( `It seems like there is a pending or finished transition for ${ node } - ID: ${ id }.` );
+					res();
 				}
 
 				store.animations.running = store.animations.running || [ ];
@@ -331,7 +334,7 @@ let NodeTools = target => class extends target {
 
 							this.data.get( node ).storage.animations.running.push( undoPromise );
 
-							return false;
+							return undoPromise;
 						},
 						finalize:	() => {
 							node.style.animation = '';

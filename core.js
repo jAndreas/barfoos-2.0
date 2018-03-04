@@ -21,7 +21,9 @@ const	eventLoop	= makeClass( class coreEventLoop{ }, { id: 'coreEventLoop' } ).m
 		modules.awaiting	= Object.create( null );
 
 const 	nodes		= DOM.transpile({ htmlData: worldMarkup }),
-		scrollSpeed	= 20;
+		scrollSpeed	= 20,
+		EaseOut		= power => {return t => { return (.04 - .04 / t) * Math.sin(25 * t) + 1 }},
+		ease		= EaseOut( 5 );
 
 /*****************************************************************************************************
  * Class Component is the basic GUI Module set of BarFoos 2. It provides automatic html-string transpiling,
@@ -146,13 +148,15 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	onDialogModeChange( active ) {
 		if( active ) {
 			this.nodes.root.style.background	= 'inherit';
+			this._dialogMode = true;
 		} else {
 			this.nodes.root.style.background	= '';
+			this._dialogMode = false;
 		}
 	}
 
-	activateSpinner( { at, opts: { location = 'afterbegin', position = { x:0, y:0 }, anchorRect = { }, fitToSize = true } = { } } = { } ) {
-		let opts = { location, position, fitToSize, anchorRect };
+	activateSpinner( { at, opts: { location = 'afterbegin', position = { x:0, y:0 }, anchorRect = null, fitToSize = true, relative = false, lowblur = false } = { } } = { } ) {
+		let opts = { location, position, fitToSize, anchorRect, relative, lowblur };
 
 		this.addNodes({
 			nodeData:	this.spinnerNode.cloneNode(),
@@ -163,8 +167,20 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			}
 		});
 
+		if( opts.relative ) {
+			this.nodes.overlaySpinner.style.position	= 'relative';
+		}
+
+		if( opts.lowblur ) {
+			this.nodes.overlaySpinner.style.filter		= 'blur(2px)';
+		}
+
+		if( opts.anchorRect === null ) {
+			opts.anchorRect = at.getBoundingClientRect();
+		}
+
 		if( opts.fitToSize ) {
-			let calcSize					= opts.anchorRect.height / 2;
+			let calcSize								= opts.anchorRect.height / 2;
 			this.nodes.overlaySpinner.style.width		= `${calcSize}px`;
 			this.nodes.overlaySpinner.style.height		= `${calcSize}px`;
 			this.nodes.overlaySpinner.style.borderWidth	= `${calcSize / 10}px`;
@@ -181,7 +197,23 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 						position:	location
 					}
 				});
-				this.animate({
+
+				if( opts.relative ) {
+					this.nodes.overlayConfirm.style.position	= 'relative';
+				}
+
+				if( opts.anchorRect === null ) {
+					opts.anchorRect = at.getBoundingClientRect();
+				}
+
+				if( opts.fitToSize ) {
+					let calcSize								= opts.anchorRect.height / 2;
+					this.nodes.overlayConfirm.style.width		= `${calcSize}px`;
+					this.nodes.overlayConfirm.style.height		= `${calcSize}px`;
+					this.nodes.overlayConfirm.style.borderWidth	= `${calcSize / 10}px`;
+				}
+
+				return this.animate({
 					node:	this.nodes.overlayConfirm,
 					rules:	{
 						duration:	1000,
@@ -189,8 +221,19 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 					}
 				});
 			},
-			cleanup:	() => {
+			cleanup:	async ( duration ) => {
+				if( duration ) {
+					await this.animate({
+						node:	this.nodes.overlaySpinner,
+						rules:	{
+							duration:	duration,
+							name:		'fadeOutOverlay'
+						}
+					});
+				}
+
 				this.removeNodes( 'overlaySpinner', true );
+				this.removeNodes( 'overlayConfirm', true );
 			}
 		};
 	}
@@ -208,9 +251,9 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			}
 		});
 
-		if( spinner ) {
-			this.nodes.modalOverlay.classList.add( 'flex' );
+		this.nodes.modalOverlay.classList.add( 'flex' );
 
+		if( spinner ) {
 			controlInterface.spinner = this.activateSpinner({
 				at:			this.nodes.modalOverlay,
 				opts:		{
@@ -221,10 +264,27 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		}
 
 		controlInterface.cleanup = () => {
+			if( spinner ) {
+				controlInterface.spinner.cleanup();
+			}
+
 			this.removeNodes( 'modalOverlay', true );
 		};
 
-		controlInterface.fulfill = async () => {
+		controlInterface.log = async ( msg, duration = 3000 ) => {
+			if(!this.nodes.modalOverlay ) {
+				return;
+			}
+
+			this.nodes.modalOverlay.innerHTML = msg;
+			return this.timeout( duration );
+		};
+
+		controlInterface.fulfill = async ( duration = 1000 ) => {
+			if(!this.nodes.modalOverlay ) {
+				return;
+			}
+
 			this.nodes.modalOverlay.classList.add( 'fulfilled' );
 
 			if( this.nodes.overlayConfirm ) {
@@ -234,7 +294,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			let fadeOut = this.animate({
 				node:	this.nodes.modalOverlay,
 				rules:	{
-					duration:	1000,
+					duration:	duration,
 					name:		'fadeOutOverlay'
 				}
 			});
@@ -247,6 +307,25 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		};
 
 		return controlInterface;
+	}
+
+	render( htmlData = '' ) {
+		return {
+			with:	replacementHash => {
+				for( let [ searchFor, value ] of Object.entries( replacementHash ) ) {
+					htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), value );
+				}
+
+				return {
+					at:		reference => {
+						this.addNodes({ htmlData, reference });
+					},
+					get:	() => {
+						return htmlData;
+					}
+				};
+			}
+		};
 	}
 }
 /****************************************** Component End ******************************************/
@@ -264,6 +343,13 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	// all eyes on us!
 	nodes[ 'div#world' ].focus();
 }());
+
+nodes[ 'section.center' ].addEventListener( 'scroll', event => {
+	eventLoop.fire( 'centerScroll.appEvents', {
+		offsetTop:		nodes[ 'section.center' ].scrollTop,
+		innerHeight:	win.innerHeight
+	});
+}, false);
 
 /*****************************************************************************************************
  * Core Event handling
@@ -284,12 +370,54 @@ eventLoop.on( 'getSectionDimensions.core', sectionName => {
 	return nodes[ `section.${ sectionName }` ].getBoundingClientRect();
 });
 
-eventLoop.on( 'mouseWheelUp.appEvents', () => {
-	nodes[ 'div#world' ].scrollTop -= scrollSpeed;
+/*eventLoop.on( 'mouseWheelUp.appEvents', () => {
+	//nodes[ 'section.center' ].scrollTop -= scrollSpeed;
 });
 
 eventLoop.on( 'mouseWheelDown.appEvents', () => {
-	nodes[ 'div#world' ].scrollTop += scrollSpeed;
+	//nodes[ 'section.center' ].scrollTop += scrollSpeed;
+});*/
+
+eventLoop.on( 'slideDown.appEvents', node => {
+	let	count		= 1,
+		prog		= 1 / 100,
+		accel		= 0,
+		endValue	= nodes[ 'section.center' ].scrollTop + node.getBoundingClientRect().top;
+
+	function step() {
+		nodes[ 'section.center' ].scrollTop += ease( count ) + (5*accel);
+		count -= prog;
+		accel += 5;
+
+		if( node.getBoundingClientRect().top > 0 ) {
+			win.requestAnimationFrame( step );
+		} else {
+			nodes[ 'section.center' ].scrollTop = endValue;
+		}
+	}
+
+	win.requestAnimationFrame( step );
+});
+
+eventLoop.on( 'slideUp.appEvents', node => {
+	let	count		= 1,
+		prog		= 1 / 100,
+		accel		= 0,
+		endValue	= node.getBoundingClientRect().top - nodes[ 'section.center' ].scrollTop;
+
+	function step() {
+		nodes[ 'section.center' ].scrollTop -= ease( count ) + (5 * accel);
+		count -= prog;
+		accel += 5;
+
+		if( node.getBoundingClientRect().top < 0 ) {
+			win.requestAnimationFrame( step );
+		} else {
+			nodes[ 'section.center' ].scrollTop = endValue;
+		}
+	}
+
+	win.requestAnimationFrame( step );
 });
 
 eventLoop.on( 'moduleLaunch.appEvents', ( module, event ) => {
