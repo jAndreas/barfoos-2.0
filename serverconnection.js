@@ -13,32 +13,32 @@ let		connected	= false;
 
 socket.on( 'reconnect_attempt', () => {
 	connected = false;
-	console.log('Reconnecting, also allowing xhr polling...');
+	if( ENV_PROD === false ) console.log('Reconnecting, also allowing xhr polling...');
 	socket.io.opts.transport = [ 'polling', 'websocket' ];
 });
 
 socket.on( 'connect', () => {
 	connected = true;
-	console.log('server connection established.');
+	if( ENV_PROD === false ) console.log('server connection established.');
 });
 
 socket.on( 'reconnect', attempts => {
 	connected = true;
-	console.log('server connection established.');
+	if( ENV_PROD === false ) console.log('server connection established.');
 });
 
 socket.on( 'connect_timeout', timeout => {
 	connected = false;
-	console.log('server connection timed out: ', timeout);
+	if( ENV_PROD === false ) console.log('server connection timed out: ', timeout);
 });
 
 socket.on( 'disconnect', reason => {
 	connected = false;
-	console.log('server connection disconnected: ', reason);
+	if( ENV_PROD === false ) console.log('server connection disconnected: ', reason);
 });
 
 socket.on( 'error', error => {
-	console.log('server connection error: ', error);
+	if( ENV_PROD === false ) console.log('server connection error: ', error);
 });
 
 let ServerConnection = target => class extends target {

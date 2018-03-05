@@ -86,11 +86,19 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		});
 
 		this.removeAllNodeEvents();
-		this.removeNodes( 'root', true );
-		this.removeNodes( 'dialogRoot', true );
+
+		if( this.dialogElements ) {
+			delete this.nodes.root;
+
+			this.removeNodes( 'dialogRoot', true );
+		} else {
+			this.removeNodes( 'root', true );
+		}
+
 		this.data.delete( this );
-		this.data	= null;
-		this.nodes	= null;
+		this.data			= null;
+		this.nodes			= null;
+		this.dialogElements	= null;
 
 		this.off();
 
@@ -309,7 +317,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		return controlInterface;
 	}
 
-	render( htmlData = '' ) {
+	render({ htmlData = '', standalone = false }) {
 		return {
 			with:	replacementHash => {
 				for( let [ searchFor, value ] of Object.entries( replacementHash ) ) {
@@ -318,7 +326,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 				return {
 					at:		reference => {
-						this.addNodes({ htmlData, reference });
+						this.addNodes({ htmlData, reference, standalone });
 					},
 					get:	() => {
 						return htmlData;

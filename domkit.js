@@ -39,19 +39,19 @@ let DOMTools = target => class extends target {
 		}
 	}
 
-	transpile({ nodeData, nodeName, htmlData, moduleRoot })  {
+	transpile({ nodeData, nodeName, htmlData, moduleRoot, standalone })  {
 		let nodes;
 
 		if( typeof htmlData === 'string' ) {
 			this.vDom.body.innerHTML = htmlData;
 
-			nodes = this.cacheNodes({ rootNode: this.vDom.body.firstChild.cloneNode( true ), moduleRoot });
+			nodes = this.cacheNodes({ rootNode: this.vDom.body.firstChild.cloneNode( true ), moduleRoot, standalone });
 
 			this.vDom.body.firstElementChild.remove();
 		} else if( nodeData instanceof HTMLElement && typeof nodeName === 'string' ) {
 			this.vDom.body.insertAdjacentElement( 'afterbegin', nodeData );
 
-			nodes = this.cacheNodes({ rootNode: this.vDom.body.firstChild.cloneNode( true ), nodeName, moduleRoot });
+			nodes = this.cacheNodes({ rootNode: this.vDom.body.firstChild.cloneNode( true ), nodeName, moduleRoot, standalone });
 		}
 
 		this.vDom.body.innerHTML = '';
@@ -65,7 +65,7 @@ let DOMTools = target => class extends target {
 		});
 	}
 
-	addNodes({ nodeData, htmlData, reference = { }, nodeName } = { }) {
+	addNodes({ nodeData, htmlData, reference = { }, nodeName, standalone = false } = { }) {
 		if( typeof reference.node === 'string' ) {
 			reference.node = this.nodes[ reference.node ];
 		}
@@ -79,13 +79,15 @@ let DOMTools = target => class extends target {
 				if( nodeName in this.nodes ) {
 					this.error && this.error( `${ nodeName } already exists in Components Node Hash.` );
 				} else {
-					let nodeHash = this.transpile({ nodeData, nodeName });
+					let nodeHash = this.transpile({ nodeData, nodeName, standalone });
 
 					reference.node.insertAdjacentElement( reference.position, nodeHash.localRoot );
 
 					delete nodeHash.localRoot;
 
-					extend( this.nodes ).with( nodeHash );
+					if(!standalone ) {
+						extend( this.nodes ).with( nodeHash );
+					}
 				}
 			} else {
 				this.error && this.error( `addNodes was called with wrong arguments. When passing in a node reference, you need to specify a node name and a reference-node with position.` );
@@ -93,13 +95,15 @@ let DOMTools = target => class extends target {
 		}
 
 		if( typeof htmlData === 'string' ) {
-			let nodeHash = this.transpile({ htmlData });
+			let nodeHash = this.transpile({ htmlData, standalone });
 
 			reference.node.insertAdjacentElement( reference.position, nodeHash.localRoot );
 
 			delete nodeHash.localRoot;
 
-			extend( this.nodes ).with( nodeHash );
+			if(!standalone ) {
+				extend( this.nodes ).with( nodeHash );
+			}
 		}
 
 		return this;
@@ -109,20 +113,32 @@ let DOMTools = target => class extends target {
 		name = Array.isArray( name ) ? name : [ name ];
 
 		name.forEach( n => {
-			if( this.nodes[ n ] ) {
+			let localRef = this.dialogElements[ n ] || this.nodes[ n ];
+
+			if( localRef ) {
+				let localChildren = Array.from( localRef.children ).concat();
 				// if there are any children of this node, remove them aswell from all structures
-				for( let i = 0, len = this.nodes[ n ].children.length; i < len; i++ ) {
-					this.removeNodes( this.resolveNodeNameFrom( this.nodes[ n ].children[ i ] ), removePhysically );
+				for( let i = 0, len = localChildren.length; i < len; i++ ) {
+					let resolvedName = this.resolveNodeNameFromRef( localChildren[ i ] );
+
+					if(!resolvedName ) {
+						this.warn( 'Unable to resolve hash name for: ', localChildren[ i ], ' of ', localRef );
+						localChildren[ i ].remove();
+						continue;
+					};
+
+					this.removeNodes( resolvedName, removePhysically );
 				}
 
 				// if removePhysically is set, the node will get removed from the live DOM
 				if( removePhysically ) {
-					this.nodes[ n ].remove();
+					localRef.remove();
 				}
 
 				// delete all data- and events for this node from internal structures
-				this.data.delete( this.nodes[ n ] );
+				this.data.delete( localRef );
 				delete this.nodes[ n ];
+				delete this.dialogElements[ n ];
 				delete this.availableNames[ n ];
 			} else {
 				this.warn( `${ n } could not be found in local node hash and therefore could not be removed.` );
@@ -130,7 +146,7 @@ let DOMTools = target => class extends target {
 		});
 	}
 
-	cacheNodes({ rootNode, nodeName, moduleRoot }) {
+	cacheNodes({ rootNode, nodeName, moduleRoot, standalone }) {
 		let nodeHash		= Object.create( null ),
 			self			= this;
 
@@ -161,7 +177,10 @@ let DOMTools = target => class extends target {
 				}
 				else {
 					nodeHash[ currentTag + '_' + self.availableNames[ currentTag ] ] = node;
-					self.warn && self.warn( `cacheNodes(): Duplicate node identifier on ${ currentTag }(${ self.availableNames[ currentTag ] }) -> `, node );
+
+					if(!standalone ) {
+						self.warn && self.warn( `cacheNodes(): Duplicate node identifier on ${ currentTag }(${ self.availableNames[ currentTag ] }) -> `, node );
+					}
 				}
 
 				let alias					= node.getAttribute( 'alias' ),

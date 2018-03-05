@@ -203,7 +203,7 @@ let NodeTools = target => class extends target {
 
 	removeAllNodeEvents( types = '' ) {
 		if( typeof types === 'string' ) {
-			types = types.split( /\s+/ );
+			types = types.split( /\s+/ ).filter( Boolean );
 		} else {
 			this.error( `Parameter "types" must be a String (possibly separated by whitespaces), received ${typeof type} instead.` );
 		}
@@ -236,10 +236,10 @@ let NodeTools = target => class extends target {
 			}
 		}
 
-		this.cleanDelegations();
+		this.cleanDelegations( true );
 	}
 
-	cleanDelegations() {
+	cleanDelegations( force ) {
 		let validDelegation;
 
 		for( let delegatedEvent in this._alreadyDelegatedEvents ) {
@@ -265,7 +265,7 @@ let NodeTools = target => class extends target {
 				}
 			}
 
-			if(!validDelegation ) {
+			if(!validDelegation || force ) {
 				delete this._alreadyDelegatedEvents[ delegatedEvent ];
 
 				if( Object.keys( this.dialogElements ).length ) {
@@ -277,8 +277,14 @@ let NodeTools = target => class extends target {
 		}
 	}
 
-	resolveNodeNameFrom( ref ) {
+	resolveNodeNameFromRef( ref ) {
 		for( let [ name, nodeRef ] of Object.entries( this.nodes ) ) {
+			if( nodeRef === ref ) {
+				return name;
+			}
+		}
+
+		for( let [ name, nodeRef ] of Object.entries( this.dialogElements ) ) {
 			if( nodeRef === ref ) {
 				return name;
 			}
@@ -288,9 +294,10 @@ let NodeTools = target => class extends target {
 	animate( { node, id = 'last', rules:{ delay = '0', duration = 200, timing = 'linear', iterations = 1, direction = 'normal', mode = 'forwards', name = '' } = { } } = { } ) {
 		let rules = { delay, duration, timing, iterations, direction, mode, name };
 
-		let promise = new Promise(( res, rej ) => {
+		let promise = new Promise(async ( res, rej ) => {
 			if( node instanceof HTMLElement ) {
-				let store = this.data.get( node ).storage;
+				let store			= this.data.get( node ).storage,
+					cancelOrigin	= null;
 
 				if( store.animations[ id ] ) {
 					this.warn( `It seems like there is a pending or finished transition for ${ node } - ID: ${ id }.` );
@@ -303,33 +310,46 @@ let NodeTools = target => class extends target {
 
 				this.addNodeEventOnce( node, 'animationend', animationEndEvent );
 
+				cancelOrigin = win.setTimeout(() => {
+					this.data.get( node ).storage.animations.running = [ ];
+					res( 'animation timed out');
+				}, duration + (duration*0.3));
+
 				function animationEndEvent( event ) {
 					let options = {
 						undo:		() => {
 							let undoPromise = new Promise(( undoRes, undoRej ) => {
-								let undoEnd = event => {
-									node.style.animationDelay = '';
-									node.style.animationDuration = '';
-									node.style.animationName = '';
-									node.style.animationTimingFunction = '';
-									node.style.animationIterationCount = '';
-									node.style.animationDirection = '';
-									node.style.animationFillMode = '';
-									node.style.animationPlayState = '';
+								let cancelUndo	= null,
+									undoEnd		= event => {
+										node.style.animationDelay = '';
+										node.style.animationDuration = '';
+										node.style.animationName = '';
+										node.style.animationTimingFunction = '';
+										node.style.animationIterationCount = '';
+										node.style.animationDirection = '';
+										node.style.animationFillMode = '';
+										node.style.animationPlayState = '';
 
-									delete this.data.get( node ).storage.animations[ id ];
+										delete this.data.get( node ).storage.animations[ id ];
 
-									undoRes( event );
-								};
+										win.clearTimeout( cancelUndo );
+										undoRes( event );
+									};
 
 								this.addNodeEventOnce( node, 'animationend', undoEnd );
 
 								node.style.animation = '';
 								this.reflow();
 								node.style.animation = `${ name } ${ duration }ms ${ timing } ${ delay }ms ${ iterations } reverse ${ mode }`;
+
+								cancelUndo = win.setTimeout(() => {
+									this.data.get( node ).storage.animations.running = [ ];
+									res( 'animation (undo) timed out');
+								}, duration + (duration*0.3));
 							});
 
 							let running = this.data.get( node ).storage.animations.running;
+
 							undoPromise.then(() => running.splice( running.indexOf( undoPromise ), 1 ), () => running.splice( running.indexOf( undoPromise ), 1 ) );
 
 							this.data.get( node ).storage.animations.running.push( undoPromise );
@@ -344,6 +364,7 @@ let NodeTools = target => class extends target {
 
 					store.animations[ id ] = options;
 
+					win.clearTimeout( cancelOrigin );
 					res( options );
 
 					return false;

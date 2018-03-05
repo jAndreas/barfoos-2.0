@@ -12,7 +12,6 @@ let Swipe = target => class extends target {
 		this.addNodeEvent( this.nodes.root, 'touchstart', this.onSwipeTouchStart );
 		this.addNodeEvent( this.nodes.root, 'touchmove', this.onSwipeTouchMove );
 		this.addNodeEvent( this.nodes.root, 'touchend', this.onSwipeTouchEnd );
-		console.log('swipe events registered for: ', this.nodes.root);
 	}
 
 	onSwipeTouchStart( event ) {
