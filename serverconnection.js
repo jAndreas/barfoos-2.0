@@ -24,7 +24,7 @@ socket.on( 'connect', () => {
 
 socket.on( 'reconnect', attempts => {
 	connected = true;
-	if( ENV_PROD === false ) console.log('server connection established.');
+	if( ENV_PROD === false ) console.log('server connection (re-) established.');
 });
 
 socket.on( 'connect_timeout', timeout => {

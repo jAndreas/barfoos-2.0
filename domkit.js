@@ -156,6 +156,10 @@ let DOMTools = target => class extends target {
 			nodeHash.localRoot	= rootNode;
 		}
 
+		if( standalone ) {
+			return nodeHash;
+		}
+
 		(function crawlNodes( node, nodeName ) {
 			let currentTag = null;
 
@@ -178,20 +182,28 @@ let DOMTools = target => class extends target {
 				else {
 					nodeHash[ currentTag + '_' + self.availableNames[ currentTag ] ] = node;
 
-					if(!standalone ) {
-						self.warn && self.warn( `cacheNodes(): Duplicate node identifier on ${ currentTag }(${ self.availableNames[ currentTag ] }) -> `, node );
-					}
+					self.warn && self.warn( `cacheNodes(): Duplicate node identifier on ${ currentTag }(${ self.availableNames[ currentTag ] }) -> `, node );
 				}
 
 				let alias					= node.getAttribute( 'alias' ),
+					defaultDialogContainer	= node.getAttribute( 'defaultDialogContainer' ),
 					defaultChildContainer	= node.getAttribute( 'defaultChildContainer' );
 
 				if( alias ) {
 					nodeHash[ alias ] = node;
 				}
 
-				if( defaultChildContainer ) {
+				if( defaultChildContainer !== null ) {
 					Object.defineProperty(nodeHash, 'defaultChildContainer', {
+						value:			node,
+						enumerable:		true,
+						configurable:	false,
+						writable:		false
+					});
+				}
+
+				if( defaultDialogContainer !== null ) {
+					Object.defineProperty(nodeHash, 'defaultDialogContainer', {
 						value:			node,
 						enumerable:		true,
 						configurable:	false,
@@ -203,7 +215,8 @@ let DOMTools = target => class extends target {
 					storage:		{
 						animations:		{
 							running:	[ ]
-						}
+						},
+						nodeData:		{ }
 					},
 					events:			Object.create( null ),
 					oneTimeEvents:	Object.create( null )
@@ -213,6 +226,10 @@ let DOMTools = target => class extends target {
 					if( name.startsWith( 'on' ) ) {
 						self.addNodeEvent( node, name.slice( 2 ), self[ value ] );
 						node.removeAttribute( name );
+					}
+
+					if( name.startsWith( 'data-' ) ) {
+						self.data.get( node ).storage.nodeData[ name.slice( 3 ) ] = value;
 					}
 				}
 
@@ -231,6 +248,10 @@ let DOMTools = target => class extends target {
 
 		if(!nodeHash.defaultChildContainer && moduleRoot ) {
 			nodeHash.defaultChildContainer = nodeHash.root;
+		}
+
+		if(!nodeHash.defaultDialogContainer && moduleRoot ) {
+			nodeHash.defaultDialogContainer = nodeHash.root;
 		}
 
 		return nodeHash;

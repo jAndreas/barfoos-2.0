@@ -65,17 +65,23 @@ class Overlay extends Component {
 
 		if( this.center ) {
 			this.centerOverlay();
+		} else if( this.centerToViewport ) {
+			this.centerOverlay({ centerToViewport: true });
 		}
 	}
 
-	async centerOverlay() {
+	async centerOverlay({ centerToViewport = false } = { }) {
 		let ownRect		= this.nodes.dialogRoot.getBoundingClientRect(),
 			rootRect;
 
-		rootRect = await this.fire( `getModuleDimensions.${ this.location }` );
+		if( centerToViewport ) {
+			rootRect = doc.body.getBoundingClientRect();
+		} else {
+			rootRect = await this.fire( `getModuleDimensions.${ this.location }` );
 
-		if( rootRect === null ) {
-			rootRect = await this.fire( `getSectionDimensions.core`, this.location );
+			if( rootRect === null ) {
+				rootRect = await this.fire( `getSectionDimensions.core`, this.location );
+			}
 		}
 
 		if( rootRect ) {
@@ -157,11 +163,12 @@ let Draggable = target => class extends target {
 		super.init && super.init();
 	}
 
-	onDialogHandleMouseDown( event ) {
-		let clRect = this.dialogElements[ 'div.bfDialogWrapper' ].getBoundingClientRect();
+	async onDialogHandleMouseDown( event ) {
+		let clRect	= this.dialogElements[ 'div.bfDialogWrapper' ].getBoundingClientRect(),
+			parent	= await this.fire( `getModuleDimensions.${ this.location }` );
 
-		this.relativeCursorPositionLeft		= event.pageX - clRect.x - doc.body.scrollLeft;
-		this.relativeCursorPositionTop		= event.pageY - clRect.y - doc.body.scrollTop;
+		this.relativeCursorPositionLeft		= event.pageX - clRect.x + parent.left;
+		this.relativeCursorPositionTop		= event.pageY - clRect.y + parent.top;
 
 		this.fire( 'pushMouseMoveListener.appEvents', this._boundMouseMoveHandler, () => {} );
 		this.addNodeEventOnce( 'div.bfContentDialogBody', 'mouseup touchend', this.onMouseUp.bind( this ) );
@@ -205,7 +212,13 @@ let GlasEffect = target => class extends target {
 	}
 
 	init() {
+		this.fire( 'setScrollingStatus.core', 'disable' );
 		super.init && super.init();
+	}
+
+	destroy() {
+		this.fire( 'setScrollingStatus.core', 'enable' );
+		super.destroy && super.destroy( ...arguments );
 	}
 
 	installModule() {
@@ -232,6 +245,8 @@ let GlasEffect = target => class extends target {
 		}
 
 		if( rootElementFromParent instanceof HTMLElement ) {
+			rootElementFromParent.scrollIntoView();
+
 			Array.from( rootElementFromParent.children )
 				.filter( child => child !== this.dialogElements[ 'div.bfDialogWrapper' ] && child.nodeName !== 'VIDEO' )
 				.forEach( child => {
@@ -240,6 +255,8 @@ let GlasEffect = target => class extends target {
 					clone.style.position	= 'absolute';
 					clone.style.top			= `${ (this.nodes.dialogRoot.offsetTop + this.dialogElements[ 'div.bfBlurDialogBody' ].offsetTop ) * -1 }px`;
 					clone.style.left		= `${ (this.nodes.dialogRoot.offsetLeft + this.dialogElements[ 'div.bfBlurDialogBody' ].offsetLeft ) * -1 }px`;
+					clone.style.width		= '100vw';
+					clone.style.height		= '100vh';
 
 					if( clone.firstElementChild.children ) {
 						for( let child of Array.from( clone.firstElementChild.children ) ) {

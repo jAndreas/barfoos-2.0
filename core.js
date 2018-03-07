@@ -41,7 +41,10 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 		if( typeof this.tmpl === 'string' ) {
 			extend( this ).with({
-				nodes:				this.transpile({ htmlData: this.tmpl, moduleRoot: true }),
+				nodes:				this.transpile({
+										htmlData: this.renderData ? this.render({ htmlData: this.tmpl }).with( this.renderData ).get() : this.tmpl,
+										moduleRoot: true
+									}),
 				dialogElements:		Object.create( null ),
 				spinnerNode:		this.makeNode( '<div class="loading-spinner"></div>' ),
 				overlayNode:		this.makeNode( '<div class="BFModalOverlay"></div>' ),
@@ -125,6 +128,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				nodes[ `section.${ this.location }` ].appendChild( this.nodes.dialogRoot || this.nodes.root );
 			} else if( this.location in modules.online ) {
 				this.fire( `newChildModule.${ this.location }`, {
+					isDialog:		!!this.nodes.dialogRoot,
 					node:			this.nodes.dialogRoot || this.nodes.root,
 					nodeLocation:	this.nodeLocation
 				});
@@ -142,7 +146,11 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	}
 
 	newChildModule( hookData, event ) {
-		this.nodes.defaultChildContainer.insertAdjacentElement( hookData.nodeLocation, hookData.node );
+		if( hookData.isDialog ) {
+			this.nodes.defaultDialogContainer.insertAdjacentElement( hookData.nodeLocation, hookData.node );
+		} else {
+			this.nodes.defaultChildContainer.insertAdjacentElement( hookData.nodeLocation, hookData.node );
+		}
 	}
 
 	getModuleRootElement() {
@@ -370,12 +378,31 @@ eventLoop.on( 'dialogMode.core', active => {
 	}
 });
 
+eventLoop.on( 'setScrollingStatus.core', status => {
+	switch( status ) {
+		case 'disable':
+			nodes[ 'section.center' ].style.overflowY = 'hidden';
+			break;
+
+		case 'enable':
+			nodes[ 'section.center' ].style.overflowY = 'scroll';
+			break;
+	}
+});
+
 eventLoop.on( 'getRootNodeOfSection.core', sectionName => {
 	return nodes[ `section.${ sectionName }` ];
 });
 
 eventLoop.on( 'getSectionDimensions.core', sectionName => {
 	return nodes[ `section.${ sectionName }` ].getBoundingClientRect();
+});
+
+eventLoop.on( 'getScrollOffset.core', () => {
+	return {
+		scrollTop: nodes[ 'section.center' ].scrollTop,
+		scrollLeft: nodes[ 'section.center' ].scrollLeft
+	};
 });
 
 /*eventLoop.on( 'mouseWheelUp.appEvents', () => {
@@ -386,7 +413,7 @@ eventLoop.on( 'mouseWheelDown.appEvents', () => {
 	//nodes[ 'section.center' ].scrollTop += scrollSpeed;
 });*/
 
-eventLoop.on( 'slideDown.appEvents', node => {
+eventLoop.on( 'slideDownTo.appEvents', node => {
 	let	count		= 1,
 		prog		= 1 / 100,
 		accel		= 0,
@@ -407,7 +434,7 @@ eventLoop.on( 'slideDown.appEvents', node => {
 	win.requestAnimationFrame( step );
 });
 
-eventLoop.on( 'slideUp.appEvents', node => {
+eventLoop.on( 'slideUpTo.appEvents', node => {
 	let	count		= 1,
 		prog		= 1 / 100,
 		accel		= 0,
@@ -449,6 +476,8 @@ eventLoop.on( 'moduleLaunch.appEvents', ( module, event ) => {
 eventLoop.on( 'moduleDestruction.appEvents', ( module, event ) => {
 	if( module.id in modules.online ) {
 		modules.online[ module.id ]--;
+
+		console.log( `module ${module.id} was destroyed( ${modules.online[module.id]}x instances left )` );
 	} else {
 
 	}

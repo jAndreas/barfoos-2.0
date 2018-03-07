@@ -82,41 +82,53 @@ let NodeTools = target => class extends target {
 		};
 	}
 
-	addNodeEvent( node, types, fnc ) {
-		if( typeof node === 'string' ) {
-			node = this.nodes[ node ] || this.dialogElements[ node ];
+	addNodeEvent( nodes, types, fnc ) {
+		if( typeof nodes === 'string' ) {
+			nodes = nodes.split( /\s+|,\s+/ );
+		} else if( nodes instanceof HTMLElement ) {
+			nodes = [ nodes ];
+		} else if( Array.isArray( nodes ) ) {
+			nodes = nodes;
+		} else {
+			this.error( `Wrong argument types.` );
 		}
 
 		if( typeof types === 'string' ) {
-			types = types.split( /\s+/ );
+			types = types.split( /\s+|,\s+/ );
 		} else {
-			this.error( `Parameter "types" must be a String (possibly separated by whitespaces), received ${typeof type} instead.` );
+			this.error( `Parameter "types" must be a String (possibly separated by whitespaces or commas), received ${typeof type} instead.` );
 		}
 
-		if( node instanceof HTMLElement ) {
-			for( let type of types ) {
-				if(!this._alreadyDelegatedEvents[ type ] ) {
-					this._alreadyDelegatedEvents[ type ] = true;
+		for( let node of nodes ) {
+			if( typeof node === 'string' ) {
+				node = this.nodes[ node ] || this.dialogElements[ node ];
+			}
 
-					if( Object.keys( this.dialogElements ).length ) {
-						this.dialogElements.root.addEventListener( type, this._delegatedEventHandler, false );
+			if( node instanceof HTMLElement ) {
+				for( let type of types ) {
+					if(!this._alreadyDelegatedEvents[ type ] ) {
+						this._alreadyDelegatedEvents[ type ] = true;
+
+						if( Object.keys( this.dialogElements ).length ) {
+							this.dialogElements.root.addEventListener( type, this._delegatedEventHandler, false );
+						} else {
+							this.nodes.root.addEventListener( type, this._delegatedEventHandler, false );
+						}
+					}
+
+					if( this.data.get( node ).events[ type ] === undef ) {
+						this.data.get( node ).events[ type ] = [ ];
+					}
+
+					if( this.data.get( node ).events[ type ].indexOf( fnc ) === -1 ) {
+						this.data.get( node ).events[ type ].push( fnc );
 					} else {
-						this.nodes.root.addEventListener( type, this._delegatedEventHandler, false );
+						this.warn( node, `identical event handlers are not allowed ->`, fnc );
 					}
 				}
-
-				if( this.data.get( node ).events[ type ] === undef ) {
-					this.data.get( node ).events[ type ] = [ ];
-				}
-
-				if( this.data.get( node ).events[ type ].indexOf( fnc ) === -1 ) {
-					this.data.get( node ).events[ type ].push( fnc );
-				} else {
-					this.error( node, `identical event handlers are not allowed ->`, fnc );
-				}
+			} else {
+				this.error( `Parameter "node" must be of type HTMLElement or String (referencing a valid node-name).` );
 			}
-		} else {
-			this.error( `Parameter "node" must be of type HTMLElement or String (referencing a valid node-name).` );
 		}
 	}
 

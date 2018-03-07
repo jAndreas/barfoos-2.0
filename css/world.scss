@@ -24,13 +24,6 @@ div#world {
 		justify-content:flex-start;
 		flex-direction:row;
 		flex-wrap:wrap;
-
-		> .BFComponent {
-			flex-basis:100%;
-			display:flex;
-			flex-direction:column;
-			flex-wrap:nowrap;
-		}
 		/*
 		DEBUG BORDER
 		box-sizing:border-box;
@@ -108,6 +101,13 @@ div#world.backgroundImage:before {
 
 div#world.blurred {
 	filter:blur(50px);
+}
+
+.BFComponent {
+	flex-basis:100%;
+	display:flex;
+	flex-direction:column;
+	flex-wrap:nowrap;
 }
 
 /*
