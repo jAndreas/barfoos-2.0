@@ -9,7 +9,13 @@ const	socket = io( ENV_PROD ? 'https://der-vegane-germane.de' : 'https://dev.der
 		}),
 		maxTimeout	= 3000;
 
-let		connected	= false;
+let		connected		= false,
+		connectRes		= null,
+		connectRej		= null,
+		reconnectServer	= new Promise(( res, rej ) => {
+			connectRes = res;
+			connectRej = rej;
+		});
 
 socket.on( 'reconnect_attempt', () => {
 	connected = false;
@@ -19,21 +25,35 @@ socket.on( 'reconnect_attempt', () => {
 
 socket.on( 'connect', () => {
 	connected = true;
+	connectRes();
 	if( ENV_PROD === false ) console.log('server connection established.');
 });
 
 socket.on( 'reconnect', attempts => {
 	connected = true;
+	connectRes();
 	if( ENV_PROD === false ) console.log('server connection (re-) established.');
 });
 
 socket.on( 'connect_timeout', timeout => {
 	connected = false;
+
+	reconnectServer	= new Promise(( res, rej ) => {
+		connectRes = res;
+		connectRej = rej;
+	});
+
 	if( ENV_PROD === false ) console.log('server connection timed out: ', timeout);
 });
 
 socket.on( 'disconnect', reason => {
 	connected = false;
+
+	reconnectServer	= new Promise(( res, rej ) => {
+		connectRes = res;
+		connectRej = rej;
+	});
+
 	if( ENV_PROD === false ) console.log('server connection disconnected: ', reason);
 });
 
@@ -53,13 +73,17 @@ let ServerConnection = target => class extends target {
 	send( { type = '', payload = { } } = { }, { noTimeout = false } = { } ) {
 		let responseTimeout;
 
-		return new Promise( ( resolve, reject ) => {
+		return new Promise( async ( resolve, reject ) => {
 			if(!noTimeout ) {
 				responseTimeout = win.setTimeout(() => {
 					if( this.id ) {
 						reject( `Server answer for ${ type } timed out.` );
 					}
 				}, maxTimeout);
+			}
+
+			if(!connected ) {
+				await reconnectServer;
 			}
 
 			socket.emit( type, payload, response => {

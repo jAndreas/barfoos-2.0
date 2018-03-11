@@ -90,7 +90,9 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 	}
 
 	orientationChange( event ) {
-		this.fire( 'appOrientationChange.appEvents' );
+		win.setTimeout(() => {
+			this.fire( 'appOrientationChange.appEvents' );
+		}, 100);
 	}
 
 	hashChange( event ) {

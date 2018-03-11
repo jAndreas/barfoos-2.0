@@ -61,9 +61,13 @@ div.bfDialogWrapper {
 		position:relative;
 		min-width:$dialogMinWidth;
 		min-height:80px;
+		max-height:95vh;
 		border-radius:$radius;
 		z-index:2;
-		color:white;
+		color:$themeTextColor;
+		text-shadow:0 0 12px rgba(255,255,255,0.5);
+		overflow-y:auto;
+		overflow-x:hidden;
 
 		&.minified {
 			height:0;

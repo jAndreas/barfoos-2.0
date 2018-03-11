@@ -281,7 +281,7 @@ let DOMTools = target => class extends target {
  * query is a native, simple DOM selector API.
  *****************************************************************************************************/
 extend( query ).with({
-	By:	{
+	by:	{
 		'id':		function byId( id, ctx ) {
 			return Array.from([ this.makeCtx( ctx ).getElementById( id ) ]);
 		},

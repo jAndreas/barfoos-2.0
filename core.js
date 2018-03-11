@@ -161,6 +161,18 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		return this.nodes.root.getBoundingClientRect();
 	}
 
+	async scrollContainerIntoView() {
+		let rootElementFromParent = await this.fire( `getModuleRootElement.${ this.location }` );
+
+		if( rootElementFromParent === null ) {
+			rootElementFromParent = await this.fire( `getRootNodeOfSection.core`, this.location );
+		}
+
+		if( rootElementFromParent instanceof HTMLElement ) {
+			rootElementFromParent.scrollIntoView();
+		}
+	}
+
 	onDialogModeChange( active ) {
 		if( active ) {
 			this.nodes.root.style.background	= 'inherit';
@@ -292,7 +304,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				return;
 			}
 
-			this.nodes.modalOverlay.innerHTML = msg;
+			this.nodes.modalOverlay.innerHTML = `<div style="word-wrap:break-word;font-size:2vh;width:80%">${ msg }</div>`;
 			return this.timeout( duration );
 		};
 
@@ -329,7 +341,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		return {
 			with:	replacementHash => {
 				for( let [ searchFor, value ] of Object.entries( replacementHash ) ) {
-					htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), value );
+					htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), value.toString().replace( /\n/g, '<br/>') );
 				}
 
 				return {

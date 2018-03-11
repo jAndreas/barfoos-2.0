@@ -68,6 +68,10 @@ class Overlay extends Component {
 		} else if( this.centerToViewport ) {
 			this.centerOverlay({ centerToViewport: true });
 		}
+
+		if( this.topMost ) {
+			this.nodes.dialogRoot.style.zIndex	= 1000;
+		}
 	}
 
 	async centerOverlay({ centerToViewport = false } = { }) {
@@ -95,7 +99,9 @@ class Overlay extends Component {
 	}
 
 	orientationChange() {
-		this.centerOverlay();
+		super.orientationChange && super.orientationChange( ...arguments );
+
+		this.centerOverlay({ centerToViewport: this.centerToViewport });
 
 		super.orientationChange && super.orientationChange( ...arguments );
 	}
@@ -183,11 +189,14 @@ let Draggable = target => class extends target {
 	mouseMoveHandler( event ) {
 		super.mouseMoveHandler && super.mouseMoveHandler( ...arguments );
 
-		this.dialogElements[ 'div.bfDialogWrapper' ].style.left	= `${event.pageX - this.relativeCursorPositionLeft}px`;
-		this.dialogElements[ 'div.bfDialogWrapper' ].style.top	= `${event.pageY - this.relativeCursorPositionTop}px`;
+		if( event.which === 1 ) {
+			this.dialogElements[ 'div.bfDialogWrapper' ].style.left	= `${event.pageX - this.relativeCursorPositionLeft}px`;
+			this.dialogElements[ 'div.bfDialogWrapper' ].style.top	= `${event.pageY - this.relativeCursorPositionTop}px`;
 
-		event.stopPropagation();
-		event.preventDefault();
+			event.stopPropagation();
+			event.preventDefault();
+		}
+
 		return false;
 	}
 
@@ -236,9 +245,7 @@ let GlasEffect = target => class extends target {
 	}
 
 	async initCloneElements( event ) {
-		let rootElementFromParent;
-
-		rootElementFromParent = await this.fire( `getModuleRootElement.${ this.location }` );
+		let rootElementFromParent = await this.fire( `getModuleRootElement.${ this.location }` );
 
 		if( rootElementFromParent === null ) {
 			rootElementFromParent = await this.fire( `getRootNodeOfSection.core`, this.location );
@@ -282,13 +289,15 @@ let GlasEffect = target => class extends target {
 	}
 
 	mouseMoveHandler( event ) {
-		if( this.firstMove ) {
-			this.fire( 'resetClones.overlay' );
-			this.initCloneElements();
-			this.firstMove = false;
-		}
+		if( event.which ===  1 ) {
+			if( this.firstMove ) {
+				this.fire( 'resetClones.overlay' );
+				this.initCloneElements();
+				this.firstMove = false;
+			}
 
-		this.updateCloneElements( event );
+			this.updateCloneElements( event );
+		}
 
 		super.mouseMoveHandler && super.mouseMoveHandler( ...arguments );
 	}
