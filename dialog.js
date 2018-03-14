@@ -42,10 +42,14 @@ class Overlay extends Component {
 		super.init && super.init();
 	}
 
-	destroy() {
+	async destroy() {
 		overlayInstances--;
 
 		if( overlayInstances === 0 ) {
+			if( this.modalOverlay ) {
+				await this.modalOverlay.fulfill();
+			}
+
 			this.fire( 'dialogMode.core', false );
 		}
 

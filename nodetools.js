@@ -31,7 +31,7 @@ let NodeTools = target => class extends target {
 					}
 
 					if( this.data.get( event.target ) === undef ) {
-					//	this.cleanDelegations();
+						this.cleanDelegations();
 						return false;
 					}
 
@@ -43,16 +43,16 @@ let NodeTools = target => class extends target {
 						}
 
 						this.data.get( event.target ).oneTimeEvents[ event.type ] = [ ];
-						//this.cleanDelegations();
+						this.cleanDelegations();
 					}
 				}
 
 				if( event.target && event.target.parentElement ) {
-					if( skippedPropagationElements.test( event.target.nodeName ) ) {
+					/*if( skippedPropagationElements.test( event.target.nodeName ) ) {
 						if( event.target.getAttribute( 'type' ) !== 'text') {
 							return false;
 						}
-					}
+					}*/
 
 					if( event.target.classList.contains( 'noPropagation' ) ) {
 						return false;

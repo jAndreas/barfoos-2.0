@@ -266,9 +266,14 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		};
 	}
 
-	createModalOverlay( { at, opts: { location = 'afterbegin', spinner = false } = { } } = { } ) {
+	createModalOverlay( { at, opts: { location = 'afterbegin', spinner = false, inheritBackground = false } = { } } = { } ) {
 		let opts				= { location, spinner },
 			controlInterface	= Object.create( null );
+
+		if( this.modalOverlay && typeof this.modalOverlay.cleanup === 'function' ) {
+			this.modalOverlay.cleanup();
+			this.modalOverlay = null;
+		}
 
 		this.addNodes({
 			nodeData:	this.overlayNode.cloneNode(),
@@ -280,6 +285,10 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		});
 
 		this.nodes.modalOverlay.classList.add( 'flex' );
+
+		if( inheritBackground ) {
+			this.nodes.modalOverlay.classList.add( 'inheritBackground' );
+		}
 
 		if( spinner ) {
 			controlInterface.spinner = this.activateSpinner({
@@ -297,6 +306,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			}
 
 			this.removeNodes( 'modalOverlay', true );
+			delete this.modalOverlay;
 		};
 
 		controlInterface.log = async ( msg, duration = 3000 ) => {
@@ -313,7 +323,9 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				return;
 			}
 
-			this.nodes.modalOverlay.classList.add( 'fulfilled' );
+			if(!inheritBackground ) {
+				this.nodes.modalOverlay.classList.add( 'fulfilled' );
+			}
 
 			if( this.nodes.overlayConfirm ) {
 				await Promise.all( this.data.get( this.nodes.overlayConfirm ).storage.animations.running );
@@ -334,7 +346,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			return fadeOut;
 		};
 
-		return controlInterface;
+		this.modalOverlay = controlInterface;
 	}
 
 	render({ htmlData = '', standalone = false }) {

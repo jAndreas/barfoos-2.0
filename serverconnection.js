@@ -71,12 +71,13 @@ let ServerConnection = target => class extends target {
 	}
 
 	send( { type = '', payload = { } } = { }, { noTimeout = false } = { } ) {
+		let self = this;
 		let responseTimeout;
 
 		return new Promise( async ( resolve, reject ) => {
 			if(!noTimeout ) {
 				responseTimeout = win.setTimeout(() => {
-					if( this.id ) {
+					if( self.id ) {
 						reject( `Server answer for ${ type } timed out.` );
 					}
 				}, maxTimeout);
@@ -90,12 +91,12 @@ let ServerConnection = target => class extends target {
 				win.clearTimeout( responseTimeout );
 
 				try {
-					this.handleServerReponse( response );
+					self.handleServerResponse( response );
 				} catch( ex ) {
 					reject( ex );
 				}
 
-				if( this.id ) {
+				if( self.id ) {
 					resolve( response );
 				}
 			});
@@ -103,20 +104,22 @@ let ServerConnection = target => class extends target {
 	}
 
 	recv( type, callback ) {
+		let self = this;
+
 		socket.on( type, recvData => {
 			try {
-				this.handleServerReponse( recvData );
+				self.handleServerResponse && self.handleServerResponse( recvData );
 			} catch( ex ) {
 				throw new Error( ex );
 			}
 
-			if( this.id ) {
+			if( self.id ) {
 				callback( recvData );
 			}
 		});
 	}
 
-	handleServerReponse( response ) {
+	handleServerResponse( response ) {
 		if( response.error || response.errorCode ) {
 			// handle errors
 			throw response.error || response.errorCode;
