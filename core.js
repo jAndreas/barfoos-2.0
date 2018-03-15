@@ -78,6 +78,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.on( `getModuleRootElement.${ this.id }`, this.getModuleRootElement, this );
 		this.on( `getModuleDimensions.${ this.id }`, this.getModuleDimensions, this );
 		this.on( `dialogMode.core`, this.onDialogModeChange, this );
+		this.on( `centerScroll.appEvents`, this.onCenterScrollCore, this );
 		this.installModule();
 
 		return Promise.all( this.runtimeDependencies );
@@ -90,7 +91,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 		this.removeAllNodeEvents();
 
-		if( this.dialogElements ) {
+		if( Object.keys( this.dialogElements ).length ) {
 			delete this.nodes.root;
 
 			this.removeNodes( 'dialogRoot', true );
@@ -181,6 +182,31 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			this.nodes.root.style.background	= '';
 			this._dialogMode = false;
 		}
+	}
+
+	onCenterScrollCore( data ) {
+		let clientRect			= this.nodes.root.getBoundingClientRect(),
+			centerOfViewport	= win.innerHeight / 2;
+
+		if( clientRect.top <= centerOfViewport && clientRect.bottom >= centerOfViewport ) {
+			if(!this._insightViewport ) {
+				this._insightViewport = true;
+				this.inViewport();
+			}
+		} else {
+			if( this._insightViewport ) {
+				this._insightViewport = false;
+				this.offViewport();
+			}
+		}
+	}
+
+	inViewport() {
+		super.inViewport && super.inViewport( ...arguments );
+	}
+
+	offViewport() {
+		super.offViewport && super.offViewport( ...arguments );
 	}
 
 	activateSpinner( { at, opts: { location = 'afterbegin', position = { x:0, y:0 }, anchorRect = null, fitToSize = true, relative = false, lowblur = false } = { } } = { } ) {
@@ -314,8 +340,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				return;
 			}
 
-			this.nodes.modalOverlay.innerHTML = `<div style="word-wrap:break-word;font-size:2vh;width:80%">${ msg }</div>`;
-			return this.timeout( duration );
+			this.nodes.modalOverlay.innerHTML = `<div style="word-wrap:break-word;font-size:2vh;color:white;text-align:center;width:80%">${ msg }</div>`;
+			return duration ? this.timeout( duration ) : null;
 		};
 
 		controlInterface.fulfill = async ( duration = 1000 ) => {

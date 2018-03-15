@@ -78,6 +78,37 @@ class Overlay extends Component {
 		}
 	}
 
+	scrollDialogContainerDown() {
+		let contentBodyHeight	= this.dialogElements[ 'div.bfContentDialogBody' ].offsetHeight,
+			installedRootHeight	= this.nodes.root.offsetHeight;
+
+		if( installedRootHeight > contentBodyHeight ) {
+			this.dialogElements[ 'div.bfContentDialogBody' ].scrollTop = installedRootHeight - contentBodyHeight;
+		}
+	}
+
+	scrollDialogContainerUp() {
+		this.dialogElements[ 'div.bfContentDialogBody' ].scrollTop = 0;
+	}
+
+	scrollElementIntoView( node ) {
+		if( typeof node === 'string' ) {
+			node = this.nodes[ node ] || this.dialogElements[ node ];
+		}
+
+		if( node instanceof HTMLElement ) {
+			let nodeRect		= node.getBoundingClientRect(),
+				containerRect	= this.dialogElements[ 'div.bfContentDialogBody' ].getBoundingClientRect(),
+				scrollTop		= this.dialogElements[ 'div.bfContentDialogBody' ].scrollTop;
+
+			if( nodeRect.bottom > containerRect.bottom ) {
+				this.dialogElements[ 'div.bfContentDialogBody' ].scrollTop = (nodeRect.bottom - containerRect.bottom) + 10;
+			} else if( nodeRect.top < containerRect.top ) {
+				this.dialogElements[ 'div.bfContentDialogBody' ].scrollTop = scrollTop - (containerRect.top - nodeRect.top ) - 10;
+			}
+		}
+	}
+
 	async centerOverlay({ centerToViewport = false } = { }) {
 		let ownRect		= this.nodes.dialogRoot.getBoundingClientRect(),
 			rootRect;

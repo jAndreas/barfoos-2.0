@@ -29,7 +29,7 @@ let Mediator = target => class extends target {
 						namespaceContainer[ eventNameSpace ][ eventName ] = [ ];
 					}
 
-					namespaceContainer[ eventNameSpace ][ eventName ].unshift({ handler: scope ? handler.bind( scope ) : handler, registrar: this });
+					namespaceContainer[ eventNameSpace ][ eventName ].unshift({ handler: handler, scope: scope, registrar: this });
 				} else {
 					throw new SyntaxError( 'an event name is mandatory for on() locators.' );
 				}
@@ -123,7 +123,7 @@ let Mediator = target => class extends target {
 							if( listenersMax > -1 ) {
 								do {
 									listener	= container[ listenersMax ];
-									result		= listener.handler( data, event );
+									result		= listener.handler.call( listener.scope, data, event );
 
 									// push whatever result was into data to our promises array
 									resultData.push( result );

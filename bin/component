@@ -15,8 +15,6 @@ import style from '../style/main.scss';
 const	priv_var1		= 'the',
 		priv_var2		= 'game';
 
-let		instance		= null;
-
 /*****************************************************************************************************
  *  "description here"
  *****************************************************************************************************/
@@ -56,18 +54,10 @@ class MyModule extends Component {
 async function start( ...args ) {
 	[ style ].forEach( style => style.use() );
 
-	instance = await new MyModule( ...args );
+	return await new MyModule( ...args );
 }
 
-function stop() {
-	[ style ].forEach( style => style.unuse() );
-
-	if( instance ) {
-		instance.destroy();
-	}
-}
-
-export { start, stop };`;
+export { start };`;
 
 const cssmain = `@import '~barfoos2.0/css/viewportDefinitions';`;
 
