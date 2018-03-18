@@ -1,6 +1,7 @@
 'use strict';
 
 import { Component } from './core.js';
+import { VK } from './defs.js';
 import { extend, makeClass } from './toolkit.js';
 import { win, doc, undef } from './domkit.js';
 
@@ -34,6 +35,7 @@ class Overlay extends Component {
 		}
 
 		this.on( 'appOrientationChange.appEvents', this.orientationChange, this );
+		this.on( 'down.keys', this.onKeyDown, this );
 
 		if(!this.avoidOutsideClickClose ) {
 			this.on( 'mousedown.appEvents', this.onBackgroundMouseDown, this );
@@ -76,6 +78,18 @@ class Overlay extends Component {
 		if( this.topMost ) {
 			this.nodes.dialogRoot.style.zIndex	= 1000;
 		}
+
+		if( this.hoverOverlay ) {
+			this.nodes.dialogRoot.classList.add( 'hoverOverlay' );
+		}
+
+		this.addNodeEvent( 'div.overlayClose', 'click touchstart', this.onOverlayCloseClick );
+	}
+
+	onOverlayCloseClick( event ) {
+		event.stopPropagation();
+
+		this.destroy();
 	}
 
 	scrollDialogContainerDown() {
@@ -139,6 +153,14 @@ class Overlay extends Component {
 		this.centerOverlay({ centerToViewport: this.centerToViewport });
 
 		super.orientationChange && super.orientationChange( ...arguments );
+	}
+
+	onKeyDown( vk ) {
+		switch( vk ) {
+			case VK.ESC:
+				this.destroy();
+				break;
+		}
 	}
 
 	onBackgroundMouseDown( event ) {

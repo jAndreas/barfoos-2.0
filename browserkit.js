@@ -23,10 +23,18 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 	}
 
 	async init() {
+		doc.onreadystatechange = () => {
+			if( doc.readyState === 'complete' ) {
+				this.fire( 'DOMReady.appEvents' );
+			}
+		}
+
 		win.addEventListener( 'focus', this.focusin.bind( this ), false );
 		win.addEventListener( 'blur', this.focusout.bind( this ), false );
 		win.addEventListener( 'orientationchange', this.orientationChange.bind( this ), false );
 		win.addEventListener( 'hashchange', this.hashChange.bind( this ), false );
+		win.addEventListener( 'keydown', this.keydown.bind( this ), false );
+		win.addEventListener( 'keydown', this.keyup.bind( this ), false );
 		doc.addEventListener( 'visibilitychange', this.visibilityChange.bind( this ), false );
 		doc.addEventListener( 'focusin', this.focusin.bind( this ), false );
 		doc.addEventListener( 'focusout', this.focusout.bind( this ), false );
@@ -35,6 +43,7 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		doc.addEventListener( 'mouseup', this.mouseup.bind( this ), false );
 		doc.addEventListener( 'touchend', this.mouseup.bind( this ), false );
 
+		this.on( 'waitForDOM.appEvents', this.waitForDOM, this );
 		this.on( 'pushMouseMoveListener.appEvents', this.pushMouseMoveListener, this );
 		this.on( 'removeMouseMoveListener.appEvents', this.removeMouseMoveListener, this );
 
@@ -45,6 +54,12 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		// mediaQuery
 		// resize
 		// scroll
+	}
+
+	waitForDOM( event ) {
+		return doc.readyState === 'complete' || new Promise( (res, rej) => {
+			doc.addEventListener( 'DOMContentLoaded', () => res( doc.readyState ) );
+		});
 	}
 
 	pushMouseMoveListener( fnc ) {
@@ -97,6 +112,14 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 
 	hashChange( event ) {
 		this.fire( 'hashChange.appEvents', new win.URLSearchParams( location.hash.slice( 1 ) ) );
+	}
+
+	keydown( event ) {
+		this.fire( 'down.keys', event.which || event.keyCode );
+	}
+
+	keyup( event ) {
+		this.fire( 'up.keys', event.which || event.keyCode );
 	}
 
 	mousemove( event ) {

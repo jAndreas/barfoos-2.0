@@ -44,14 +44,24 @@ let Swipe = target => class extends target {
 		} else {
 			if( (touchEnd - touchStart) < 300 ) {
 				if ( yDiff > 10 ) {
-					this.onSwipeDown && this.onSwipeDown();
+					this.onSwipeDown();
 				} else if( yDiff < -10 ) {
-					this.onSwipeUp && this.onSwipeUp();
+					this.onSwipeUp();
 				}
 			}
 		}
 
 		xDown = yDown = xDiff = yDiff = touchStart = null;
+	}
+
+	onSwipeUp() {
+		super.onSwipeUp && super.onSwipeUp( ...arguments );
+		this.fire( `slideUpGesture.${ this.id }` );
+	}
+
+	onSwipeDown() {
+		super.onSwipeDown && super.onSwipeDown( ...arguments );
+		this.fire( `slideDownGesture.${ this.id }` );
 	}
 }
 

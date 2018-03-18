@@ -10,7 +10,6 @@ div#world {
 	overflow:hidden;
 
 	transition:all 600ms linear;
-	background-color:rgba(10,10,10,1);
 
 	> section {
 		position:relative;
@@ -79,16 +78,16 @@ div#world {
 }
 
 div#world.backgroundImage {
-	background-attachment:fixed !important;
-	background-size:cover !important;
-	background-repeat:no-repeat !important;
-	background-blend-mode:multiply !important;
+	background-attachment:fixed;
+	background-size:cover;
+	background-repeat:no-repeat;
+	background-blend-mode:multiply;
 }
 
 div#world.backgroundImage:before {
 	background:inherit;
-	background-attachment:scroll;
-	background-size:cover;
+	/*background-attachment:scroll;
+	background-size:cover;*/
 	position:fixed;
 	left:0;
 	right:0;
@@ -97,6 +96,13 @@ div#world.backgroundImage:before {
 	content:'';
 	filter:blur(8px) grayscale(50%);
 	transition:filter 600ms linear;
+}
+
+div#world.backgroundImageFullBlur {
+}
+
+div#world.backgroundImageFullBlur:before {
+	filter:blur(38px) grayscale(80%);
 }
 
 div#world.blurred {

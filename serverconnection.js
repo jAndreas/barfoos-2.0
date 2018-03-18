@@ -19,6 +19,7 @@ socket.on( 'reconnect_attempt', () => {
 });
 
 socket.on( 'connect', () => {
+	eventLoop.fire( 'connect.server' );
 	if( ENV_PROD === false ) console.log('server connection established.');
 });
 
@@ -39,6 +40,8 @@ socket.on( 'disconnect', reason => {
 socket.on( 'error', error => {
 	if( ENV_PROD === false ) console.log('server connection error: ', error);
 });
+
+eventLoop.on( 'isConnected.server', () => socket.connected );
 
 let ServerConnection = target => class extends target {
 	constructor() {

@@ -50,14 +50,15 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				overlayNode:		this.makeNode( '<div class="BFModalOverlay"></div>' ),
 				confirmNode:		this.makeNode( '<div class="BFConfirm"></div>' ),
 				location:			this.location,
-				nodeLocation:		'beforeend'
+				nodeLocation:		'beforeend',
+				_insightViewport:	null
 			});
-
-			this.data.set( this, Object.create( null ) );
 
 			this.runtimeDependencies.push(
 				this.fire( 'waitForDOM.appEvents' )
 			);
+
+			this.data.set( this, Object.create( null ) );
 		} else {
 			this.log('worker..?');
 		}
@@ -68,6 +69,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	}
 
 	init() {
+		super.init && super.init( ...arguments );
+
 		if(!ENV_PROD ) {
 			win.bfdebug = () => {
 				console.log( this );
@@ -80,6 +83,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.on( `dialogMode.core`, this.onDialogModeChange, this );
 		this.on( `centerScroll.appEvents`, this.onCenterScrollCore, this );
 		this.installModule();
+
+		this.onCenterScrollCore();
 
 		return Promise.all( this.runtimeDependencies );
 	}
@@ -184,7 +189,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		}
 	}
 
-	onCenterScrollCore( data ) {
+	onCenterScrollCore() {
 		let clientRect			= this.nodes.root.getBoundingClientRect(),
 			centerOfViewport	= win.innerHeight / 2;
 
@@ -292,7 +297,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		};
 	}
 
-	createModalOverlay( { at, opts: { location = 'afterbegin', spinner = false, inheritBackground = false } = { } } = { } ) {
+	createModalOverlay( { at = this.nodes.root, opts: { location = 'afterbegin', spinner = false, inheritBackground = false } = { } } = { } ) {
 		let opts				= { location, spinner },
 			controlInterface	= Object.create( null );
 
@@ -393,6 +398,14 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			}
 		};
 	}
+
+	loadImage( url ) {
+		try {
+			return fetch( url ).then( res => res.blob() ).then( blob => URL.createObjectURL( blob ) );
+		} catch ( ex ) {
+			this.log( `Error: ${ ex.message }` );
+		}
+	}
 }
 /****************************************** Component End ******************************************/
 
@@ -472,9 +485,9 @@ eventLoop.on( 'slideDownTo.appEvents', node => {
 	function step() {
 		nodes[ 'section.center' ].scrollTop += ease( count ) + (5*accel);
 		count -= prog;
-		accel += 5;
+		accel += 3;
 
-		if( node.getBoundingClientRect().top > 0 ) {
+		if( Math.round( node.getBoundingClientRect().top ) > 0 ) {
 			win.requestAnimationFrame( step );
 		} else {
 			nodes[ 'section.center' ].scrollTop = endValue;
@@ -488,12 +501,12 @@ eventLoop.on( 'slideUpTo.appEvents', node => {
 	let	count		= 1,
 		prog		= 1 / 100,
 		accel		= 0,
-		endValue	= node.getBoundingClientRect().top - nodes[ 'section.center' ].scrollTop;
+		endValue	= nodes[ 'section.center' ].scrollTop - Math.abs( node.getBoundingClientRect().top );
 
 	function step() {
 		nodes[ 'section.center' ].scrollTop -= ease( count ) + (5 * accel);
 		count -= prog;
-		accel += 5;
+		accel += 3;
 
 		if( node.getBoundingClientRect().top < 0 ) {
 			win.requestAnimationFrame( step );
@@ -533,6 +546,14 @@ eventLoop.on( 'moduleDestruction.appEvents', ( module, event ) => {
 	}
 });
 
+eventLoop.on( 'requestFullBlur.core', () => {
+	nodes[ 'div#world' ].classList.add( 'backgroundImageFullBlur' );
+});
+
+eventLoop.on( 'removeFullBlur.core', () => {
+	nodes[ 'div#world' ].classList.remove( 'backgroundImageFullBlur' );
+});
+
 eventLoop.on( 'configApp.core', app => {
 	console.log( `Setting up BarFoos Application ${ app.name } version ${ app.version }(${ app.status }).` );
 
@@ -540,7 +561,7 @@ eventLoop.on( 'configApp.core', app => {
 
 	if( app.background ) {
 		if( typeof app.background.objURL === 'string' ) {
-			nodes[ 'div#world' ].style.background = `url( ${ app.background.objURL } )`;
+			nodes[ 'div#world' ].style.backgroundImage = `url( ${ app.background.objURL } )`;
 			nodes[ 'div#world' ].classList.add( 'backgroundImage' );
 
 			for( let [ prop, value ] of Object.entries( app.background.css ) ) {

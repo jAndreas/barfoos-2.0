@@ -59,12 +59,6 @@ let DOMTools = target => class extends target {
 		return nodes;
 	}
 
-	waitForDOM( event ) {
-		return doc.readyState === 'complete' || new Promise( (res, rej) => {
-			doc.addEventListener( 'DOMContentLoaded', () => res( doc.readyState ) );
-		});
-	}
-
 	addNodes({ nodeData, htmlData, reference = { }, nodeName, standalone = false } = { }) {
 		if( typeof reference.node === 'string' ) {
 			reference.node = this.nodes[ reference.node ];
@@ -265,14 +259,6 @@ let DOMTools = target => class extends target {
 
 	init() {
 		super.init && super.init( ...arguments );
-
-		doc.onreadystatechange = () => {
-			if( doc.readyState === 'complete' ) {
-				this.fire( 'DOMReady.appEvents' );
-			}
-		}
-
-		this.on( 'waitForDOM.appEvents', this.waitForDOM, this );
 	}
 };
 /********************************************* DOMTools End ******************************************/
