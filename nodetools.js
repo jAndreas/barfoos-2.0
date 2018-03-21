@@ -171,7 +171,7 @@ let NodeTools = target => class extends target {
 				if( this.data.get( node ).oneTimeEvents[ type ].indexOf( fnc ) === -1 ) {
 					this.data.get( node ).oneTimeEvents[ type ].push( fnc );
 				} else {
-					this.error( node, `identical event handlers are not allowed ->`, fnc );
+					this.warn( node, `identical event handlers are not allowed ->`, fnc );
 				}
 			}
 		} else {

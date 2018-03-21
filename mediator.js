@@ -47,7 +47,7 @@ let Mediator = target => class extends target {
 		let patch = function() {
 			console.log('patched event listener for once()');
 			that.off( eventLocators, patch );
-			return handler( ...arguments );
+			return handler.apply( scope, arguments );
 		}
 
 		this.on( eventLocators, patch, scope );

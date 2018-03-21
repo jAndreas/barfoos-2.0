@@ -64,7 +64,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		}
 
 		this.fire( 'moduleLaunch.appEvents', {
-			id:	this.id
+			id:		this.id,
+			state:	this
 		});
 	}
 
@@ -239,10 +240,10 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		}
 
 		if( opts.fitToSize ) {
-			let calcSize								= opts.anchorRect.height / 2;
+			let calcSize								= ( opts.anchorRect.height / 2 ) * ( 0.8 );
 			this.nodes.overlaySpinner.style.width		= `${calcSize}px`;
 			this.nodes.overlaySpinner.style.height		= `${calcSize}px`;
-			this.nodes.overlaySpinner.style.borderWidth	= `${calcSize / 10}px`;
+			this.nodes.overlaySpinner.style.borderWidth	= `${calcSize / 14}px`;
 		}
 
 		return {
@@ -266,10 +267,10 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				}
 
 				if( opts.fitToSize ) {
-					let calcSize								= opts.anchorRect.height / 2;
+					let calcSize								= ( opts.anchorRect.height / 2 ) * ( 0.8 );
 					this.nodes.overlayConfirm.style.width		= `${calcSize}px`;
 					this.nodes.overlayConfirm.style.height		= `${calcSize}px`;
-					this.nodes.overlayConfirm.style.borderWidth	= `${calcSize / 10}px`;
+					this.nodes.overlayConfirm.style.borderWidth	= `${calcSize / 14}px`;
 				}
 
 				return this.animate({
@@ -293,15 +294,19 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 				this.removeNodes( 'overlaySpinner', true );
 				this.removeNodes( 'overlayConfirm', true );
+			},
+			log:		( msg ) => {
+				this.nodes.overlaySpinner.insertAdjacentHTML( 'afterend', `<div style="word-wrap:break-word;font-size:2vh;color:white;text-align:center;width:80%">${ msg }</div>` );
 			}
 		};
 	}
 
-	createModalOverlay( { at = this.nodes.root, opts: { location = 'afterbegin', spinner = false, inheritBackground = false } = { } } = { } ) {
+	async createModalOverlay( { at = this.nodes.root, opts: { location = 'afterbegin', spinner = false, inheritBackground = false } = { } } = { } ) {
 		let opts				= { location, spinner },
 			controlInterface	= Object.create( null );
 
 		if( this.modalOverlay && typeof this.modalOverlay.cleanup === 'function' ) {
+			await Promise.all( this.data.get( this.nodes.modalOverlay ).storage.animations.running );
 			this.modalOverlay.cleanup();
 			this.modalOverlay = null;
 		}
@@ -345,7 +350,12 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				return;
 			}
 
-			this.nodes.modalOverlay.innerHTML = `<div style="word-wrap:break-word;font-size:2vh;color:white;text-align:center;width:80%">${ msg }</div>`;
+			if( spinner ) {
+				controlInterface.spinner.log( msg );
+			} else {
+				this.nodes.modalOverlay.innerHTML = `<div style="word-wrap:break-word;font-size:2vh;color:white;text-align:center;width:80%">${ msg }</div>`;
+			}
+
 			return duration ? this.timeout( duration ) : null;
 		};
 
@@ -540,10 +550,18 @@ eventLoop.on( 'moduleDestruction.appEvents', ( module, event ) => {
 	if( module.id in modules.online ) {
 		modules.online[ module.id ]--;
 
+		if( modules.online[ module.id ] === 0 ) {
+			delete modules.online[ module.id ];
+		}
+
 		console.log( `module ${module.id} was destroyed( ${modules.online[module.id]}x instances left )` );
 	} else {
 
 	}
+});
+
+eventLoop.on( 'getModuleState.core', moduleId => {
+	return modules.online[ moduleId ];
 });
 
 eventLoop.on( 'requestFullBlur.core', () => {

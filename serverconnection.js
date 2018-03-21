@@ -41,7 +41,9 @@ socket.on( 'error', error => {
 	if( ENV_PROD === false ) console.log('server connection error: ', error);
 });
 
-eventLoop.on( 'isConnected.server', () => socket.connected );
+eventLoop.on( 'waitForConnection.server', () => socket.connected || new Promise(( res, rej ) => {
+	socket.on( 'connect', () => res( true ) );
+}));
 
 let ServerConnection = target => class extends target {
 	constructor() {
