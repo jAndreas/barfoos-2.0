@@ -209,10 +209,14 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 	inViewport() {
 		super.inViewport && super.inViewport( ...arguments );
+
+		this.modalOverlay && this.modalOverlay.return();
 	}
 
 	offViewport() {
 		super.offViewport && super.offViewport( ...arguments );
+
+		this.modalOverlay && this.modalOverlay.suspend();
 	}
 
 	activateSpinner( { at, opts: { location = 'afterbegin', position = { x:0, y:0 }, anchorRect = null, fitToSize = true, relative = false, lowblur = false } = { } } = { } ) {
@@ -297,6 +301,16 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			},
 			log:		( msg ) => {
 				this.nodes.overlaySpinner.insertAdjacentHTML( 'afterend', `<div style="word-wrap:break-word;font-size:2vh;color:white;text-align:center;width:80%">${ msg }</div>` );
+			},
+			hide:		() => {
+				if( this.nodes.overlaySpinner ) {
+					this.nodes.overlaySpinner.style.display = 'none';
+				}
+			},
+			show:		() => {
+				if( this.nodes.overlaySpinner ) {
+					this.nodes.overlaySpinner.style.display = 'block';
+				}
 			}
 		};
 	}
@@ -385,6 +399,18 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			});
 
 			return fadeOut;
+		};
+
+		controlInterface.suspend = () => {
+			if( this.nodes.modalOverlay && spinner ) {
+				controlInterface.spinner.hide();
+			}
+		};
+
+		controlInterface.return = () => {
+			if( this.nodes.modalOverlay && spinner ) {
+				controlInterface.spinner.show();
+			}
 		};
 
 		this.modalOverlay = controlInterface;
