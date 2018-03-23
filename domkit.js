@@ -223,7 +223,7 @@ let DOMTools = target => class extends target {
 					}
 
 					if( name.startsWith( 'data-' ) ) {
-						self.data.get( node ).storage.nodeData[ name.slice( 3 ) ] = value;
+						self.data.get( node ).storage.nodeData[ name.slice( 5 ) ] = value;
 					}
 				}
 

@@ -59,7 +59,12 @@ async function start( ...args ) {
 
 export { start };`;
 
-const cssmain = `@import '~barfoos2.0/css/viewportDefinitions';`;
+const cssmain =
+`@import '~barfoos2.0/css/viewportDefinitions';
+
+div.MyModule {
+
+}`;
 
 const htmlmain = `<div class="MyModule"></div>`;
 

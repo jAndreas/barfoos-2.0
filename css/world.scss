@@ -3,7 +3,7 @@
 div#world {
 	display:flex;
 	align-items:stretch;
-	justify-content:space-around;
+	justify-content:flex-start;
 	flex-direction:row;
 	flex-wrap:wrap;
 
@@ -13,7 +13,7 @@ div#world {
 
 	> section {
 		position:relative;
-		flex-grow:1;
+		flex-grow:0;
 		flex-shrink:1;
 		flex-basis:100%;
 
@@ -36,11 +36,20 @@ div#world {
 	}
 
 	> section.content.center {
-		justify-content:space-around;
-		width:100vw;
+		justify-content:flex-start;
+		/*width:100vw;*/
 		height:100vh;
 		overflow-x:hidden;
 		overflow-y:scroll;
+
+		&.mobileNavMode {
+			flex-basis:20%
+		}
+
+		&.mobileNavMode ~ section.content.right {
+			flex-basis:80%;
+			display:block;
+		}
 	}
 
 	> section.footer {
@@ -56,12 +65,6 @@ div#world {
 		flex-grow:0;
 		flex-shrink:1;
 		order:0;
-
-		@media screen and (max-width:$iPadPortrait) {
-			flex-grow:1;
-			flex-basis:100vw;
-			flex-shrink:1;
-		}
 	}
 
 	> section.content.right {
@@ -69,11 +72,7 @@ div#world {
 		flex-basis:0%;
 		flex-grow:0;
 		order:4;
-
-		@media screen and (max-width:$iPadPortrait) {
-			flex-grow:1;
-			flex-basis:100vw;
-		}
+		display:none;
 	}
 }
 

@@ -81,6 +81,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.on( `newChildModule.${ this.id }`, this.newChildModule, this );
 		this.on( `getModuleRootElement.${ this.id }`, this.getModuleRootElement, this );
 		this.on( `getModuleDimensions.${ this.id }`, this.getModuleDimensions, this );
+		this.on( `slideDownTo.${ this.id }`, this.slideDownTo, this );
 		this.on( `dialogMode.core`, this.onDialogModeChange, this );
 		this.on( `centerScroll.appEvents`, this.onCenterScrollCore, this );
 		this.installModule();
@@ -168,6 +169,10 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		return this.nodes.root.getBoundingClientRect();
 	}
 
+	slideDownTo() {
+		this.fire( 'slideDownTo.appEvents', this.nodes.root );
+	}
+
 	async scrollContainerIntoView() {
 		let rootElementFromParent = await this.fire( `getModuleRootElement.${ this.location }` );
 
@@ -197,7 +202,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		if( clientRect.top <= centerOfViewport && clientRect.bottom >= centerOfViewport ) {
 			if(!this._insightViewport ) {
 				this._insightViewport = true;
-				this.inViewport();
+				this.inViewport({ enteredFrom: clientRect.top > 0 ? 'top' : 'bottom' });
 			}
 		} else {
 			if( this._insightViewport ) {
@@ -207,7 +212,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		}
 	}
 
-	inViewport() {
+	inViewport({ enteredFrom = '' } = { }) {
 		super.inViewport && super.inViewport( ...arguments );
 
 		this.modalOverlay && this.modalOverlay.return();
@@ -513,45 +518,53 @@ eventLoop.on( 'mouseWheelDown.appEvents', () => {
 });*/
 
 eventLoop.on( 'slideDownTo.appEvents', node => {
-	let	count		= 1,
+	return new Promise(( res, rej ) => {
+		let	count		= 1,
 		prog		= 1 / 100,
 		accel		= 0,
 		endValue	= nodes[ 'section.center' ].scrollTop + node.getBoundingClientRect().top;
 
-	function step() {
-		nodes[ 'section.center' ].scrollTop += ease( count ) + (5*accel);
-		count -= prog;
-		accel += 3;
+		function step() {
+			nodes[ 'section.center' ].scrollTop += ease( count ) + (5*accel);
+			count -= prog;
+			accel += 3;
 
-		if( Math.round( node.getBoundingClientRect().top ) > 0 ) {
-			win.requestAnimationFrame( step );
-		} else {
-			nodes[ 'section.center' ].scrollTop = endValue;
+			if( Math.round( node.getBoundingClientRect().top ) > 0 ) {
+				win.requestAnimationFrame( step );
+			} else {
+				nodes[ 'section.center' ].scrollTop = endValue;
+				nodes[ 'section.center' ].scrollIntoView();
+				res();
+			}
 		}
-	}
 
-	win.requestAnimationFrame( step );
+		win.requestAnimationFrame( step );
+	});
 });
 
 eventLoop.on( 'slideUpTo.appEvents', node => {
-	let	count		= 1,
+	return new Promise(( res, rej ) => {
+		let	count		= 1,
 		prog		= 1 / 100,
 		accel		= 0,
 		endValue	= nodes[ 'section.center' ].scrollTop - Math.abs( node.getBoundingClientRect().top );
 
-	function step() {
-		nodes[ 'section.center' ].scrollTop -= ease( count ) + (5 * accel);
-		count -= prog;
-		accel += 3;
+		function step() {
+			nodes[ 'section.center' ].scrollTop -= ease( count ) + (5 * accel);
+			count -= prog;
+			accel += 3;
 
-		if( node.getBoundingClientRect().top < 0 ) {
-			win.requestAnimationFrame( step );
-		} else {
-			nodes[ 'section.center' ].scrollTop = endValue;
+			if( node.getBoundingClientRect().top < 0 ) {
+				win.requestAnimationFrame( step );
+			} else {
+				nodes[ 'section.center' ].scrollTop = endValue;
+				nodes[ 'section.center' ].scrollIntoView();
+				res();
+			}
 		}
-	}
 
-	win.requestAnimationFrame( step );
+		win.requestAnimationFrame( step );
+	});
 });
 
 eventLoop.on( 'moduleLaunch.appEvents', ( module, event ) => {
@@ -596,6 +609,27 @@ eventLoop.on( 'requestFullBlur.core', () => {
 
 eventLoop.on( 'removeFullBlur.core', () => {
 	nodes[ 'div#world' ].classList.remove( 'backgroundImageFullBlur' );
+});
+
+eventLoop.on( 'requestMobileNavigation.core', state => {
+	if( nodes[ 'section.center' ].classList.contains( 'mobileNavMode' ) ) {
+		nodes[ 'section.center' ].classList.remove( 'mobileNavMode' );
+		nodes[ 'section.center' ].removeEventListener( 'touchstart', endNavMode );
+	} else {
+		nodes[ 'section.center' ].classList.add( 'mobileNavMode' );
+		nodes[ 'section.center' ].removeEventListener( 'touchstart', endNavMode );
+		nodes[ 'section.right' ].scrollIntoView();
+
+	//	win.setTimeout(() => {
+			nodes[ 'section.center' ].addEventListener( 'touchstart', endNavMode, false );
+	//	},100);
+	}
+
+	function endNavMode() {
+		nodes[ 'section.center' ].classList.remove( 'mobileNavMode' );
+		nodes[ 'section.center' ].removeEventListener( 'touchstart', endNavMode );
+		eventLoop.fire( 'remoteNavigate.appEvents' );
+	}
 });
 
 eventLoop.on( 'configApp.core', app => {

@@ -81,7 +81,8 @@ let NodeTools = target => class extends target {
 					ev		= new Proxy( event, filter );
 
 					while( ev.target && ev.target !== root ) {
-						ev.target	= ev.target.parentElement;
+						ev.originalTarget	= ev.target;
+						ev.target			= ev.target.parentElement;
 						if( this._delegatedEventHandler( ev, event ) === false ) {
 							return false;
 						}
