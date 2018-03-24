@@ -1,3 +1,5 @@
+@import 'viewportDefinitions';
+
 @keyframes rotate-forever {
 	from {
 		transform: rotate(0deg);
@@ -6,6 +8,15 @@
 	to {
 		transform: rotate(360deg);
 		box-shadow: 0px 0px 140px 1px rgba(200,200,150,0.4);
+	}
+}
+
+@keyframes rotate-forever-mobile {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
 	}
 }
 
@@ -23,8 +34,8 @@
 div.loading-spinner {
 	position: absolute;
 
-	min-width: 20px;
-	min-height: 20px;
+	min-width: 50vw;
+	min-height: 50vw;
 
 	border: 2px solid rgba(255,255,255,0.75);
 	border-right-color: transparent;
@@ -32,6 +43,11 @@ div.loading-spinner {
 	display: inline-block;
 	animation: 1s linear 0s infinite rotate-forever;
 	filter:blur(5px);
+
+	@media screen and (max-width:$iPhone6Landscape) {
+		animation: 1s linear 0s infinite rotate-forever-mobile;
+		filter:none;
+	}
 }
 
 div.BFConfirm {

@@ -425,7 +425,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		return {
 			with:	replacementHash => {
 				for( let [ searchFor, value ] of Object.entries( replacementHash ) ) {
-					htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), value.toString().replace( /\n/g, '<br/>') );
+					htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), (value || '').toString().replace( /\n/g, '<br/>') );
 				}
 
 				return {
