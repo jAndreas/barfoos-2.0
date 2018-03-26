@@ -58,7 +58,7 @@ let ServerConnection = target => class extends target {
 		let self = this;
 		let responseTimeout;
 
-		return new Promise( async ( resolve, reject ) => {
+		return new Promise( ( resolve, reject ) => {
 			if(!noTimeout ) {
 				responseTimeout = win.setTimeout(() => {
 					if( self.id ) {
@@ -72,12 +72,13 @@ let ServerConnection = target => class extends target {
 
 				try {
 					self.handleServerResponse( response );
-				} catch( ex ) {
-					reject( ex );
-				}
 
-				if( self.id ) {
-					resolve( response );
+					if( self.id ) {
+						resolve( response );
+					}
+				} catch( ex ) {
+					reject( ex.message );
+					return;
 				}
 			});
 
@@ -106,7 +107,7 @@ let ServerConnection = target => class extends target {
 	handleServerResponse( response ) {
 		if( response.error || response.errorCode ) {
 			// handle errors
-			throw response.error || response.errorCode;
+			throw new Error( response.error || response.errorCode );
 		}
 	}
 }

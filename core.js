@@ -589,11 +589,11 @@ eventLoop.on( 'moduleDestruction.appEvents', ( module, event ) => {
 	if( module.id in modules.online ) {
 		modules.online[ module.id ]--;
 
+		console.log( `module ${module.id} was destroyed( ${modules.online[module.id]}x instances left )` );
+
 		if( modules.online[ module.id ] === 0 ) {
 			delete modules.online[ module.id ];
 		}
-
-		console.log( `module ${module.id} was destroyed( ${modules.online[module.id]}x instances left )` );
 	} else {
 
 	}

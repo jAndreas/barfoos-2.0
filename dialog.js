@@ -150,7 +150,14 @@ class Overlay extends Component {
 	orientationChange() {
 		super.orientationChange && super.orientationChange( ...arguments );
 
-		this.centerOverlay({ centerToViewport: this.centerToViewport });
+		if( this.center ) {
+			this.centerOverlay();
+		} else if( this.centerToViewport ) {
+			this.centerOverlay({ centerToViewport: true });
+		} else if( this.position ) {
+			this.nodes.dialogRoot.style.left	= `${this.position.left}px`;
+			this.nodes.dialogRoot.style.top		= `${this.position.top}px`;
+		}
 
 		super.orientationChange && super.orientationChange( ...arguments );
 	}
