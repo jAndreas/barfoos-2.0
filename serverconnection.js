@@ -13,7 +13,7 @@ const	socket = io( ENV_PROD ? 'https://der-vegane-germane.de' : 'https://dev.der
 
 const	eventLoop	= makeClass( class ServerComEventLoop{ }, { id: 'ServerComEventLoop' } ).mixin( Mediator );
 
-let		session		= Object.create( null );
+let		session		= null;
 
 socket.on( 'reconnect_attempt', () => {
 	if( ENV_PROD === false ) console.log('Reconnecting, also allowing xhr polling...');
@@ -49,7 +49,16 @@ eventLoop.on( 'waitForConnection.server', () => socket.connected || new Promise(
 
 eventLoop.on( 'startNewSession.server', user => {
 	console.log('starting new session: ', user);
+	session = Object.create( null );
 	Object.assign( session, user );
+});
+
+eventLoop.on( 'userLogout.server', user => {
+	session = null;
+});
+
+eventLoop.on( 'getUserSession.server', () => {
+	return session;
 });
 
 let ServerConnection = target => class extends target {
