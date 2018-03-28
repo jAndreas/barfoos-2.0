@@ -170,9 +170,15 @@ class Overlay extends Component {
 		}
 	}
 
-	onBackgroundMouseDown( event ) {
+	async onBackgroundMouseDown( event ) {
 		if(!this.nodes.dialogRoot.contains( event.target ) ) {
-			this.destroy();
+			if( this.modalOverlay ) {
+				await Promise.all( this.modalOverlay.possibleDelays );
+			}
+
+			if( this && Object.keys( this ).length ) {
+				this.destroy();
+			}
 		}
 	}
 }

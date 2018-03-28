@@ -22,25 +22,25 @@
 
 @keyframes unfold {
 	from {
-		transform:rotate(-30deg);
+		transform:rotate(30deg);
 		opacity:0;
 	}
 	to {
-		transform:rotate(30deg);
+		transform:rotate(0deg);
 		opacity:1;
 	}
 }
 
 div.loading-spinner {
-	position: absolute;
+	position:absolute;
 
-	max-width: 50vw;
-	max-height: 50vw;
+	max-width:50vw;
+	max-height:50vw;
 
-	border: 2px solid rgba(255,255,255,0.75);
-	border-right-color: transparent;
-	border-radius: 60%;
-	display: inline-block;
+	border:2px solid rgba(255,255,255,0.75);
+	border-right-color:transparent;
+	border-radius:60%;
+	display:inline-block;
 	animation: 1s linear 0s infinite rotate-forever;
 	filter:blur(5px);
 
@@ -57,12 +57,15 @@ div.BFConfirm {
 	height:50%;
 	align-self:flex-start;
 
-	border:20px solid rgba(0,100,0,0.85);
-	border-top-color:transparent;
-	border-left-color:transparent;
-
 	transform:rotate(30deg);
-	box-shadow:12px 12px 17px 0px rgba(0, 220, 0, 0.65);
 
-	filter:blur(2px) contrast(3) brightness(1.5);
+	filter:blur(1px) contrast(3) brightness(1.5);
+
+	&:after {
+		content:'👍';
+		font-size:6vh;
+		margin:auto;
+		color:rgba(243, 240, 255, 0.9);
+		text-shadow:0px 0px 15px white;
+	}
 }

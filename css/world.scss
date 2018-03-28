@@ -11,6 +11,11 @@ div#world {
 
 	transition:all 600ms linear;
 
+	@media screen and (max-width:$iPhone6Landscape) {
+		overflow-y:hidden;
+  		-webkit-overflow-scrolling:touch;
+	}
+
 	> section {
 		position:relative;
 		flex-grow:0;

@@ -333,8 +333,10 @@ let NodeTools = target => class extends target {
 				this.addNodeEventOnce( node, 'animationend', animationEndEvent );
 
 				cancelOrigin = win.setTimeout(() => {
-					this.data.get( node ).storage.animations.running = [ ];
-					res( 'animation timed out');
+					if( this && Object.keys( this ).length ) {
+						this.data.get( node ).storage.animations.running = [ ];
+						res( 'animation timed out');
+					}
 				}, duration + (duration*0.3));
 
 				function animationEndEvent( event ) {
@@ -365,8 +367,10 @@ let NodeTools = target => class extends target {
 								node.style.animation = `${ name } ${ duration }ms ${ timing } ${ delay }ms ${ iterations } reverse ${ mode }`;
 
 								cancelUndo = win.setTimeout(() => {
-									this.data.get( node ).storage.animations.running = [ ];
-									res( 'animation (undo) timed out');
+									if( this && Object.keys( this ).length ) {
+										this.data.get( node ).storage.animations.running = [ ];
+										res( 'animation (undo) timed out');
+									}
 								}, duration + (duration*0.3));
 							});
 

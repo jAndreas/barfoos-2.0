@@ -282,23 +282,31 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 					this.nodes.overlayConfirm.style.borderWidth	= `${calcSize / 14}px`;
 				}
 
-				return this.animate({
+				let overlayConfirmAnimation = this.animate({
 					node:	this.nodes.overlayConfirm,
 					rules:	{
 						duration:	1000,
 						name:		'unfold'
 					}
 				});
+
+				this.modalOverlay.possibleDelays.push( overlayConfirmAnimation );
+
+				return overlayConfirmAnimation;
 			},
 			cleanup:	async ( duration ) => {
 				if( duration ) {
-					await this.animate({
+					let overlaySpinnerAnimation = this.animate({
 						node:	this.nodes.overlaySpinner,
 						rules:	{
 							duration:	duration,
 							name:		'fadeOutOverlay'
 						}
 					});
+
+					this.modalOverlay.possibleDelays.push( overlaySpinnerAnimation );
+
+					await overlaySpinnerAnimation;
 				}
 
 				this.removeNodes( 'overlaySpinner', true );
@@ -375,7 +383,11 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				this.nodes.modalOverlay.innerHTML = `<div style="word-wrap:break-word;font-size:2vh;color:white;text-align:center;width:80%">${ msg }</div>`;
 			}
 
-			return duration ? this.timeout( duration ) : null;
+			let timeoutPromise = this.timeout( duration );
+
+			controlInterface.possibleDelays.push( timeoutPromise );
+
+			return duration ? timeoutPromise : null;
 		};
 
 		controlInterface.fulfill = async ( duration = 1000 ) => {
@@ -403,6 +415,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				controlInterface.cleanup();
 			});
 
+			controlInterface.possibleDelays.push( fadeOut );
+
 			return fadeOut;
 		};
 
@@ -417,6 +431,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				controlInterface.spinner.show();
 			}
 		};
+
+		controlInterface.possibleDelays = [ ];
 
 		this.modalOverlay = controlInterface;
 	}

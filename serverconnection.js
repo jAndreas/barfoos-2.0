@@ -13,6 +13,8 @@ const	socket = io( ENV_PROD ? 'https://der-vegane-germane.de' : 'https://dev.der
 
 const	eventLoop	= makeClass( class ServerComEventLoop{ }, { id: 'ServerComEventLoop' } ).mixin( Mediator );
 
+let		session		= Object.create( null );
+
 socket.on( 'reconnect_attempt', () => {
 	if( ENV_PROD === false ) console.log('Reconnecting, also allowing xhr polling...');
 	socket.io.opts.transport = [ 'polling', 'websocket' ];
@@ -45,6 +47,11 @@ eventLoop.on( 'waitForConnection.server', () => socket.connected || new Promise(
 	socket.on( 'connect', () => res( true ) );
 }));
 
+eventLoop.on( 'startNewSession.server', user => {
+	console.log('starting new session: ', user);
+	Object.assign( session, user );
+});
+
 let ServerConnection = target => class extends target {
 	constructor() {
 		super( ...arguments );
@@ -66,6 +73,8 @@ let ServerConnection = target => class extends target {
 					}
 				}, maxTimeout);
 			}
+
+			Object.assign( payload, session );
 
 			socket.emit( type, payload, response => {
 				win.clearTimeout( responseTimeout );
