@@ -28,9 +28,11 @@ class Overlay extends Component {
 			this.error( `Destonation is required for options.location. Received ${ this.location } instead.` );
 		}
 
-		overlayInstances++;
+		if( !this.fixed ) {
+			overlayInstances++;
+		}
 
-		if( overlayInstances === 1 ) {
+		if( overlayInstances === 1 && !this.fixed ) {
 			this.fire( 'dialogMode.core', true );
 		}
 
@@ -45,7 +47,9 @@ class Overlay extends Component {
 	}
 
 	async destroy() {
-		overlayInstances--;
+		if( !this.fixed ) {
+			overlayInstances--;
+		}
 
 		if( overlayInstances === 0 ) {
 			if( this.modalOverlay ) {
@@ -79,7 +83,13 @@ class Overlay extends Component {
 			this.nodes.dialogRoot.style.zIndex	= 1000;
 		}
 
+		if( this.fixed ) {
+			this.nodes.dialogRoot.style.position = 'fixed';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(100, 200, 255, 0.7), rgba(0, 70, 250, 0.7))';
+		}
+
 		if( this.hoverOverlay ) {
+			this.dialogElements[ 'div.overlayTitle' ].textContent = this.title || '';
 			this.nodes.dialogRoot.classList.add( 'hoverOverlay' );
 		}
 
@@ -90,6 +100,8 @@ class Overlay extends Component {
 		event.stopPropagation();
 
 		this.destroy();
+
+		return false;
 	}
 
 	scrollDialogContainerDown() {
@@ -234,22 +246,42 @@ let Draggable = target => class extends target {
 	init() {
 		this.addNodeEvent( 'div.bfContentDialogBody', 'mousedown touchstart', this.onDialogHandleMouseDown );
 
+		if( this.hoverOverlay ) {
+			this.addNodeEvent( 'div.overlayHandle', 'mousedown touchstart', this.onDialogHandleMouseDown );
+		}
+
 		this._boundMouseMoveHandler = this.mouseMoveHandler.bind( this );
 
 		super.init && super.init();
+	}
+
+	installModule() {
+		super.installModule && super.installModule();
+
+		this.dialogElements[ 'div.bfBlurDialogBody' ].style.top = this.dialogElements[ 'div.bfDialogHandle' ].offsetHeight + 'px';
 	}
 
 	async onDialogHandleMouseDown( event ) {
 		let clRect	= this.dialogElements[ 'div.bfDialogWrapper' ].getBoundingClientRect(),
 			parent	= await this.fire( `getModuleDimensions.${ this.location }` );
 
-		this.relativeCursorPositionLeft		= event.pageX - clRect.x + parent.left;
-		this.relativeCursorPositionTop		= event.pageY - clRect.y + parent.top;
+		if( parent === null ) {
+			this.relativeCursorPositionLeft		= event.pageX - this.dialogElements[ 'div.bfDialogWrapper' ].offsetLeft;
+			this.relativeCursorPositionTop		= event.pageY - this.dialogElements[ 'div.bfDialogWrapper' ].offsetTop;
+		} else {
+			this.relativeCursorPositionLeft		= event.pageX - clRect.x + parent.left;
+			this.relativeCursorPositionTop		= event.pageY - clRect.y + parent.top;
+		}
+
 
 		this.fire( 'pushMouseMoveListener.appEvents', this._boundMouseMoveHandler, () => {} );
 		this.addNodeEventOnce( 'div.bfContentDialogBody', 'mouseup touchend', this.onMouseUp.bind( this ) );
 
-		super.onDialogHandleMouseDown && super.onDialogHandleMouseDown( ...arguments );
+		if( this.hoverOverlay ) {
+			this.addNodeEventOnce( 'div.overlayHandle', 'mouseup touchend', this.onMouseUp.bind( this ) );
+		}
+
+		//super.onDialogHandleMouseDown && super.onDialogHandleMouseDown( ...arguments );
 
 		event.stopPropagation();
 		event.preventDefault();

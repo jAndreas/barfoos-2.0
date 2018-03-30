@@ -21,6 +21,7 @@ socket.on( 'reconnect_attempt', () => {
 });
 
 socket.on( 'connect', () => {
+	socket.sendBuffer = [ ];
 	eventLoop.fire( 'connect.server' );
 	if( ENV_PROD === false ) console.log('server connection established.');
 });
@@ -83,7 +84,9 @@ let ServerConnection = target => class extends target {
 				}, maxTimeout);
 			}
 
-			Object.assign( payload, session );
+			if( session ) {
+				Object.assign( payload, session );
+			}
 
 			socket.emit( type, payload, response => {
 				win.clearTimeout( responseTimeout );

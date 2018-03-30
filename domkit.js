@@ -77,10 +77,11 @@ let DOMTools = target => class extends target {
 
 					reference.node.insertAdjacentElement( reference.position, nodeHash.localRoot );
 
-					delete nodeHash.localRoot;
-
 					if(!standalone ) {
+						delete nodeHash.localRoot;
 						extend( this.nodes ).with( nodeHash );
+					} else {
+						return nodeHash;
 					}
 				}
 			} else {
@@ -93,10 +94,11 @@ let DOMTools = target => class extends target {
 
 			reference.node.insertAdjacentElement( reference.position, nodeHash.localRoot );
 
-			delete nodeHash.localRoot;
-
 			if(!standalone ) {
+				delete nodeHash.localRoot;
 				extend( this.nodes ).with( nodeHash );
+			} else {
+				return nodeHash;
 			}
 		}
 

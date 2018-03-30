@@ -446,7 +446,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 				return {
 					at:		reference => {
-						this.addNodes({ htmlData, reference, standalone });
+						let hash = this.addNodes({ htmlData, reference, standalone });
+						return hash;
 					},
 					get:	() => {
 						return htmlData;
