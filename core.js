@@ -204,7 +204,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	}
 
 	getModuleDimensions() {
-		return this.nodes.root.getBoundingClientRect();
+		return this.nodes.dialogRoot ? this.nodes.dialogRoot.getBoundingClientRect() : this.nodes.root.getBoundingClientRect();
 	}
 
 	slideDownTo() {

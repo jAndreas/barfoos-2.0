@@ -85,7 +85,7 @@ class Overlay extends Component {
 
 		if( this.fixed ) {
 			this.nodes.dialogRoot.style.position = 'fixed';
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(100, 200, 255, 0.7), rgba(0, 70, 250, 0.7))';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(100, 200, 255, 0.9), rgba(0, 70, 250, 0.9))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 		}
 
