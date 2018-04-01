@@ -86,6 +86,7 @@ class Overlay extends Component {
 		if( this.fixed ) {
 			this.nodes.dialogRoot.style.position = 'fixed';
 			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(100, 200, 255, 0.7), rgba(0, 70, 250, 0.7))';
+			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 		}
 
 		if( this.hoverOverlay ) {
@@ -291,7 +292,7 @@ let Draggable = target => class extends target {
 	mouseMoveHandler( event ) {
 		super.mouseMoveHandler && super.mouseMoveHandler( ...arguments );
 
-		if( event.which === 1 ) {
+		if( event.type === 'mousemove' && event.which === 1 || event.type === 'touchmove' ) {
 			this.dialogElements[ 'div.bfDialogWrapper' ].style.left	= `${event.pageX - this.relativeCursorPositionLeft}px`;
 			this.dialogElements[ 'div.bfDialogWrapper' ].style.top	= `${event.pageY - this.relativeCursorPositionTop}px`;
 

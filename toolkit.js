@@ -110,4 +110,33 @@ function intToRGB( i = 0 ){
 	return '00000'.substring( 0, 6 - c.length ) + c;
 }
 
-export { mix, makeClass, Composition, extend, type, desc, defineProp, props, slice, hashCode, intToRGB };
+function getTimePeriod( timestamp ) {
+		let diff 			= Date.now() - timestamp,
+			diffSeconds		= Math.round( diff / 1000 ),
+			diffMinutes		= Math.round( diffSeconds / 60 ),
+			diffHours		= Math.round( diffMinutes / 60 ),
+			diffDays		= Math.round( diffHours / 24 ),
+			diffWeeks		= Math.round( diffDays / 7 ),
+			diffMonths		= (diffWeeks / 4).toFixed( 1 ),
+			diffYears		= (diffMonths / 12).toFixed( 1 );
+
+		if( diffYears >= 1 ) {
+			return diffYears + ' Jahr' + (diffYears > 1 ? 'e' : '');
+		} else if( diffMonths >= 1 ) {
+			return diffMonths + ' Monat' + (diffMonths > 1 ? 'e' : '');
+		} else if( diffWeeks >= 1 ) {
+			return diffWeeks + ' Woche' + (diffWeeks > 1 ? 'n' : '');
+		} else if( diffDays >= 1 ) {
+			return diffDays + ' Tag' + (diffDays > 1 ? 'e' : '');
+		} else if( diffHours >= 1 ) {
+			return diffHours + ' Stunde' + (diffHours > 1 ? 'n' : '');
+		} else if( diffMinutes >= 1) {
+			return diffMinutes + ' Minute' + (diffMinutes > 1 ? 'n' : '');
+		} else if( diffSeconds >= 1) {
+			return diffSeconds + ' Sekunde' + (diffSeconds > 1 ? 'n' : '');
+		} else {
+			return 'kurzem...';
+		}
+	}
+
+export { mix, makeClass, Composition, extend, getTimePeriod, type, desc, defineProp, props, slice, hashCode, intToRGB };

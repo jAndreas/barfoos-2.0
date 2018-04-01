@@ -36,7 +36,7 @@ socket.on( 'connect_timeout', timeout => {
 });
 
 socket.on( 'disconnect', reason => {
-	eventLoop.fire( 'disconnect.server' );
+	eventLoop.fire( 'disconnect.server', reason );
 	if( ENV_PROD === false ) console.log('server connection disconnected: ', reason);
 });
 
@@ -65,10 +65,20 @@ eventLoop.on( 'getUserSession.server', () => {
 let ServerConnection = target => class extends target {
 	constructor() {
 		super( ...arguments );
+
+		this.instanceListeners = Object.create( null );
 	}
 
 	init() {
 		super.init && super.init( ...arguments );
+	}
+
+	destroy() {
+		for( let [ type, callback ] of Object.entries( this.instanceListeners ) ) {
+			socket.removeListener( type, callback );
+		}
+
+		super.destroy && super.destroy( ...arguments );
 	}
 
 	send( { type = '', payload = { } } = { }, { noTimeout = false, simplex = false } = { } ) {
@@ -79,7 +89,7 @@ let ServerConnection = target => class extends target {
 			if(!noTimeout ) {
 				responseTimeout = win.setTimeout(() => {
 					if( self.id ) {
-						reject( `Server answer for ${ type } timed out.` );
+						reject( new Error( `Es konnte keine Verbindung zum Server aufgebaut werden (${ type }).` ) );
 					}
 				}, maxTimeout);
 			}
@@ -98,7 +108,7 @@ let ServerConnection = target => class extends target {
 						resolve( response );
 					}
 				} catch( ex ) {
-					reject( ex.message );
+					reject( ex );
 					return;
 				}
 			});
@@ -111,6 +121,8 @@ let ServerConnection = target => class extends target {
 
 	recv( type, callback ) {
 		let self = this;
+
+		this.instanceListeners[ type ] = callback;
 
 		socket.on( type, recvData => {
 			try {
@@ -128,7 +140,7 @@ let ServerConnection = target => class extends target {
 	handleServerResponse( response ) {
 		if( response.error || response.errorCode ) {
 			// handle errors
-			throw new Error( response.error || response.errorCode );
+			throw new Error( response.error + ' (r)' || response.errorCode );
 		}
 	}
 }

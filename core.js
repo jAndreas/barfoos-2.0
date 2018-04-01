@@ -62,11 +62,6 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		} else {
 			this.log('worker..?');
 		}
-
-		this.fire( 'moduleLaunch.appEvents', {
-			id:		this.id,
-			state:	this
-		});
 	}
 
 	init() {
@@ -78,15 +73,23 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			};
 		}
 
+		this._boundMediaChange = this.mediaChanged.bind( this );
+		this.setupMediaQueryWatchers();
+
 		this.on( `newChildModule.${ this.id }`, this.newChildModule, this );
 		this.on( `getModuleRootElement.${ this.id }`, this.getModuleRootElement, this );
 		this.on( `getModuleDimensions.${ this.id }`, this.getModuleDimensions, this );
 		this.on( `slideDownTo.${ this.id }`, this.slideDownTo, this );
 		this.on( `dialogMode.core`, this.onDialogModeChange, this );
 		this.on( `centerScroll.appEvents`, this.onCenterScrollCore, this );
-		this.installModule();
 
+		this.installModule();
 		this.onCenterScrollCore();
+
+		this.fire( 'moduleLaunch.appEvents', {
+			id:		this.id,
+			state:	this
+		});
 
 		return Promise.all( this.runtimeDependencies );
 	}
@@ -96,6 +99,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			id:	this.id
 		});
 
+		this.destroyMediaQueryWatchers();
 		this.removeAllNodeEvents();
 
 		if( Object.keys( this.dialogElements ).length ) {
@@ -151,6 +155,40 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				});
 			}
 		}
+	}
+
+	setupMediaQueryWatchers() {
+		extend( this ).with({
+			res360:			win.matchMedia( '(min-width:415px) and (min-height:370px)' ),
+			res480:			win.matchMedia( '(min-width:736px) and (min-height:490px)' ),
+			res480wide:		win.matchMedia( '(min-width:870px)' ),
+			res720:			win.matchMedia( '(min-width:1300px) and (min-height:900px)' )
+		});
+
+		[ this.res360, this.res480, this.res480wide, this.res720 ].forEach( res => {
+			res.addListener( this._boundMediaChange );
+		});
+	}
+
+	destroyMediaQueryWatchers() {
+		[ this.res360, this.res480, this.res480wide, this.res720 ].forEach( res => {
+			res.removeListener( this._boundMediaChange );
+		});
+	}
+
+	mediaChanged( data ) {
+		switch( data.media ) {
+			case '(min-height: 370px) and (min-width: 415px)':
+				this._mediaMode = 'iPhone6Portrait';
+				break;
+			case '(min-height: 490px) and (min-width: 736px)':
+				this._mediaMode = 'iPhone6Landscape';
+				break;
+			default:
+				this._mediaMode = 'desktop';
+		}
+
+		super.mediaChanged && super.mediaChanged( mode );
 	}
 
 	newChildModule( hookData, event ) {

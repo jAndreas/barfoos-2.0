@@ -1,3 +1,5 @@
+@import 'viewportDefinitions';
+
 $handleBorderColor:rgba(200,200,200,0.55);
 $dialogMinWidth:100px;
 $dialogMinHeight:18px;
@@ -16,19 +18,30 @@ div.bfDialogWrapper {
 	background:inherit;
 	filter:sepia(0.3);
 
+	@media screen and (max-width:$iPhone6Landscape) {
+		box-shadow:none;
+		filter:none;
+		background:black;
+
+		* {
+			filter:none !important;
+			box-shadow:none !important;
+			text-shadow:none !important;
+		}
+	}
+
+	&.liveChatMode {
+		left:auto;
+		right:1vh;
+		top:1vh;
+		align-self:flex-end;
+	}
+
 	&.hoverOverlay:hover {
-		overflow:visible;
 	}
 
 	&.hoverOverlay:hover > div.overlayHandle {
 		display:flex;
-	}
-
-	&.hoverOverlay:hover > div.bfBlurDialogBody {
-		top:2px;
-		left:2px;
-		right:2px;
-		bottom:2px;
 	}
 
 	> div.overlayHandle {
@@ -46,6 +59,7 @@ div.bfDialogWrapper {
 		user-select:none;
 		-moz-user-select:none;
 		border-radius:8px 8px 0 0;
+		cursor:move;
 
 		> div.overlayClose {
 			color:rgba(255,255,255,0.9);
@@ -56,8 +70,8 @@ div.bfDialogWrapper {
 			user-select:none;
 			-moz-user-select:none;
 			position:absolute;
-			top:-3vh;
-			right:-2vw;
+			top:0;
+			right:0;
 		}
 
 		> div.overlayTitle {
@@ -66,6 +80,14 @@ div.bfDialogWrapper {
 			font-size:1.5vw;
 			font-weight:bold;
 			margin:auto;
+
+			@media screen and (max-width:$iPhone6Landscape) {
+				font-size:1.5vw;
+			}
+
+			@media screen and (max-width:$iPhone6Portrait) {
+				font-size:1.7vh;
+			}
 		}
 	}
 
@@ -144,6 +166,12 @@ div.bfDialogWrapper {
 		z-index:1;
 
 		background:inherit;
+
+		@media screen and (max-width:$iPhone6Landscape) {
+			filter:none;
+			background:black;
+			display:none;
+		}
 
 		&:after {
 			content:'';
