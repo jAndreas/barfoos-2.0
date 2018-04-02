@@ -94,7 +94,7 @@ class Overlay extends Component {
 			this.nodes.dialogRoot.classList.add( 'hoverOverlay' );
 		}
 
-		this.addNodeEvent( 'div.overlayClose', 'click touchstart', this.onOverlayCloseClick );
+		this.addNodeEvent( 'div.overlayClose', 'click', this.onOverlayCloseClick );
 	}
 
 	onOverlayCloseClick( event ) {
@@ -204,8 +204,8 @@ let Dialog = target => class extends target {
 	}
 
 	init() {
-		this.removeNodeEvent( 'div.bfContentDialogBody', 'mousedown touchstart', this.onDialogHandleMouseDown );
-		this.addNodeEvent( 'div.title', 'mousedown touchstart', this.onDialogHandleMouseDown );
+		this.removeNodeEvent( 'div.bfContentDialogBody', 'mousedown', this.onDialogHandleMouseDown );
+		this.addNodeEvent( 'div.title', 'mousedown', this.onDialogHandleMouseDown );
 		this.addNodeEvent( 'div.close', 'click', this.onCloseClick );
 		this.addNodeEvent( 'div.mini', 'click', this.onMiniClick );
 
@@ -245,10 +245,10 @@ let Draggable = target => class extends target {
 	}
 
 	init() {
-		this.addNodeEvent( 'div.bfContentDialogBody', 'mousedown touchstart', this.onDialogHandleMouseDown );
+		this.addNodeEvent( 'div.bfContentDialogBody', 'mousedown', this.onDialogHandleMouseDown );
 
 		if( this.hoverOverlay ) {
-			this.addNodeEvent( 'div.overlayHandle', 'mousedown touchstart', this.onDialogHandleMouseDown );
+			this.addNodeEvent( 'div.overlayHandle', 'mousedown', this.onDialogHandleMouseDown );
 		}
 
 		this._boundMouseMoveHandler = this.mouseMoveHandler.bind( this );

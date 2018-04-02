@@ -69,10 +69,6 @@ let ServerConnection = target => class extends target {
 		this.instanceListeners = Object.create( null );
 	}
 
-	init() {
-		super.init && super.init( ...arguments );
-	}
-
 	destroy() {
 		for( let [ type, callback ] of Object.entries( this.instanceListeners ) ) {
 			socket.removeListener( type, callback );

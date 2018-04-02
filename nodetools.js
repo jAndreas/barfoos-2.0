@@ -8,6 +8,19 @@ const		win			= window,
 
 const		skippedPropagationElements = /INPUT|BUTTON/;
 
+const		mappedMobileEvents = Object.create( null );
+
+(function() {
+	let el = doc.createElement( 'div' );
+
+	if( 'ontouchstart' in el ) {
+		mappedMobileEvents[ 'click' ]		= 'touchstart';
+		mappedMobileEvents[ 'mousedown' ]	= 'touchstart';
+	}
+
+	el = null;
+}());
+
 /*****************************************************************************************************
  * Mixin Class NodeTools: Provides some HTMLElement helper tools and magic trickery
  *****************************************************************************************************/
@@ -116,6 +129,8 @@ let NodeTools = target => class extends target {
 
 			if( node instanceof HTMLElement ) {
 				for( let type of types ) {
+					type = mappedMobileEvents[ type ] || type;
+
 					if(!this._alreadyDelegatedEvents[ type ] ) {
 						this._alreadyDelegatedEvents[ type ] = true;
 
@@ -155,6 +170,8 @@ let NodeTools = target => class extends target {
 
 		if( node instanceof HTMLElement ) {
 			for( let type of types ) {
+				type = mappedMobileEvents[ type ] || type;
+
 				if(!this._alreadyDelegatedEvents[ type ] ) {
 					this._alreadyDelegatedEvents[ type ] = true;
 
@@ -193,6 +210,8 @@ let NodeTools = target => class extends target {
 
 		if( node instanceof HTMLElement ) {
 			for( let type of types ) {
+				type = mappedMobileEvents[ type ] || type;
+
 				if( typeof fnc === 'function' ) {
 					if( Array.isArray( this.data.get( node ).events[ type ] ) ) {
 						this.data.get( node ).events[ type ] = this.data.get( node ).events[ type ].filter( currentFnc => currentFnc !== fnc );
@@ -313,7 +332,7 @@ let NodeTools = target => class extends target {
 		}
 	}
 
-	animate( { node, id = 'last', rules:{ delay = '0', duration = 200, timing = 'linear', iterations = 1, direction = 'normal', mode = 'forwards', name = '' } = { } } = { } ) {
+	animate( { node, id = 'last', rules:{ delay = 0, duration = 200, timing = 'linear', iterations = 1, direction = 'normal', mode = 'forwards', name = '' } = { } } = { } ) {
 		let rules = { delay, duration, timing, iterations, direction, mode, name };
 
 		let promise = new Promise(async ( res, rej ) => {
@@ -337,7 +356,7 @@ let NodeTools = target => class extends target {
 						this.data.get( node ).storage.animations.running = [ ];
 						res( 'animation timed out');
 					}
-				}, duration + (duration*0.3));
+				}, duration + delay + (duration*0.3));
 
 				function animationEndEvent( event ) {
 					let options = {
@@ -371,7 +390,7 @@ let NodeTools = target => class extends target {
 										this.data.get( node ).storage.animations.running = [ ];
 										res( 'animation (undo) timed out');
 									}
-								}, duration + (duration*0.3));
+								}, duration + delay + (duration*0.3));
 							});
 
 							let running = this.data.get( node ).storage.animations.running;

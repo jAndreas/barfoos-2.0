@@ -60,6 +60,7 @@ div.bfDialogWrapper {
 		-moz-user-select:none;
 		border-radius:8px 8px 0 0;
 		cursor:move;
+		overflow:hidden;
 
 		> div.overlayClose {
 			color:rgba(255,255,255,0.9);
