@@ -19,8 +19,9 @@ const	priv_var1		= 'the',
  *  "description here"
  *****************************************************************************************************/
 class MyModule extends Component {
-	constructor( input = { }, options = { } ) {
+	constructor( input = { }, options = { } ) {
 		extend( options ).with({
+			name:			MyModule
 			location:		moduleLocations.center,
 			tmpl:			html
 		}).and( input );

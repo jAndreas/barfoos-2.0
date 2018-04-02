@@ -67,7 +67,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	init() {
 		super.init && super.init( ...arguments );
 
-		if(!ENV_PROD ) {
+		if( typeof ENV_PROD === 'undefined' ) {
 			win.bfdebug = () => {
 				console.log( this );
 			};
@@ -79,7 +79,9 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.on( `newChildModule.${ this.id }`, this.newChildModule, this );
 		this.on( `getModuleRootElement.${ this.id }`, this.getModuleRootElement, this );
 		this.on( `getModuleDimensions.${ this.id }`, this.getModuleDimensions, this );
-		this.on( `slideDownTo.${ this.id }`, this.slideDownTo, this );
+		this.on( `findModule.${ this.name }`, this.findModule, this );
+		this.on( `getModuleDimensionsByName.${ this.name }`, this.getModuleDimensions, this );
+		this.on( `slideDownTo.${ this.name }`, this.slideDownTo, this );
 		this.on( `dialogMode.core`, this.onDialogModeChange, this );
 		this.on( `centerScroll.appEvents`, this.onCenterScrollCore, this );
 
@@ -88,6 +90,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 		this.fire( 'moduleLaunch.appEvents', {
 			id:		this.id,
+			name:	this.name,
 			state:	this
 		});
 
@@ -96,7 +99,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 	destroy() {
 		this.fire( 'moduleDestruction.appEvents', {
-			id:	this.id
+			id:		this.id,
+			name:	this.name
 		});
 
 		this.destroyMediaQueryWatchers();
@@ -197,6 +201,10 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		} else {
 			this.nodes.defaultChildContainer.insertAdjacentElement( hookData.nodeLocation, hookData.node );
 		}
+	}
+
+	findModule() {
+		return true;
 	}
 
 	getModuleRootElement() {
@@ -652,10 +660,6 @@ eventLoop.on( 'moduleDestruction.appEvents', ( module, event ) => {
 	} else {
 
 	}
-});
-
-eventLoop.on( 'getModuleState.core', moduleId => {
-	return modules.online[ moduleId ];
 });
 
 eventLoop.on( 'requestFullBlur.core', () => {
