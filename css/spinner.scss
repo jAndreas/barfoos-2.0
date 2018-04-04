@@ -41,11 +41,11 @@ div.loading-spinner {
 	border-right-color:transparent;
 	border-radius:60%;
 	display:inline-block;
-	animation: 1s linear 0s infinite rotate-forever;
+	animation:1s linear 0s infinite rotate-forever;
 	filter:blur(5px);
 
 	@media screen and (max-width:$iPhone6Landscape) {
-		animation: 1s linear 0s infinite rotate-forever-mobile;
+		animation:1s linear 0s infinite rotate-forever-mobile;
 		filter:none;
 	}
 }

@@ -49,7 +49,6 @@ eventLoop.on( 'waitForConnection.server', () => socket.connected || new Promise(
 }));
 
 eventLoop.on( 'startNewSession.server', user => {
-	console.log('starting new session: ', user);
 	session = Object.create( null );
 	Object.assign( session, user );
 });
@@ -97,15 +96,17 @@ let ServerConnection = target => class extends target {
 			socket.emit( type, payload, response => {
 				win.clearTimeout( responseTimeout );
 
-				try {
-					self.handleServerResponse( response );
+				if( response ) {
+					try {
+						self.handleServerResponse( response );
 
-					if( self.id ) {
-						resolve( response );
+						if( self.id ) {
+							resolve( response );
+						}
+					} catch( ex ) {
+						reject( ex );
+						return;
 					}
-				} catch( ex ) {
-					reject( ex );
-					return;
 				}
 			});
 
@@ -134,9 +135,11 @@ let ServerConnection = target => class extends target {
 	}
 
 	handleServerResponse( response ) {
-		if( response.error || response.errorCode ) {
-			// handle errors
-			throw new Error( response.error + ' (r)' || response.errorCode );
+		if( response ) {
+			if( response.error || response.errorCode ) {
+				// handle errors
+				throw new Error( response.error + ' (r)' || response.errorCode );
+			}
 		}
 	}
 }

@@ -336,7 +336,9 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 					}
 				});
 
-				this.modalOverlay.possibleDelays.push( overlayConfirmAnimation );
+				if( this.modalOverlay ) {
+					this.modalOverlay.possibleDelays.push( overlayConfirmAnimation );
+				}
 
 				return overlayConfirmAnimation;
 			},
@@ -350,7 +352,9 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 						}
 					});
 
-					this.modalOverlay.possibleDelays.push( overlaySpinnerAnimation );
+					if( this.modalOverlay ) {
+						this.modalOverlay.possibleDelays.push( overlaySpinnerAnimation );
+					}
 
 					await overlaySpinnerAnimation;
 				}

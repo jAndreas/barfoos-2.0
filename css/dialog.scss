@@ -16,7 +16,6 @@ div.bfDialogWrapper {
 	overflow:hidden;
 	z-index:101;
 	background:inherit;
-	filter:sepia(0.3);
 
 	@media screen and (max-width:$iPhone6Landscape) {
 		box-shadow:none;
