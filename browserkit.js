@@ -31,13 +31,13 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 
 		win.addEventListener( 'focus', this.focusin.bind( this ), false );
 		win.addEventListener( 'blur', this.focusout.bind( this ), false );
+		doc.addEventListener( 'focusin', this.focusin.bind( this ), false );
+		doc.addEventListener( 'focusout', this.focusout.bind( this ), false );
 		win.addEventListener( 'orientationchange', this.orientationChange.bind( this ), false );
 		win.addEventListener( 'hashchange', this.hashChange.bind( this ), false );
 		win.addEventListener( 'keydown', this.keydown.bind( this ), false );
 		win.addEventListener( 'keydown', this.keyup.bind( this ), false );
 		doc.addEventListener( 'visibilitychange', this.visibilityChange.bind( this ), false );
-		doc.addEventListener( 'focusin', this.focusin.bind( this ), false );
-		doc.addEventListener( 'focusout', this.focusout.bind( this ), false );
 		//doc.addEventListener( 'mousewheel', this.mousewheel.bind( this ), false );
 		doc.addEventListener( 'mousedown', this.mousedown.bind( this ), false );
 		doc.addEventListener( 'mouseup', this.mouseup.bind( this ), false );
