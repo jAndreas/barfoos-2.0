@@ -117,10 +117,16 @@ function getTimePeriod( timestamp ) {
 			diffHours		= Math.round( diffMinutes / 60 ),
 			diffDays		= Math.round( diffHours / 24 ),
 			diffWeeks		= Math.round( diffDays / 7 ),
-			diffMonths		= (diffWeeks / 4).toFixed( 1 ),
-			diffYears		= (diffMonths / 12).toFixed( 1 );
+			diffMonths		= Math.round( diffWeeks / 4),
+			diffYears		= (diffMonths / 12);
 
 		if( diffYears >= 1 ) {
+			diffYears = diffYears.toFixed( 1 ).replace( '.', ',' );
+
+			if( diffYears.slice( -1 ) === '0' ) {
+				diffYears = diffYears.slice( 0, -2 );
+			}
+
 			return diffYears + ' Jahr' + (diffYears > 1 ? 'e' : '');
 		} else if( diffMonths >= 1 ) {
 			return diffMonths + ' Monat' + (diffMonths > 1 ? 'e' : '');
