@@ -127,13 +127,13 @@ function getTimePeriod( timestamp ) {
 				diffYears = diffYears.slice( 0, -2 );
 			}
 
-			return diffYears + ' Jahr' + (diffYears > 1 ? 'e' : '');
+			return diffYears + ' Jahr' + (diffYears > 1 ? 'en' : '');
 		} else if( diffMonths >= 1 ) {
-			return diffMonths + ' Monat' + (diffMonths > 1 ? 'e' : '');
+			return diffMonths + ' Monat' + (diffMonths > 1 ? 'en' : '');
 		} else if( diffWeeks >= 1 ) {
 			return diffWeeks + ' Woche' + (diffWeeks > 1 ? 'n' : '');
 		} else if( diffDays >= 1 ) {
-			return diffDays + ' Tag' + (diffDays > 1 ? 'e' : '');
+			return diffDays + ' Tag' + (diffDays > 1 ? 'en' : '');
 		} else if( diffHours >= 1 ) {
 			return diffHours + ' Stunde' + (diffHours > 1 ? 'n' : '');
 		} else if( diffMinutes >= 1) {

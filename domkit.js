@@ -259,8 +259,8 @@ let DOMTools = target => class extends target {
 		});
 	}
 
-	init() {
-		super.init && super.init( ...arguments );
+	async init() {
+		super.init && await super.init( ...arguments );
 	}
 };
 /********************************************* DOMTools End ******************************************/

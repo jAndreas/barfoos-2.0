@@ -30,7 +30,7 @@ let NodeTools = target => class extends target {
 
 		this._alreadyDelegatedEvents = Object.create( null );
 
-		this._delegatedEventHandler = event => {
+		this._delegatedEventHandler = (event) => {
 			let callbackResult;
 
 			if( this && this.data ) {
@@ -134,7 +134,7 @@ let NodeTools = target => class extends target {
 					if(!this._alreadyDelegatedEvents[ type ] ) {
 						this._alreadyDelegatedEvents[ type ] = true;
 
-						if( Object.keys( this.dialogElements ).length ) {
+						if( this.dialogElements && Object.keys( this.dialogElements ).length ) {
 							this.dialogElements.root.addEventListener( type, this._delegatedEventHandler, false );
 						} else {
 							this.nodes.root.addEventListener( type, this._delegatedEventHandler, false );

@@ -23,7 +23,7 @@ class Overlay extends Component {
 		this.dialogElements[ 'div.title' ].textContent = this.title || '';
 	}
 
-	init() {
+	async init() {
 		if( typeof this.location !== 'string' ) {
 			this.error( `Destonation is required for options.location. Received ${ this.location } instead.` );
 		}
@@ -43,7 +43,7 @@ class Overlay extends Component {
 			this.on( 'mousedown.appEvents', this.onBackgroundMouseDown, this );
 		}
 
-		super.init && super.init();
+		super.init && await super.init();
 	}
 
 	async destroy() {
@@ -59,7 +59,7 @@ class Overlay extends Component {
 			this.fire( 'dialogMode.core', false );
 		}
 
-		super.destroy && super.destroy();
+		super.destroy && await super.destroy();
 	}
 
 	installModule() {
@@ -203,7 +203,7 @@ let Dialog = target => class extends target {
 		this.dialogElements[ 'div.bfDialogHandle' ].style.display = 'flex';
 	}
 
-	init() {
+	async init() {
 		this.removeNodeEvent( 'div.bfContentDialogBody', 'mousedown', this.onDialogHandleMouseDown );
 		this.addNodeEvent( 'div.title', 'mousedown', this.onDialogHandleMouseDown );
 		this.addNodeEvent( 'div.close', 'click', this.onCloseClick );
@@ -211,11 +211,11 @@ let Dialog = target => class extends target {
 
 		this._DialogClass = true;
 
-		super.init && super.init();
+		super.init && await super.init();
 	}
 
-	destroy() {
-		super.destroy && super.destroy();
+	async destroy() {
+		super.destroy && await super.destroy();
 	}
 
 	onCloseClick( event ) {
@@ -244,7 +244,7 @@ let Draggable = target => class extends target {
 		super( ...arguments );
 	}
 
-	init() {
+	async init() {
 		this.addNodeEvent( 'div.bfContentDialogBody', 'mousedown', this.onDialogHandleMouseDown );
 
 		if( this.hoverOverlay ) {
@@ -253,7 +253,7 @@ let Draggable = target => class extends target {
 
 		this._boundMouseMoveHandler = this.mouseMoveHandler.bind( this );
 
-		super.init && super.init();
+		super.init && await super.init();
 	}
 
 	installModule() {
@@ -323,14 +323,14 @@ let GlasEffect = target => class extends target {
 		});
 	}
 
-	init() {
+	async init() {
 		this.fire( 'setScrollingStatus.core', 'disable' );
-		super.init && super.init();
+		super.init && await super.init();
 	}
 
-	destroy() {
+	async destroy() {
 		this.fire( 'setScrollingStatus.core', 'enable' );
-		super.destroy && super.destroy( ...arguments );
+		super.destroy && await super.destroy( ...arguments );
 	}
 
 	installModule() {

@@ -64,7 +64,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		}
 	}
 
-	init() {
+	async init() {
 		super.init && super.init( ...arguments );
 
 		if( typeof ENV_PROD === 'undefined' ) {
@@ -85,7 +85,19 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.on( `dialogMode.core`, this.onDialogModeChange, this );
 		this.on( `centerScroll.appEvents`, this.onCenterScrollCore, this );
 
-		this.installModule();
+
+		await this.installModule();
+
+		this.createModalOverlay({
+			opts:	{
+				spinner: true
+			}
+		});
+
+		if( this.loadingMessage ) {
+			this.modalOverlay.log( this.loadingMessage, this.loadingMessageDelay || 0 );
+		}
+
 		this.onCenterScrollCore();
 
 		this.fire( 'moduleLaunch.appEvents', {
@@ -94,10 +106,12 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			state:	this
 		});
 
-		return Promise.all( this.runtimeDependencies );
+		this._depsResolve = await Promise.all( this.runtimeDependencies );
+
+		this.modalOverlay.fulfill();
 	}
 
-	destroy() {
+	async destroy() {
 		this.fire( 'moduleDestruction.appEvents', {
 			id:		this.id,
 			name:	this.name
@@ -134,7 +148,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		console.log('That is all what remains: ', this);
 	}
 
-	installModule() {
+	async installModule() {
 		if( typeof this.location === 'string' ) {
 			if( this.location in moduleLocations ) {
 				if(!this.nodes.dialogRoot ) {
@@ -143,7 +157,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 				nodes[ `section.${ this.location }` ].appendChild( this.nodes.dialogRoot || this.nodes.root );
 			} else if( this.location in modules.online ) {
-				this.fire( `newChildModule.${ this.location }`, {
+				await this.fire( `newChildModule.${ this.location }`, {
 					isDialog:		!!this.nodes.dialogRoot,
 					node:			this.nodes.dialogRoot || this.nodes.root,
 					nodeLocation:	this.nodeLocation
@@ -384,7 +398,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 		if( this.modalOverlay && typeof this.modalOverlay.cleanup === 'function' ) {
 			await Promise.all( this.data.get( this.nodes.modalOverlay ).storage.animations.running );
-			this.modalOverlay.cleanup();
+			this.modalOverlay && this.modalOverlay.cleanup();
 			this.modalOverlay = null;
 		}
 
@@ -433,11 +447,15 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				this.nodes.modalOverlay.innerHTML = `<div style="word-wrap:break-word;font-size:2vh;color:white;text-align:center;width:80%">${ msg }</div>`;
 			}
 
-			let timeoutPromise = this.timeout( duration );
+			if( duration ) {
+				let timeoutPromise = this.timeout( duration );
 
-			controlInterface.possibleDelays.push( timeoutPromise );
+				controlInterface.possibleDelays.push( timeoutPromise );
 
-			return duration ? timeoutPromise : null;
+				return timeoutPromise;
+			} else {
+				return null;
+			}
 		};
 
 		controlInterface.fulfill = async ( duration = 1000 ) => {
@@ -491,7 +509,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		return {
 			with:	replacementHash => {
 				for( let [ searchFor, value ] of Object.entries( replacementHash ) ) {
-					htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), (value || '').toString().replace( /\n/g, '<br/>') );
+					htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), (value !== undef ? value : '').toString().replace( /\n/g, '<br/>') );
 				}
 
 				return {

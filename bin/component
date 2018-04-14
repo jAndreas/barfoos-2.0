@@ -21,7 +21,7 @@ const	priv_var1		= 'the',
 class MyModule extends Component {
 	constructor( input = { }, options = { } ) {
 		extend( options ).with({
-			name:			MyModule
+			name:			'MyModule',
 			location:		moduleLocations.center,
 			tmpl:			html
 		}).and( input );

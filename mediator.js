@@ -35,7 +35,7 @@ let Mediator = target => class extends target {
 				}
 			}
 		} else {
-			throw new TypeError( 'on() was called with wrong arguments.' );
+			throw new TypeError( 'on() was called with wrong arguments. Expected String and Function received ', typeof eventLocators, ' and ', typeof handler );
 		}
 
 		return this;
