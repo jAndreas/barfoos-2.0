@@ -377,7 +377,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				this.removeNodes( 'overlayConfirm', true );
 			},
 			log:		( msg ) => {
-				this.nodes.overlaySpinner.insertAdjacentHTML( 'afterend', `<div style="word-wrap:break-word;font-size:2vh;color:white;text-align:center;width:80%">${ msg }</div>` );
+				this.nodes.overlaySpinner.insertAdjacentHTML( 'afterend', `<div style="word-wrap:break-word;font-size:2vh;color:white;text-align:center;width:85%">${ msg }</div>` );
 			},
 			hide:		() => {
 				if( this.nodes.overlaySpinner ) {
@@ -444,7 +444,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			if( spinner ) {
 				controlInterface.spinner.log( msg );
 			} else {
-				this.nodes.modalOverlay.innerHTML = `<div style="word-wrap:break-word;font-size:2vh;color:white;text-align:center;width:80%">${ msg }</div>`;
+				this.nodes.modalOverlay.innerHTML = `<div style="word-wrap:break-word;font-size:2vh;color:white;text-align:center;width:85%">${ msg }</div>`;
 			}
 
 			if( duration ) {

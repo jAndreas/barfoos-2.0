@@ -9,6 +9,10 @@ div.BFModalOverlay {
 	cursor:wait;
 	transition:all 1s ease-in-out;
 	opacity:0.95;
+
+	sup.smallLetters {
+		font-size:1.5vh;
+	}
 }
 
 div.BFModalOverlay.inheritBackground {
