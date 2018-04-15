@@ -28,6 +28,8 @@ class Overlay extends Component {
 			this.error( `Destonation is required for options.location. Received ${ this.location } instead.` );
 		}
 
+		this.fire( 'setScrollingStatus.core', 'disable' );
+
 		if( !this.fixed ) {
 			overlayInstances++;
 		}
@@ -56,6 +58,7 @@ class Overlay extends Component {
 				await this.modalOverlay.fulfill();
 			}
 
+			this.fire( 'setScrollingStatus.core', 'enable' );
 			this.fire( 'dialogMode.core', false );
 		}
 
@@ -86,6 +89,11 @@ class Overlay extends Component {
 		if( this.fixed ) {
 			this.nodes.dialogRoot.style.position = 'fixed';
 			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(100, 200, 255, 0.9), rgba(0, 70, 250, 0.9))';
+			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
+		}
+
+		if( this.noBlur ) {
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(6, 13, 16, 0.7), rgba(39, 62, 121, 0.5))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 		}
 
