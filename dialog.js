@@ -28,9 +28,8 @@ class Overlay extends Component {
 			this.error( `Destonation is required for options.location. Received ${ this.location } instead.` );
 		}
 
-		this.fire( 'setScrollingStatus.core', 'disable' );
-
 		if( !this.fixed ) {
+			this.fire( 'setScrollingStatus.core', 'disable' );
 			overlayInstances++;
 		}
 
