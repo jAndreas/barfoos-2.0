@@ -1,25 +1,18 @@
 'use strict'
 
-import { extend } from './toolkit.js';
+import { extend, isMobileDevice } from './toolkit.js';
 
 const		win			= window,
 			doc			= win.document,
 			undef		= void 0;
 
-const		skippedPropagationElements = /INPUT|BUTTON/;
+const		skippedPropagationElements	= /INPUT|BUTTON/,
+			mappedMobileEvents			= Object.create( null );
 
-const		mappedMobileEvents = Object.create( null );
-
-(function() {
-	let el = doc.createElement( 'div' );
-
-	if( 'ontouchstart' in el ) {
-		mappedMobileEvents[ 'click' ]		= 'touchstart';
-		mappedMobileEvents[ 'mousedown' ]	= 'touchstart';
-	}
-
-	el = null;
-}());
+if( isMobileDevice ) {
+	mappedMobileEvents[ 'click' ]		= 'touchstart';
+	mappedMobileEvents[ 'mousedown' ]	= 'touchstart';
+}
 
 /*****************************************************************************************************
  * Mixin Class NodeTools: Provides some HTMLElement helper tools and magic trickery
@@ -353,8 +346,12 @@ let NodeTools = target => class extends target {
 
 				cancelOrigin = win.setTimeout(() => {
 					if( this && Object.keys( this ).length ) {
-						this.data.get( node ).storage.animations.running = [ ];
-						res( 'animation timed out');
+						try {
+							this.data.get( node ).storage.animations.running = [ ];
+							res( 'animation timed out');
+						} catch( ex ) {
+							/* noop */
+						}
 					}
 				}, duration + delay + (duration*0.3));
 
@@ -387,8 +384,12 @@ let NodeTools = target => class extends target {
 
 								cancelUndo = win.setTimeout(() => {
 									if( this && Object.keys( this ).length ) {
-										this.data.get( node ).storage.animations.running = [ ];
-										res( 'animation (undo) timed out');
+										try {
+											this.data.get( node ).storage.animations.running = [ ];
+											res( 'animation (undo) timed out');
+										} catch( ex ) {
+											/* noop */
+										}
 									}
 								}, duration + delay + (duration*0.3));
 							});

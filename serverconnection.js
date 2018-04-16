@@ -6,8 +6,9 @@ import Mediator from './mediator.js';
 import io from 'socket.io-client';
 
 const	socket = io( ENV_PROD ? 'https://der-vegane-germane.de' : 'https://dev.der-vegane-germane.de', {
-			transports:	[ 'websocket' ],
-			secure:		true
+			transports:		[ 'websocket' ],
+			secure:			true,
+			autoConnect:	false
 		}),
 		maxTimeout	= 3000;
 
@@ -16,8 +17,8 @@ const	eventLoop	= makeClass( class ServerComEventLoop{ }, { id: 'ServerComEventL
 let		session		= null;
 
 socket.on( 'reconnect_attempt', () => {
-	if( ENV_PROD === false ) console.log('Reconnecting, also allowing xhr polling...');
-	socket.io.opts.transport = [ 'polling', 'websocket' ];
+	if( ENV_PROD === false ) console.log('Reconnecting');
+	socket.io.opts.transport = [ 'websocket' ];
 });
 
 socket.on( 'connect', () => {
@@ -60,6 +61,36 @@ eventLoop.on( 'userLogout.server', user => {
 eventLoop.on( 'getUserSession.server', () => {
 	return session;
 });
+
+eventLoop.on( 'appVisibilityChange.appEvents', active => {
+	let socketCloseTimeout = null;
+
+	if( active ) {
+		if(!socket.connected ) {
+			if( ENV_PROD === false ) console.log('re-opening socket for client.');
+			socket.open();
+		} else {
+			if( ENV_PROD === false ) console.log('client returned, canceling timer for socket close.');
+			win.clearTimeout( socketCloseTimeout );
+			socketCloseTimeout = null;
+		}
+	} else {
+		if( socketCloseTimeout === null ) {
+			if( ENV_PROD === false ) console.log('client has gone idle, initiating timer for socket close.');
+
+			win.clearTimeout( socketCloseTimeout );
+
+			socketCloseTimeout = win.setTimeout(() => {
+				if( doc.visibilityState === 'hidden' ) {
+					if( ENV_PROD === false ) console.log('client idle for 30 seconds, closing socket connection.');
+					socket.close();
+				}
+			}, 60 * 1000 * 5);
+		}
+	}
+});
+
+socket.open();
 
 let ServerConnection = target => class extends target {
 	constructor() {

@@ -1,6 +1,6 @@
 'use strict';
 
-import { extend, Composition } from './toolkit.js';
+import { extend, Composition, isMobileDevice } from './toolkit.js';
 import { doc, win } from './domkit.js';
 import Mediator from './mediator.js';
 import LogTools from './logtools.js';
@@ -40,8 +40,12 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		doc.addEventListener( 'visibilitychange', this.visibilityChange.bind( this ), false );
 		//doc.addEventListener( 'mousewheel', this.mousewheel.bind( this ), false );
 		doc.addEventListener( 'mousedown', this.mousedown.bind( this ), false );
-		doc.addEventListener( 'mouseup', this.mouseup.bind( this ), false );
-		doc.addEventListener( 'touchend', this.mouseup.bind( this ), false );
+
+		if( isMobileDevice ) {
+			doc.addEventListener( 'touchend', this.mouseup.bind( this ), false );
+		} else {
+			doc.addEventListener( 'mouseup', this.mouseup.bind( this ), false );
+		}
 
 		this.on( 'waitForDOM.appEvents', this.waitForDOM, this );
 		this.on( 'pushMouseMoveListener.appEvents', this.pushMouseMoveListener, this );

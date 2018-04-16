@@ -397,7 +397,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			controlInterface	= Object.create( null );
 
 		if( this.modalOverlay && typeof this.modalOverlay.cleanup === 'function' ) {
-			await Promise.all( this.data.get( this.nodes.modalOverlay ).storage.animations.running );
+			//await Promise.all( this.data.get( this.nodes.modalOverlay ).storage.animations.running );
 			this.modalOverlay && this.modalOverlay.cleanup();
 			this.modalOverlay = null;
 		}

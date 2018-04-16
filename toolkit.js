@@ -8,7 +8,23 @@ const	type		= input => Object.prototype.toString.call( input ).split( /\s/ )[ 1 
 		setProto	= Object.setPrototypeOf,
 		slice		= Array.prototype.slice;
 
-const	undef		= void 0;
+const	win			= window,
+		doc			= win.document,
+		undef		= void 0;
+
+let	isMobileDevice	= false;
+
+(function() {
+	let el = doc.createElement( 'div' );
+
+	if( 'ontouchstart' in el ) {
+		isMobileDevice = true;
+		mappedMobileEvents[ 'click' ]		= 'touchstart';
+		mappedMobileEvents[ 'mousedown' ]	= 'touchstart';
+	}
+
+	el = null;
+}());
 
 /*****************************************************************************************************
  * mix() should be used to augment an already existing class with multiple mixin-classes
@@ -145,4 +161,4 @@ function getTimePeriod( timestamp ) {
 		}
 	}
 
-export { mix, makeClass, Composition, extend, getTimePeriod, type, desc, defineProp, props, slice, hashCode, intToRGB };
+export { mix, makeClass, Composition, extend, getTimePeriod, type, desc, defineProp, props, slice, hashCode, intToRGB, isMobileDevice };
