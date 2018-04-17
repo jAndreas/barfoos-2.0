@@ -19,8 +19,6 @@ let	isMobileDevice	= false;
 
 	if( 'ontouchstart' in el ) {
 		isMobileDevice = true;
-		mappedMobileEvents[ 'click' ]		= 'touchstart';
-		mappedMobileEvents[ 'mousedown' ]	= 'touchstart';
 	}
 
 	el = null;
