@@ -280,22 +280,30 @@ let NodeTools = target => class extends target {
 			validDelegation = false;
 
 			for( let [ key, node ] of Object.entries( this.nodes ) ) {
-				let persistEvents	= this.data.get( node ).events[ delegatedEvent ],
-					oneTimeEvents	= this.data.get( node ).oneTimeEvents[ delegatedEvent ];
+				let nodeData			= this.data.get( node );
 
-				if( (persistEvents && persistEvents.length) || (oneTimeEvents && oneTimeEvents.length) ) {
-					validDelegation = true;
-					break;
+				if( nodeData ) {
+					let persistEvents	= this.data.get( node ).events[ delegatedEvent ],
+						oneTimeEvents	= this.data.get( node ).oneTimeEvents[ delegatedEvent ];
+
+					if( (persistEvents && persistEvents.length) || (oneTimeEvents && oneTimeEvents.length) ) {
+						validDelegation = true;
+						break;
+					}
 				}
 			}
 
 			for( let [ key, node ] of Object.entries( this.dialogElements ) ) {
-				let persistEvents	= this.data.get( node ).events[ delegatedEvent ],
-					oneTimeEvents	= this.data.get( node ).oneTimeEvents[ delegatedEvent ];
+				let nodeData			= this.data.get( node );
 
-				if( (persistEvents && persistEvents.length) || (oneTimeEvents && oneTimeEvents.length) ) {
-					validDelegation = true;
-					break;
+				if( nodeData ) {
+					let persistEvents		= this.data.get( node ).events[ delegatedEvent ],
+						oneTimeEvents		= this.data.get( node ).oneTimeEvents[ delegatedEvent ];
+
+					if( (persistEvents && persistEvents.length) || (oneTimeEvents && oneTimeEvents.length) ) {
+						validDelegation = true;
+						break;
+					}
 				}
 			}
 

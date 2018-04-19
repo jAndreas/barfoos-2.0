@@ -83,7 +83,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.on( `getModuleDimensionsByName.${ this.name }`, this.getModuleDimensions, this );
 		this.on( `slideDownTo.${ this.name }`, this.slideDownTo, this );
 		this.on( `dialogMode.core`, this.onDialogModeChange, this );
-		this.on( `centerScroll.appEvents`, this.onCenterScrollCore, this );
+		this.on( 'centerScroll.appEvents', this.onCenterScrollCore, this );
+		this.on( 'moduleDestruction.appEvents', this.onModuleDestruction, this );
 
 
 		await this.installModule();
@@ -172,6 +173,12 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 					nodeLocation:	this.nodeLocation
 				});
 			}
+		}
+	}
+
+	onModuleDestruction( module ) {
+		if( this.location === module.name ) {
+			this.destroy();
 		}
 	}
 
