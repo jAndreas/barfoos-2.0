@@ -177,7 +177,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	}
 
 	onModuleDestruction( module ) {
-		if( this.location === module.name ) {
+		if( this.location === module.id ) {
 			this.destroy();
 		}
 	}
