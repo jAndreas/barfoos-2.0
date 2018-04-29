@@ -62,7 +62,11 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 
 	waitForDOM( event ) {
 		return doc.readyState === 'complete' || new Promise( (res, rej) => {
-			doc.addEventListener( 'DOMContentLoaded', () => res( doc.readyState ) );
+			doc.onreadystatechange = () => {
+				if( doc.readyState === 'complete' ) {
+					res( doc.readyState );
+				}
+			};
 		});
 	}
 

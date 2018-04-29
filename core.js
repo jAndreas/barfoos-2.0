@@ -25,6 +25,8 @@ const 	nodes		= DOM.transpile({ htmlData: worldMarkup }),
 		EaseOut		= power => {return t => { return (.04 - .04 / t) * Math.sin(25 * t) + 1 }},
 		ease		= EaseOut( 5 );
 
+let		scrollDelay	= null;
+
 /*****************************************************************************************************
  * Class Component is the basic GUI Module set of BarFoos 2. It provides automatic html-string transpiling,
  * appending of module nodes, creating and waiting any async events (promises) to keep things in order and will
@@ -51,7 +53,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				confirmNode:		this.makeNode( '<div class="BFConfirm"></div>' ),
 				location:			this.location,
 				nodeLocation:		'beforeend',
-				_insightViewport:	null
+				_insightViewport:	null,
+				DOMParsingSpeed:	'performance' in win ? win.performance.timing.domComplete - win.performance.timing.domLoading : null
 			});
 
 			this.runtimeDependencies.push(
@@ -545,22 +548,39 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 /*****************************************************************************************************
  * Core entry point
  *****************************************************************************************************/
-(async function main() {
+async function main() {
 	[ normalizeStyle, worldStyle, spinnerStyle, overlayStyle ].forEach( style => style.use() );
 
 	await eventLoop.fire( 'waitForDOM.appEvents' );
+
+	if( 'performance' in win ) {
+		let renderSpeed = win.performance.timing.domComplete - win.performance.timing.domLoading;
+
+		if( renderSpeed > 500 ) {
+			nodes[ 'div#world' ].classList.add( 'lowRes' );
+		}
+	} else {
+		nodes[ 'div#world' ].classList.add( 'lowRes' );
+	}
 
 	doc.body.appendChild( nodes[ 'div#world' ] );
 
 	// all eyes on us!
 	nodes[ 'div#world' ].focus();
-}());
+};
 
 nodes[ 'section.center' ].addEventListener( 'scroll', event => {
-	eventLoop.fire( 'centerScroll.appEvents', {
-		offsetTop:		nodes[ 'section.center' ].scrollTop,
-		innerHeight:	win.innerHeight
-	});
+	if( scrollDelay ) {
+		win.clearTimeout( scrollDelay );
+		scrollDelay = null;
+	}
+
+	scrollDelay = win.setTimeout(() => {
+		eventLoop.fire( 'centerScroll.appEvents', {
+			offsetTop:		nodes[ 'section.center' ].scrollTop,
+			innerHeight:	win.innerHeight
+		});
+	}, 200);
 }, false);
 
 /*****************************************************************************************************
@@ -691,14 +711,6 @@ eventLoop.on( 'moduleDestruction.appEvents', ( module, event ) => {
 	}
 });
 
-eventLoop.on( 'requestFullBlur.core', () => {
-	nodes[ 'div#world' ].classList.add( 'backgroundImageFullBlur' );
-});
-
-eventLoop.on( 'removeFullBlur.core', () => {
-	nodes[ 'div#world' ].classList.remove( 'backgroundImageFullBlur' );
-});
-
 eventLoop.on( 'requestMobileNavigation.core', state => {
 	if( nodes[ 'section.center' ].classList.contains( 'mobileNavMode' ) ) {
 		nodes[ 'section.center' ].classList.remove( 'mobileNavMode' );
@@ -727,17 +739,15 @@ eventLoop.on( 'configApp.core', app => {
 
 	if( app.background ) {
 		if( typeof app.background.objURL === 'string' ) {
-			nodes[ 'div#world' ].style.backgroundImage = `url( ${ app.background.objURL } )`;
+			nodes[ 'div#world' ].style.backgroundImage = `linear-gradient(45deg, rgba(0,0,20,0.6), rgba(0,0,0,0.5)), url( ${ app.background.objURL } )`;
 			nodes[ 'div#world' ].classList.add( 'backgroundImage' );
 
 			for( let [ prop, value ] of Object.entries( app.background.css ) ) {
 				nodes[ 'div#world' ].style[ prop ] = value;
 			}
-
-			nodes[ 'div#world' ].classList.remove( 'blurred' );
 		}
 	}
 });
 /****************************************** Event Handling End ****************************************/
 
-export { Component };
+export { main, Component };

@@ -14,7 +14,8 @@ const	socket = io( ENV_PROD ? 'https://der-vegane-germane.de' : 'https://dev.der
 
 const	eventLoop	= makeClass( class ServerComEventLoop{ }, { id: 'ServerComEventLoop' } ).mixin( Mediator );
 
-let		session		= null;
+let		session				= null,
+		socketCloseTimeout	= null;
 
 socket.on( 'reconnect_attempt', () => {
 	if( ENV_PROD === false ) console.log('Reconnecting');
@@ -62,9 +63,7 @@ eventLoop.on( 'getUserSession.server', () => {
 	return session;
 });
 
-eventLoop.on( 'appVisibilityChange.appEvents', active => {
-	let socketCloseTimeout = null;
-
+function idleWatcher( active ) {
 	if( active ) {
 		if(!socket.connected ) {
 			if( ENV_PROD === false ) console.log('re-opening socket for client.');
@@ -85,10 +84,12 @@ eventLoop.on( 'appVisibilityChange.appEvents', active => {
 					if( ENV_PROD === false ) console.log('client idle for 30 seconds, closing socket connection.');
 					socket.close();
 				}
-			}, 60 * 1000 * 5);
+			}, 60 * 1000 * 8);
 		}
 	}
-});
+}
+
+eventLoop.on( 'appVisibilityChange.appEvents', idleWatcher );
 
 socket.open();
 
@@ -163,6 +164,11 @@ let ServerConnection = target => class extends target {
 				callback( recvData );
 			}
 		});
+	}
+
+	disableSocketAutoClose() {
+		eventLoop.off( 'appVisibilityChange.appEvents', idleWatcher );
+		win.clearTimeout( socketCloseTimeout );
 	}
 
 	handleServerResponse( response ) {

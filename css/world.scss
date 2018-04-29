@@ -9,7 +9,25 @@ div#world {
 
 	overflow:hidden;
 
-	transition:all 600ms linear;
+	/*transition:all 600ms linear;*/
+
+	&.lowRes {
+		background-image:none !important;
+		background:linear-gradient(90deg, black, green) !important;
+
+		* {
+			filter:none !important;
+			box-shadow:none !important;
+			text-shadow:none !important;
+			transition:none !important;
+		}
+
+		&:before {
+			filter:none !important;
+			transition:none !important;
+			content:none !important;
+		}
+	}
 
 	@media screen and (max-width:$iPhone6Landscape) {
 		overflow-y:hidden;
@@ -41,11 +59,13 @@ div#world {
 	}
 
 	> section.content.center {
+		background:inherit;
 		justify-content:flex-start;
 		/*width:100vw;*/
 		height:100vh;
 		overflow-x:hidden;
 		overflow-y:scroll;
+		z-index:1;
 
 		&.mobileNavMode {
 			flex-basis:20%
@@ -87,10 +107,8 @@ div#world.backgroundImage {
 	background-repeat:no-repeat;
 }
 
-div#world.backgroundImage:before {
+/*div#world.backgroundImage:before {
 	background:inherit;
-	/*background-attachment:scroll;
-	background-size:cover;*/
 	position:fixed;
 	left:0;
 	right:0;
@@ -99,18 +117,7 @@ div#world.backgroundImage:before {
 	content:'';
 	filter:blur(8px) grayscale(50%);
 	transition:filter 600ms linear;
-}
-
-div#world.backgroundImageFullBlur {
-}
-
-div#world.backgroundImageFullBlur:before {
-	filter:blur(38px) grayscale(80%);
-}
-
-div#world.blurred {
-	filter:blur(50px);
-}
+}*/
 
 .BFComponent {
 	flex-basis:100%;

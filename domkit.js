@@ -109,7 +109,18 @@ let DOMTools = target => class extends target {
 		name = Array.isArray( name ) ? name : [ name ];
 
 		name.forEach( n => {
-			let localRef = this.dialogElements[ n ] || this.nodes[ n ];
+			let localRef;
+
+			if( n instanceof HTMLElement ) {
+				localRef	= n;
+				n			= this.resolveNodeNameFromRef( localRef );
+
+				if( n === undef ) {
+					this.error( 'passed in node reference does not match anything in modules node hash.' );
+				}
+			} else if( typeof n === 'string' ) {
+				localRef = this.dialogElements[ n ] || this.nodes[ n ];
+			}
 
 			if( localRef ) {
 				let localChildren = Array.from( localRef.children ).concat();
@@ -152,80 +163,87 @@ let DOMTools = target => class extends target {
 			nodeHash.localRoot	= rootNode;
 		}
 
-		if( standalone ) {
-			return nodeHash;
-		}
+		//if( standalone ) {
+		//	return nodeHash;
+		//}
 
 		(function crawlNodes( node, nodeName ) {
-			let currentTag = null;
-
 			if( node instanceof HTMLElement ) {
-				currentTag = nodeName || node.nodeName.toLowerCase() + ( node.id ? ('#' + node.id) : node.className ? ('.' + node.className.split( /\s+/ )[ 0 ]) : '' );
-				currentTag = currentTag.replace( /\s+/, '' );
+				if( standalone ) {
+					for( let { name, value } of Array.from( node.attributes ).slice( 0 ) ) {
+						if( name.startsWith( 'on' ) ) {
+							node.addEventListener( name.slice( 2 ), self[ value ].bind( self ), false );
+							node.removeAttribute( name );
+						}
+					}
+				} else {
+					let currentTag = nodeName || node.nodeName.toLowerCase() + ( node.id ? ('#' + node.id) : node.className ? ('.' + node.className.split( /\s+/ )[ 0 ]) : '' );
+					currentTag = currentTag.replace( /\s+/, '' );
 
-				// avoid duplicates, keep track on the number of identical identifiers
-				if( typeof self.availableNames[ currentTag ] === 'undefined' ) {
-					self.availableNames[ currentTag ] = 1;
-				}
-				else {
-					self.availableNames[ currentTag ]++;
-				}
+					// avoid duplicates, keep track on the number of identical identifiers
+					if( typeof self.availableNames[ currentTag ] === 'undefined' ) {
+						self.availableNames[ currentTag ] = 1;
+					}
+					else {
+						self.availableNames[ currentTag ]++;
+					}
 
-				// fill nodeHash lookup
-				if( self.availableNames[ currentTag ] === 1 ) {
-					nodeHash[ currentTag ] = node;
-				}
-				else {
-					nodeHash[ currentTag + '_' + self.availableNames[ currentTag ] ] = node;
+					// fill nodeHash lookup
+					if( self.availableNames[ currentTag ] === 1 ) {
+						nodeHash[ currentTag ] = node;
+					}
+					else {
+						nodeHash[ currentTag + '_' + self.availableNames[ currentTag ] ] = node;
 
-					self.warn && self.warn( `cacheNodes(): Duplicate node identifier on ${ currentTag }(${ self.availableNames[ currentTag ] }) -> `, node );
-				}
+						self.warn && self.warn( `cacheNodes(): Duplicate node identifier on ${ currentTag }(${ self.availableNames[ currentTag ] }) -> `, node );
+					}
 
-				let alias					= node.getAttribute( 'alias' ),
+					let alias				= node.getAttribute( 'alias' ),
 					defaultDialogContainer	= node.getAttribute( 'defaultDialogContainer' ),
 					defaultChildContainer	= node.getAttribute( 'defaultChildContainer' );
 
-				if( alias ) {
-					nodeHash[ alias ] = node;
-				}
-
-				if( defaultChildContainer !== null ) {
-					Object.defineProperty(nodeHash, 'defaultChildContainer', {
-						value:			node,
-						enumerable:		true,
-						configurable:	false,
-						writable:		false
-					});
-				}
-
-				if( defaultDialogContainer !== null ) {
-					Object.defineProperty(nodeHash, 'defaultDialogContainer', {
-						value:			node,
-						enumerable:		true,
-						configurable:	false,
-						writable:		false
-					});
-				}
-
-				self.data.set(node, {
-					storage:		{
-						animations:		{
-							running:	[ ]
-						},
-						nodeData:		{ }
-					},
-					events:			Object.create( null ),
-					oneTimeEvents:	Object.create( null )
-				});
-
-				for( let { name, value } of Array.from( node.attributes ).slice( 0 ) ) {
-					if( name.startsWith( 'on' ) ) {
-						self.addNodeEvent( node, name.slice( 2 ), self[ value ] );
-						node.removeAttribute( name );
+					if( alias ) {
+						nodeHash[ alias ] = node;
 					}
 
-					if( name.startsWith( 'data-' ) ) {
-						self.data.get( node ).storage.nodeData[ name.slice( 5 ) ] = value;
+					if( defaultChildContainer !== null ) {
+						Object.defineProperty(nodeHash, 'defaultChildContainer', {
+							value:			node,
+							enumerable:		true,
+							configurable:	false,
+							writable:		false
+						});
+					}
+
+					if( defaultDialogContainer !== null ) {
+						Object.defineProperty(nodeHash, 'defaultDialogContainer', {
+							value:			node,
+							enumerable:		true,
+							configurable:	false,
+							writable:		false
+						});
+					}
+
+					self.data.set(node, {
+						storage:		{
+							animations:		{
+								running:	[ ]
+							},
+							nodeData:		{ }
+						},
+						events:			Object.create( null ),
+						oneTimeEvents:	Object.create( null )
+					});
+
+					for( let { name, value } of Array.from( node.attributes ).slice( 0 ) ) {
+						if( name.startsWith( 'on' ) ) {
+							self.addNodeEvent( node, name.slice( 2 ), self[ value ] );
+							node.removeAttribute( name );
+						}
+
+						if( name.startsWith( 'data-' ) ) {
+							self.data.get( node ).storage.nodeData[ name.slice( 5 ) ] = value;
+						}
 					}
 				}
 
@@ -242,12 +260,14 @@ let DOMTools = target => class extends target {
 			}
 		}( rootNode, nodeName ));
 
-		if(!nodeHash.defaultChildContainer && moduleRoot ) {
-			nodeHash.defaultChildContainer = nodeHash.root;
-		}
+		if(!standalone ) {
+			if(!nodeHash.defaultChildContainer && moduleRoot ) {
+				nodeHash.defaultChildContainer = nodeHash.root;
+			}
 
-		if(!nodeHash.defaultDialogContainer && moduleRoot ) {
-			nodeHash.defaultDialogContainer = nodeHash.root;
+			if(!nodeHash.defaultDialogContainer && moduleRoot ) {
+				nodeHash.defaultDialogContainer = nodeHash.root;
+			}
 		}
 
 		return nodeHash;

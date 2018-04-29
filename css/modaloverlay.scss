@@ -17,9 +17,7 @@ div.BFModalOverlay {
 
 div.BFModalOverlay.inheritBackground {
 	opacity:1;
-	background:inherit;
-	background-size:cover;
-	filter:blur(8px) brightness(0.2) opacity(0.95);
+	background-color:rgba(0,0,0,0.65);
 }
 
 div.BFModalOverlay.fulfilled {
