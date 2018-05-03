@@ -1,6 +1,6 @@
 'use strict';
 
-import { extend, Composition, makeClass, props, type } from './toolkit.js';
+import { extend, Composition, makeClass, props, type, isMobileDevice } from './toolkit.js';
 import { win, doc, undef, DOMTools } from './domkit.js';
 import { moduleLocations } from './defs.js';
 import Mediator from './mediator.js';
@@ -25,7 +25,7 @@ const 	nodes		= DOM.transpile({ htmlData: worldMarkup }),
 		EaseOut		= power => {return t => { return (.04 - .04 / t) * Math.sin(25 * t) + 1 }},
 		ease		= EaseOut( 5 );
 
-let		scrollDelay	= null;
+let		lastScrollEvent	= 0;
 
 /*****************************************************************************************************
  * Class Component is the basic GUI Module set of BarFoos 2. It provides automatic html-string transpiling,
@@ -570,17 +570,11 @@ async function main() {
 };
 
 nodes[ 'section.center' ].addEventListener( 'scroll', event => {
-	if( scrollDelay ) {
-		win.clearTimeout( scrollDelay );
-		scrollDelay = null;
-	}
+	if( Date.now() - lastScrollEvent > 200 ) {
+		eventLoop.fire( 'centerScroll.appEvents' );
 
-	scrollDelay = win.setTimeout(() => {
-		eventLoop.fire( 'centerScroll.appEvents', {
-			offsetTop:		nodes[ 'section.center' ].scrollTop,
-			innerHeight:	win.innerHeight
-		});
-	}, 200);
+		lastScrollEvent = Date.now();
+	}
 }, false);
 
 /*****************************************************************************************************
@@ -646,6 +640,7 @@ eventLoop.on( 'slideDownTo.appEvents', node => {
 			} else {
 				nodes[ 'section.center' ].scrollTop = endValue;
 				nodes[ 'section.center' ].scrollIntoView();
+				eventLoop.fire( 'centerScroll.appEvents' );
 				res();
 			}
 		}

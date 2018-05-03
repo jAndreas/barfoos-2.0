@@ -171,6 +171,14 @@ let ServerConnection = target => class extends target {
 		win.clearTimeout( socketCloseTimeout );
 	}
 
+	tryReconnectServer() {
+		socket.close();
+
+		win.setTimeout(() => {
+			socket.open();
+		}, 2000);
+	}
+
 	handleServerResponse( response ) {
 		if( response ) {
 			if( response.error || response.errorCode ) {
