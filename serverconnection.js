@@ -84,7 +84,7 @@ function idleWatcher( active ) {
 					if( ENV_PROD === false ) console.log('client idle for 30 seconds, closing socket connection.');
 					socket.close();
 				}
-			}, 60 * 1000 * 8);
+			}, 60 * 1000 * 10);
 		}
 	}
 }
