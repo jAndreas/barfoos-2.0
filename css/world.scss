@@ -107,31 +107,9 @@ div#world.backgroundImage {
 	background-repeat:no-repeat;
 }
 
-/*div#world.backgroundImage:before {
-	background:inherit;
-	position:fixed;
-	left:0;
-	right:0;
-	top:0;
-	bottom:0;
-	content:'';
-	filter:blur(8px) grayscale(50%);
-	transition:filter 600ms linear;
-}*/
-
 .BFComponent {
 	flex-basis:100%;
 	display:flex;
 	flex-direction:column;
 	flex-wrap:nowrap;
 }
-
-/*
-Took this out because it caused trouble when creating Dialog Modules within the Center directly
-@media screen and (min-width:$iPadPortrait) {
-	#world > section.content {
-		flex-grow:10;
-		flex-basis:0%;
-		order: 1;
-	}
-}*/
