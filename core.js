@@ -734,7 +734,7 @@ eventLoop.on( 'configApp.core', app => {
 
 	if( app.background ) {
 		if( typeof app.background.objURL === 'string' ) {
-			nodes[ 'div#world' ].style.backgroundImage = `linear-gradient(45deg, rgba(112, 106, 165, 0.9), rgba(0, 0, 0, 0.9)), url( ${ app.background.objURL } )`;
+			nodes[ 'div#world' ].style.backgroundImage = `linear-gradient(45deg, rgba(56, 55, 66, 0.9), rgba(150, 148, 175, 0.9)), url( ${ app.background.objURL } )`;
 			nodes[ 'div#world' ].classList.add( 'backgroundImage' );
 
 			for( let [ prop, value ] of Object.entries( app.background.css ) ) {

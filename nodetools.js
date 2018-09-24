@@ -7,11 +7,13 @@ const		win			= window,
 			undef		= void 0;
 
 const		skippedPropagationElements	= /INPUT|BUTTON/,
-			mappedMobileEvents			= Object.create( null );
+			mappedMobileEvents			= Object.create( null ),
+			touchStartPos				= Object.create( null );
 
 if( isMobileDevice ) {
-	mappedMobileEvents[ 'click' ]		= 'touchstart';
+	mappedMobileEvents[ 'click' ]		= 'touchend';
 	mappedMobileEvents[ 'mousedown' ]	= 'touchstart';
+	mappedMobileEvents[ 'mouseup' ]		= 'touchend';
 }
 
 /*****************************************************************************************************
@@ -29,7 +31,9 @@ let NodeTools = target => class extends target {
 			if( this && this.data ) {
 				if( this.data.get( event.target ) ) {
 					if( this.data.get( event.target ).events[ event.type ] ) {
-						this.data.get( event.target ).events[ event.type ].forEach( fnc => callbackResult = fnc.call( this, event ) );
+						this.data.get( event.target ).events[ event.type ].forEach( fnc => {
+							callbackResult = fnc.call( this, event );
+						});
 
 						if( callbackResult === false ) {
 							return false;
@@ -42,7 +46,9 @@ let NodeTools = target => class extends target {
 					}
 
 					if( this.data.get( event.target ).oneTimeEvents[ event.type ] ) {
-						this.data.get( event.target ).oneTimeEvents[ event.type ].forEach( fnc => callbackResult = fnc.call( this, event ) );
+						this.data.get( event.target ).oneTimeEvents[ event.type ].forEach( fnc => {
+							callbackResult = fnc.call( this, event );
+						});
 
 						if( callbackResult === false ) {
 							return false;

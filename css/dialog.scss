@@ -20,7 +20,7 @@ div.bfDialogWrapper {
 	@media screen and (max-width:$iPhone6Landscape) {
 		box-shadow:none;
 		filter:none;
-		background:black;
+		background:linear-gradient(45deg, #1d1c1c, #5f5c5cf0);
 
 		* {
 			filter:none !important;

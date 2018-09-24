@@ -12,7 +12,8 @@ const	win			= window,
 		doc			= win.document,
 		undef		= void 0;
 
-let	isMobileDevice	= false;
+let	isMobileDevice	= false,
+	isAgentCrawler	= /bot|google|baidu|bing|msn|duckduckbot|teoma|slurp|yandex/i.test( navigator.userAgent );
 
 (function() {
 	let el = doc.createElement( 'div' );
@@ -159,4 +160,4 @@ function getTimePeriod( timestamp ) {
 		}
 	}
 
-export { mix, makeClass, Composition, extend, getTimePeriod, type, desc, defineProp, props, slice, hashCode, intToRGB, isMobileDevice };
+export { mix, makeClass, Composition, extend, getTimePeriod, type, desc, defineProp, props, slice, hashCode, intToRGB, isMobileDevice, isAgentCrawler };

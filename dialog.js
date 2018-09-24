@@ -87,12 +87,12 @@ class Overlay extends Component {
 
 		if( this.fixed ) {
 			this.nodes.dialogRoot.style.position = 'fixed';
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(100, 200, 255, 0.9), rgba(0, 70, 250, 0.9))';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(78, 139, 214, 0.95), rgba(28, 36, 58, 0.95))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 		}
 
 		if( this.noBlur ) {
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(6, 13, 16, 0.7), rgba(39, 62, 121, 0.5))';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(78, 139, 214, 0.95), rgba(28, 36, 58, 0.95))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 		}
 

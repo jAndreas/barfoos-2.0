@@ -1,12 +1,12 @@
 'use strict';
 
 import { win, doc, undef } from './domkit.js';
-import { makeClass } from './toolkit.js';
+import { makeClass, isAgentCrawler } from './toolkit.js';
 import Mediator from './mediator.js';
 import io from 'socket.io-client';
 
 const	socket = io( ENV_PROD ? 'https://der-vegane-germane.de' : 'https://dev.der-vegane-germane.de', {
-			transports:		[ 'websocket' ],
+			transports:		isAgentCrawler ? [ 'polling' ] : [ 'websocket', 'polling' ],
 			secure:			true,
 			autoConnect:	false
 		}),
@@ -18,8 +18,8 @@ let		session				= null,
 		socketCloseTimeout	= null;
 
 socket.on( 'reconnect_attempt', () => {
-	if( ENV_PROD === false ) console.log('Reconnecting');
-	socket.io.opts.transport = [ 'websocket' ];
+	if( ENV_PROD === false ) console.log('Reconnecting, also allowing for XHR.');
+	socket.io.opts.transports = [ 'polling', 'websocket' ];
 });
 
 socket.on( 'connect', () => {
