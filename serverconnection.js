@@ -134,6 +134,8 @@ let ServerConnection = target => class extends target {
 
 						if( self.id ) {
 							resolve( response );
+						} else {
+							throw new Error( 'Unidentified or Obsolete Module Instance.' );
 						}
 					} catch( ex ) {
 						reject( ex );

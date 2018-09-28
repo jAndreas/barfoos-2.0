@@ -75,7 +75,11 @@ let DOMTools = target => class extends target {
 				} else {
 					let nodeHash = this.transpile({ nodeData, nodeName, standalone });
 
-					reference.node.insertAdjacentElement( reference.position, nodeHash.localRoot );
+					if( reference.position === 'replace' ) {
+						reference.node.replaceWith( nodeHash.localRoot );
+					} else {
+						reference.node.insertAdjacentElement( reference.position, nodeHash.localRoot );
+					}
 
 					if(!standalone ) {
 						delete nodeHash.localRoot;
@@ -92,7 +96,11 @@ let DOMTools = target => class extends target {
 		if( typeof htmlData === 'string' ) {
 			let nodeHash = this.transpile({ htmlData, standalone });
 
-			reference.node.insertAdjacentElement( reference.position, nodeHash.localRoot );
+			if( reference.position === 'replace' ) {
+				reference.node.replaceWith( nodeHash.localRoot );
+			} else {
+				reference.node.insertAdjacentElement( reference.position, nodeHash.localRoot );
+			}
 
 			if(!standalone ) {
 				delete nodeHash.localRoot;

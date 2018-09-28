@@ -449,6 +449,18 @@ let NodeTools = target => class extends target {
 			let oldStyleValues = Object.create( null );
 
 			if( node instanceof HTMLElement ) {
+				if( this.data.get( node ) === undef ) {
+					this.data.set(node, {
+						storage:		{
+							animations:		{
+								running:	[ ]
+							},
+							nodeData:		{ }
+						},
+						temp:			true
+					});
+				}
+
 				let store = this.data.get( node ).storage;
 
 				if( store.transitions === undef ) {
@@ -463,8 +475,8 @@ let NodeTools = target => class extends target {
 
 				if( typeof style === 'object' ) {
 					for( let [ name, newValue ] of Object.entries( style ) ) {
-						oldStyleValues[ name ]	= node.style[ name ];
-						node.style[ name ]		= newValue;
+						oldStyleValues[ name ]	= newValue.from;
+						node.style[ name ]		= newValue.to;
 					}
 				}
 
@@ -480,7 +492,11 @@ let NodeTools = target => class extends target {
 				let options = {
 					undo:		() => {
 						return new Promise(async ( undoRes, undoRej ) => {
+							//node.style.transition = '';
+							//node.style.transition = `${ property } ${ duration }ms ${ timing } ${ delay }ms`;
+
 							for( let [ name, oldValue ] of Object.entries( oldStyleValues ) ) {
+								this.reflow();
 								node.style[ name ] = oldValue;
 							}
 
@@ -494,6 +510,10 @@ let NodeTools = target => class extends target {
 							node.style.transitionTimingFunction = '';
 
 							delete this.data.get( node ).storage.transitions[ id ];
+
+							if( this.data.get( node ).temp ) {
+								this.data.delete( node );
+							}
 
 							undoRes();
 						});

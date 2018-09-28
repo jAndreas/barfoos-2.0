@@ -515,11 +515,15 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.modalOverlay = controlInterface;
 	}
 
-	render({ htmlData = '', standalone = false }) {
+	render({ htmlData = '', standalone = false, crlf = false }) {
 		return {
 			with:	replacementHash => {
 				for( let [ searchFor, value ] of Object.entries( replacementHash ) ) {
-					htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), (value !== undef ? value : '').toString().replace( /\n/g, '<br/>') );
+					if( crlf ) {
+						htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), (value !== undef ? value : '').toString().replace( /<br>|<br\/>/g, '\n' ) );
+					} else {
+						htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), (value !== undef ? value : '').toString().replace( /\n/g, '<br/>') );
+					}
 				}
 
 				return {
