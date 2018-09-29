@@ -29,7 +29,7 @@ class Overlay extends Component {
 		}
 
 		if( !this.fixed ) {
-			this.fire( 'setScrollingStatus.core', 'disable' );
+			//this.fire( 'setScrollingStatus.core', 'disable' );
 			overlayInstances++;
 		}
 
@@ -57,7 +57,7 @@ class Overlay extends Component {
 				await this.modalOverlay.fulfill();
 			}
 
-			this.fire( 'setScrollingStatus.core', 'enable' );
+			//this.fire( 'setScrollingStatus.core', 'enable' );
 			this.fire( 'dialogMode.core', false );
 		}
 
@@ -147,7 +147,7 @@ class Overlay extends Component {
 		let ownRect		= this.nodes.dialogRoot.getBoundingClientRect(),
 			rootRect;
 
-		if( centerToViewport ) {
+		if( centerToViewport || this.fixed ) {
 			rootRect = doc.body.getBoundingClientRect();
 		} else {
 			rootRect = await this.fire( `getModuleDimensions.${ this.location }` );
@@ -159,7 +159,7 @@ class Overlay extends Component {
 
 		if( rootRect ) {
 			this.nodes.dialogRoot.style.left		= `${ (rootRect.width / 2) - (ownRect.width / 2) }px`;
-			this.nodes.dialogRoot.style.top			= `${ (rootRect.height / 2) - (ownRect.height / 2) }px`;
+			this.nodes.dialogRoot.style.top			= `${ ((rootRect.height / 2) - (ownRect.height / 2)) + (this.fixed ? 0 : Math.abs( rootRect.y / 2 )) }px`;
 			this.nodes.dialogRoot.style.alignSelf	= 'center';
 		}
 		else {
@@ -331,12 +331,12 @@ let GlasEffect = target => class extends target {
 	}
 
 	async init() {
-		this.fire( 'setScrollingStatus.core', 'disable' );
+		//this.fire( 'setScrollingStatus.core', 'disable' );
 		super.init && await super.init();
 	}
 
 	async destroy() {
-		this.fire( 'setScrollingStatus.core', 'enable' );
+		//this.fire( 'setScrollingStatus.core', 'enable' );
 		super.destroy && await super.destroy( ...arguments );
 	}
 
@@ -362,7 +362,7 @@ let GlasEffect = target => class extends target {
 		}
 
 		if( rootElementFromParent instanceof HTMLElement ) {
-			rootElementFromParent.scrollIntoView();
+			//rootElementFromParent.scrollIntoView();
 
 			Array.from( rootElementFromParent.children )
 				.filter( child => child !== this.dialogElements[ 'div.bfDialogWrapper' ] && child.nodeName !== 'VIDEO' )
