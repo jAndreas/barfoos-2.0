@@ -28,7 +28,7 @@ let NodeTools = target => class extends target {
 		this._delegatedEventHandler = (event) => {
 			let callbackResult;
 
-			if( this && this.data ) {
+			if( this && Object.keys( this ).length && this.data ) {
 				if( this.data.get( event.target ) ) {
 					if( this.data.get( event.target ).events[ event.type ] ) {
 						this.data.get( event.target ).events[ event.type ].forEach( fnc => {

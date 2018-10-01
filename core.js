@@ -20,12 +20,13 @@ const	eventLoop	= makeClass( class coreEventLoop{ }, { id: 'coreEventLoop' } ).m
 		modules.online		= Object.create( null );
 		modules.awaiting	= Object.create( null );
 
-const 	nodes		= DOM.transpile({ htmlData: worldMarkup }),
-		scrollSpeed	= 20,
-		EaseOut		= power => {return t => { return (.04 - .04 / t) * Math.sin(25 * t) + 1 }},
-		ease		= EaseOut( 5 );
+const 	nodes			= DOM.transpile({ htmlData: worldMarkup }),
+		scrollSpeed		= 20,
+		EaseOut			= power => {return t => { return (.04 - .04 / t) * Math.sin(25 * t) + 1 }},
+		ease			= EaseOut( 5 );
 
-let		lastScrollEvent	= 0;
+let		lastScrollEvent	= 0,
+		observerTimer	= 0;
 
 /*****************************************************************************************************
  * Class Component is the basic GUI Module set of BarFoos 2. It provides automatic html-string transpiling,
@@ -52,7 +53,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				overlayNode:		this.makeNode( '<div class="BFModalOverlay"></div>' ),
 				confirmNode:		this.makeNode( '<div class="BFConfirm"></div>' ),
 				location:			this.location,
-				nodeLocation:		'beforeend',
+				nodeLocation:		this.nodeLocation || 'beforeend',
 				_insightViewport:	null,
 				DOMParsingSpeed:	'performance' in win ? win.performance.timing.domComplete - win.performance.timing.domLoading : null
 			});
@@ -118,7 +119,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	async destroy() {
 		this.fire( 'moduleDestruction.appEvents', {
 			id:		this.id,
-			name:	this.name
+			name:	this.name,
+			root:	this.nodes.root
 		});
 
 		this.destroyMediaQueryWatchers();
@@ -180,7 +182,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	}
 
 	onModuleDestruction( module ) {
-		if( this.location === module.id ) {
+		if( this.location === module.id && module.root.contains( this.nodes.root ) ) {
 			this.destroy();
 		}
 	}
@@ -578,7 +580,13 @@ nodes[ 'section.center' ].addEventListener( 'scroll', event => {
 		eventLoop.fire( 'centerScroll.appEvents' );
 
 		lastScrollEvent = Date.now();
+		win.clearTimeout( observerTimer );
 	}
+
+	// make sure centerScroll fires at least one time
+	observerTimer = win.setTimeout(() => {
+		eventLoop.fire( 'centerScroll.appEvents' );
+	}, 200);
 }, false);
 
 /*****************************************************************************************************
