@@ -83,6 +83,10 @@ div#world {
 		order:5;
 
 		color:white;
+		position:absolute;
+		bottom:0;
+		width:100vw;
+		z-index:1;
 	}
 
 	> section.content.left {
