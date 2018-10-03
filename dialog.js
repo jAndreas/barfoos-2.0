@@ -252,10 +252,10 @@ let Draggable = target => class extends target {
 	}
 
 	async init() {
-		this.addNodeEvent( 'div.bfContentDialogBody', 'mousedown', this.onDialogHandleMouseDown );
-
 		if( this.hoverOverlay ) {
 			this.addNodeEvent( 'div.overlayHandle', 'mousedown', this.onDialogHandleMouseDown );
+		} else {
+			this.addNodeEvent( 'div.bfContentDialogBody', 'mousedown', this.onDialogHandleMouseDown );
 		}
 
 		this._boundMouseMoveHandler = this.mouseMoveHandler.bind( this );
