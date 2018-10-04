@@ -99,9 +99,17 @@ class Overlay extends Component {
 		if( this.hoverOverlay ) {
 			this.dialogElements[ 'div.overlayTitle' ].textContent = this.title || '';
 			this.nodes.dialogRoot.classList.add( 'hoverOverlay' );
-		}
 
-		this.addNodeEvent( 'div.overlayClose', 'click', this.onOverlayCloseClick );
+			if( this.hoverOverlay.maximize ) {
+				this.addNodeEvent( 'div.overlayMax', 'click', this.onOverlayCloseMax );
+				this.dialogElements[ 'div.overlayMax' ].style.display = 'flex';
+			}
+
+			if( this.hoverOverlay.close ) {
+				this.addNodeEvent( 'div.overlayClose', 'click', this.onOverlayCloseClick );
+				this.dialogElements[ 'div.overlayClose' ].style.display = 'flex';
+			}
+		}
 	}
 
 	onOverlayCloseClick( event ) {
@@ -110,6 +118,12 @@ class Overlay extends Component {
 		this.destroy();
 
 		return false;
+	}
+
+	onOverlayCloseMax( event ) {
+		event.stopPropagation();
+
+		super.onOverlayCloseMax && super.onOverlayCloseMax( ...arguments );
 	}
 
 	scrollDialogContainerDown() {

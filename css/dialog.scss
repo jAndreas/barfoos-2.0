@@ -45,8 +45,9 @@ div.bfDialogWrapper {
 
 	> div.overlayHandle {
 		display:none;
-		flex-direction:column;
-		justify-content:flex-end;
+		flex-direction:row-reverse;
+		justify-content: center;
+		align-items: center;
 		flex-wrap:nowrap;
 		position:absolute;
 		top:0;
@@ -61,25 +62,34 @@ div.bfDialogWrapper {
 		cursor:move;
 		overflow:hidden;
 
-		> div.overlayClose {
+		> div.overlayMax {
+			display:none;
 			color:rgba(255,255,255,0.9);
 			font-size:5vh;
 			text-shadow:0 0 3px black;
 			cursor:pointer;
-			margin-right:1vw;
 			user-select:none;
 			-moz-user-select:none;
-			position:absolute;
-			top:0;
-			right:0;
+			width:3vw;
+		}
+
+		> div.overlayClose {
+			display:none;
+			color:rgba(255,255,255,0.9);
+			font-size:5vh;
+			text-shadow:0 0 3px black;
+			cursor:pointer;
+			user-select:none;
+			-moz-user-select:none;
+			width:3vw;
 		}
 
 		> div.overlayTitle {
-			align-self:center;
-			color:rgba(255,255,255,0.6);
+			color:rgba(255, 255, 255, 0.6);
 			font-size:1.5vw;
 			font-weight:bold;
-			margin:auto;
+			flex-basis:85%;
+			text-align:center;
 
 			@media screen and (max-width:$iPhone6Landscape) {
 				font-size:1.5vw;
