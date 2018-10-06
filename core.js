@@ -1,6 +1,6 @@
 'use strict';
 
-import { extend, Composition, makeClass, props, type, isMobileDevice } from './toolkit.js';
+import { extend, Composition, MakeClass, props, type, isMobileDevice } from './toolkit.js';
 import { win, doc, undef, DOMTools } from './domkit.js';
 import { moduleLocations } from './defs.js';
 import Mediator from './mediator.js';
@@ -12,9 +12,9 @@ import overlayStyle from './css/modaloverlay.scss';
 import normalizeStyle from './css/normalize.scss';
 import worldStyle from './css/world.scss';
 
-const	eventLoop	= makeClass( class coreEventLoop{ }, { id: 'coreEventLoop' } ).mixin( Mediator ),
-		console		= makeClass( class core{ }, { id: 'core'} ).mixin( LogTools ),
-		DOM			= makeClass( class DOM{ }, { id: 'DOM'} ).mixin( Mediator, DOMTools ),
+const	eventLoop	= MakeClass( class coreEventLoop{ }, { id: 'coreEventLoop' } ).Mixin( Mediator ),
+		console		= MakeClass( class core{ }, { id: 'core'} ).Mixin( LogTools ),
+		DOM			= MakeClass( class DOM{ }, { id: 'DOM'} ).Mixin( Mediator, DOMTools ),
 		modules		= Object.create( null );
 
 		modules.online		= Object.create( null );
@@ -80,9 +80,9 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this._boundMediaChange = this.mediaChanged.bind( this );
 		this.setupMediaQueryWatchers();
 
-		this.on( `newChildModule.${ this.id }`, this.newChildModule, this );
-		this.on( `getModuleRootElement.${ this.id }`, this.getModuleRootElement, this );
-		this.on( `getModuleDimensions.${ this.id }`, this.getModuleDimensions, this );
+		this.on( `newChildModule.${ this.name }`, this.newChildModule, this );
+		this.on( `getModuleRootElement.${ this.name }`, this.getModuleRootElement, this );
+		this.on( `getModuleDimensions.${ this.name }`, this.getModuleDimensions, this );
 		this.on( `findModule.${ this.name }`, this.findModule, this );
 		this.on( `getModuleDimensionsByName.${ this.name }`, this.getModuleDimensions, this );
 		this.on( `slideDownTo.${ this.name }`, this.slideDownTo, this );
@@ -106,7 +106,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.onCenterScrollCore();
 
 		this.fire( 'moduleLaunch.appEvents', {
-			id:		this.id,
+			id:		this.name,
 			name:	this.name,
 			state:	this
 		});
@@ -169,7 +169,11 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 					nodeLocation:	this.nodeLocation
 				});
 			} else {
-				if( typeof modules.awaiting[ this.location ] === undef ) {
+				/*if( typeof modules.awaiting[ this.location ] === undef ) {
+					modules.awaiting[ this.location ] = [ ];
+				}*/
+
+				if(!(this.location in modules.awaiting) ) {
 					modules.awaiting[ this.location ] = [ ];
 				}
 
@@ -182,7 +186,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	}
 
 	onModuleDestruction( module ) {
-		if( this.location === module.id && module.root.contains( this.nodes.root ) ) {
+		if( (this.location === module.id || this.location === module.name) && module.root.contains( this.nodes.root ) ) {
 			this.destroy();
 		}
 	}
@@ -687,31 +691,31 @@ eventLoop.on( 'slideUpTo.appEvents', node => {
 });
 
 eventLoop.on( 'moduleLaunch.appEvents', ( module, event ) => {
-	if( module.id in modules.online ) {
-		modules.online[ module.id ]++;
+	if( module.name in modules.online ) {
+		modules.online[ module.name ]++;
 	} else {
-		modules.online[ module.id ] = 1;
+		modules.online[ module.name ] = 1;
 	}
 
-	if( modules.awaiting[ module.id ] ) {
-		for( let hookData of modules.awaiting[ module.id ] ) {
-			this.fire( `newChildModule.${ module.id }`, hookData );
+	if( modules.awaiting[ module.name ] ) {
+		for( let hookData of modules.awaiting[ module.name ] ) {
+			this.fire( `newChildModule.${ module.name }`, hookData );
 		}
 
-		delete modules.awaiting[ module.id ];
+		delete modules.awaiting[ module.name ];
 	}
 
-	console.log( `module ${module.id} was launched( ${modules.online[module.id]}x )` );
+	console.log( `module ${module.name} was launched( ${modules.online[module.name]}x )` );
 });
 
 eventLoop.on( 'moduleDestruction.appEvents', ( module, event ) => {
-	if( module.id in modules.online ) {
-		modules.online[ module.id ]--;
+	if( module.name in modules.online ) {
+		modules.online[ module.name ]--;
 
-		console.log( `module ${module.id} was destroyed( ${modules.online[module.id]}x instances left )` );
+		console.log( `module ${module.name} was destroyed( ${modules.online[module.name]}x instances left )` );
 
-		if( modules.online[ module.id ] === 0 ) {
-			delete modules.online[ module.id ];
+		if( modules.online[ module.name ] === 0 ) {
+			delete modules.online[ module.name ];
 		}
 	} else {
 

@@ -2,7 +2,7 @@
 
 import { Component } from './core.js';
 import { VK } from './defs.js';
-import { extend, makeClass, isMobileDevice } from './toolkit.js';
+import { extend, MakeClass, isMobileDevice } from './toolkit.js';
 import { win, doc, undef } from './domkit.js';
 
 import dialogStyle from './css/dialog.scss';

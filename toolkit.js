@@ -30,13 +30,13 @@ let	isMobileDevice	= false,
  * It can also be used to extend a class at declaration, therefore it will create a anonymous
  * default class if none was passed.
  *****************************************************************************************************/
-function mix( targetClass = class { } ) {
-	let composedClass;
+function Mix( TargetClass = class { } ) {
+	let ComposedClass;
 
 	return {
-		with: function( ...sources ) {
-			composedClass = sources.reduce( ( composition, mixinFnc ) => mixinFnc( composition ), targetClass );
-			return composedClass;
+		With: function( ...sources ) {
+			ComposedClass = sources.reduce( ( Composition, MixinFnc ) => MixinFnc( Composition ), TargetClass );
+			return ComposedClass;
 		}
 	};
 }
@@ -46,21 +46,21 @@ function mix( targetClass = class { } ) {
  * This is just sugar to not to be forced to call mix().with() with empty arguments.
  *****************************************************************************************************/
 function Composition( ...sources ) {
-	return sources.reduce( ( composition, mixinFnc ) => mixinFnc( composition ), class { } );
+	return sources.reduce( ( Composition, MixinFnc ) => MixinFnc( Composition ), class { } );
 }
 
 /*****************************************************************************************************
- * makeClass() should be used if there is no class to augment, but you still want to
+ * MakeClass() should be used if there is no class to augment, but you still want to
  * use some features from mixin-functions. It will create+instantiate an anonymous class if nothing
  * was passed in and returns the option to directly mixin() stuff.
  *****************************************************************************************************/
-function makeClass( cls, args = { } ) {
-	let	composedClass;
+function MakeClass( cls, args = { } ) {
+	let	ComposedClass;
 
 	return {
-		mixin: function( ...sources ) {
-			composedClass = sources.reduce( ( composition, mixinFnc ) => mixinFnc( composition ), cls || class { } );
-			return new composedClass( args );
+		Mixin: function( ...sources ) {
+			ComposedClass = sources.reduce( ( Composition, MixinFnc ) => MixinFnc( Composition ), cls || class { } );
+			return new ComposedClass( args );
 		}
 	};
 }
@@ -160,4 +160,4 @@ function getTimePeriod( timestamp ) {
 		}
 	}
 
-export { mix, makeClass, Composition, extend, getTimePeriod, type, desc, defineProp, props, slice, hashCode, intToRGB, isMobileDevice, isAgentCrawler };
+export { Mix, MakeClass, Composition, extend, getTimePeriod, type, desc, defineProp, props, slice, hashCode, intToRGB, isMobileDevice, isAgentCrawler };

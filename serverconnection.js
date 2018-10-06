@@ -1,7 +1,7 @@
 'use strict';
 
 import { win, doc, undef } from './domkit.js';
-import { makeClass, isAgentCrawler } from './toolkit.js';
+import { MakeClass, isAgentCrawler } from './toolkit.js';
 import Mediator from './mediator.js';
 import io from 'socket.io-client';
 
@@ -12,7 +12,7 @@ const	socket = io( ENV_PROD ? 'https://der-vegane-germane.de' : 'https://dev.der
 		}),
 		maxTimeout	= 3000;
 
-const	eventLoop	= makeClass( class ServerComEventLoop{ }, { id: 'ServerComEventLoop' } ).mixin( Mediator );
+const	eventLoop	= MakeClass( class ServerComEventLoop{ }, { id: 'ServerComEventLoop' } ).Mixin( Mediator );
 
 let		session				= null,
 		socketCloseTimeout	= null;
