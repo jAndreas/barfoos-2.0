@@ -2,7 +2,7 @@
 
 import { Component } from './core.js';
 import { VK } from './defs.js';
-import { extend, makeClass } from './toolkit.js';
+import { extend, makeClass, isMobileDevice } from './toolkit.js';
 import { win, doc, undef } from './domkit.js';
 
 import dialogStyle from './css/dialog.scss';
@@ -101,8 +101,10 @@ class Overlay extends Component {
 			this.nodes.dialogRoot.classList.add( 'hoverOverlay' );
 
 			if( this.hoverOverlay.maximize ) {
-				this.addNodeEvent( 'div.overlayMax', 'click', this.onOverlayCloseMax );
-				this.dialogElements[ 'div.overlayMax' ].style.display = 'flex';
+				if(!isMobileDevice ) {
+					this.addNodeEvent( 'div.overlayMax', 'click', this.onOverlayCloseMax );
+					this.dialogElements[ 'div.overlayMax' ].style.display = 'flex';
+				}
 			}
 
 			if( this.hoverOverlay.close ) {

@@ -15,6 +15,11 @@ body {
 	padding:0;
 
 	overflow:hidden;
+
+	> a {
+		position:absolute;
+		visibility:hidden;
+	}
 }
 
 ::selection {

@@ -156,7 +156,7 @@ let DOMTools = target => class extends target {
 				delete this.dialogElements[ n ];
 				delete this.availableNames[ n ];
 			} else {
-				this.warn( `${ n } could not be found in local node hash and therefore could not be removed.` );
+				//this.warn( `${ n } could not be found in local node hash and therefore could not be removed.` );
 			}
 		});
 	}
@@ -257,7 +257,9 @@ let DOMTools = target => class extends target {
 
 				// loop over every childnode, if we have children of children, recursively call crawlNodes()
 				for( let i = 0, len = node.children.length; i < len; i++ ) {
-					crawlNodes( node.children[ i ] );
+					if( node.children[ i ].tagName !== 'BR' ) {
+						crawlNodes( node.children[ i ] );
+					}
 				}
 			} else if( node instanceof NodeList ) {
 				// handle each node of NodeList

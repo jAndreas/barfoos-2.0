@@ -15,12 +15,11 @@ div.bfDialogWrapper {
 	box-shadow:2px 4px 20px 3px black;
 	overflow:hidden;
 	z-index:101;
-	background:inherit;
+	background:linear-gradient(1750deg, rgba(78, 139, 214, 0.95), rgba(28, 36, 58, 0.95));
 
 	@media screen and (max-width:$iPhone6Landscape) {
 		box-shadow:none;
 		filter:none;
-		background:linear-gradient(45deg, #1d1c1c, #5f5c5cf0);
 
 		* {
 			filter:none !important;
@@ -88,7 +87,7 @@ div.bfDialogWrapper {
 			color:rgba(255, 255, 255, 0.6);
 			font-size:1.5vw;
 			font-weight:bold;
-			flex-basis:85%;
+			flex-basis:90%;
 			text-align:center;
 
 			@media screen and (max-width:$iPhone6Landscape) {
