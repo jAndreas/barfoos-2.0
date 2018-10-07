@@ -16,8 +16,11 @@ let Speech = target => class extends target {
 			if( 'speechSynthesis' in win ) {
 				synth			= win.speechSynthesis;
 				defaultVoice	= await this.waitForVoices();
+			} else {
+				this.speechNotAvailable = true;
 			}
 		} catch( ex ) {
+			this.speechNotAvailable = true;
 			this.log( ex.message );
 		}
 	}

@@ -169,10 +169,6 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 					nodeLocation:	this.nodeLocation
 				});
 			} else {
-				/*if( typeof modules.awaiting[ this.location ] === undef ) {
-					modules.awaiting[ this.location ] = [ ];
-				}*/
-
 				if(!(this.location in modules.awaiting) ) {
 					modules.awaiting[ this.location ] = [ ];
 				}
