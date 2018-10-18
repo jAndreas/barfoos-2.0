@@ -53,6 +53,10 @@ eventLoop.on( 'waitForConnection.server', () => socket.connected || new Promise(
 eventLoop.on( 'startNewSession.server', user => {
 	session = Object.create( null );
 	Object.assign( session, user );
+
+	if( session ) {
+		socket.emit( 'clientHasReturned', session );
+	}
 });
 
 eventLoop.on( 'userLogout.server', user => {
@@ -80,16 +84,21 @@ function idleWatcher( active ) {
 			win.clearTimeout( socketCloseTimeout );
 
 			socketCloseTimeout = win.setTimeout(() => {
-				if( doc.visibilityState === 'hidden' ) {
-					if( ENV_PROD === false ) console.log('client idle for 30 seconds, closing socket connection.');
+				//if( doc.visibilityState === 'hidden' ) {
+					if( ENV_PROD === false ) console.log('client idle for 10 minutes, closing socket connection.');
+
+					if( session ) {
+						socket.emit( 'clientIsIdle', session );
+					}
+
 					socket.close();
-				}
+				//}
 			}, 60 * 1000 * 10);
 		}
 	}
 }
 
-eventLoop.on( 'appVisibilityChange.appEvents', idleWatcher );
+eventLoop.on( 'appVisibilityChange.appEvents appFocusChange.appEvents', idleWatcher );
 
 socket.open();
 
