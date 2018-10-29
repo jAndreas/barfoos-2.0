@@ -14,7 +14,8 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		super( ...arguments );
 
 		extend( this ).with({
-			mouseMoveHandlers:	[ ]
+			mouseMoveHandlers:	[ ],
+			DOMreadyHandlers:	[ ]
 		});
 
 		this._boundMouseMove = this.mousemove.bind( this );
@@ -26,6 +27,12 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		doc.onreadystatechange = () => {
 			if( doc.readyState === 'complete' ) {
 				this.fire( 'DOMReady.appEvents' );
+
+				for( let cb of this.DOMreadyHandlers ) {
+					cb.call( this, true );
+				}
+
+				delete this.DOMreadyHandlers;
 			}
 		}
 
@@ -61,12 +68,8 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 	}
 
 	waitForDOM( event ) {
-		return doc.readyState === 'complete' || new Promise( (res, rej) => {
-			doc.onreadystatechange = () => {
-				if( doc.readyState === 'complete' ) {
-					res( doc.readyState );
-				}
-			};
+		return doc.readyState === 'complete' || new Promise( ( res, rej ) => {
+			this.DOMreadyHandlers.push( () => { res( doc.readyState ); } );
 		});
 	}
 
@@ -105,6 +108,7 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 			return fetch( url ).then( res => res.blob() ).then( blob => URL.createObjectURL( blob ) );
 		} catch ( ex ) {
 			this.log( `Error: ${ ex.message }` );
+			return true;
 		}
 	}
 

@@ -13,7 +13,7 @@ const	win			= window,
 		undef		= void 0;
 
 let	isMobileDevice	= false,
-	isAgentCrawler	= /bot|google|baidu|bing|msn|duckduckbot|teoma|slurp|yandex/i.test( navigator.userAgent );
+	isAgentCrawler	= /bot|google|headlesschrome|bing|msn|duckduckbot|slurp/i.test( navigator.userAgent );
 
 (function() {
 	let el = doc.createElement( 'div' );

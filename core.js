@@ -90,6 +90,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.on( 'centerScroll.appEvents', this.onCenterScrollCore, this );
 		this.on( 'moduleDestruction.appEvents', this.onModuleDestruction, this );
 
+		this._depsResolve = await Promise.all( this.runtimeDependencies );
 
 		await this.installModule();
 
@@ -110,8 +111,6 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			name:	this.name,
 			state:	this
 		});
-
-		this._depsResolve = await Promise.all( this.runtimeDependencies );
 
 		this.modalOverlay.fulfill();
 	}

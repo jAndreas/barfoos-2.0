@@ -71,7 +71,10 @@ function idleWatcher( active ) {
 	if( active ) {
 		if(!socket.connected ) {
 			if( ENV_PROD === false ) console.log('re-opening socket for client.');
-			socket.open();
+
+			if(!isAgentCrawler ) {
+				socket.open();
+			}
 		} else {
 			if( ENV_PROD === false ) console.log('client returned, canceling timer for socket close.');
 			win.clearTimeout( socketCloseTimeout );
@@ -100,7 +103,9 @@ function idleWatcher( active ) {
 
 eventLoop.on( 'appVisibilityChange.appEvents appFocusChange.appEvents', idleWatcher );
 
-socket.open();
+if(!isAgentCrawler ) {
+	socket.open();
+}
 
 let ServerConnection = target => class extends target {
 	constructor() {
