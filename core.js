@@ -26,7 +26,8 @@ const 	nodes			= DOM.transpile({ htmlData: worldMarkup }),
 		ease			= EaseOut( 5 );
 
 let		lastScrollEvent	= 0,
-		observerTimer	= 0;
+		observerTimer	= 0,
+		anotherWorld	= false;
 
 /*****************************************************************************************************
  * Class Component is the basic GUI Module set of BarFoos 2. It provides automatic html-string transpiling,
@@ -92,27 +93,29 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 		this._depsResolve = await Promise.all( this.runtimeDependencies );
 
-		await this.installModule();
+		if(!anotherWorld ) {
+			await this.installModule();
 
-		this.createModalOverlay({
-			opts:	{
-				spinner: true
+			this.createModalOverlay({
+				opts:	{
+					spinner: true
+				}
+			});
+
+			if( this.loadingMessage ) {
+				this.modalOverlay.log( this.loadingMessage, this.loadingMessageDelay || 0 );
 			}
-		});
 
-		if( this.loadingMessage ) {
-			this.modalOverlay.log( this.loadingMessage, this.loadingMessageDelay || 0 );
+			this.onCenterScrollCore();
+
+			this.fire( 'moduleLaunch.appEvents', {
+				id:		this.name,
+				name:	this.name,
+				state:	this
+			});
+
+			this.modalOverlay.fulfill();
 		}
-
-		this.onCenterScrollCore();
-
-		this.fire( 'moduleLaunch.appEvents', {
-			id:		this.name,
-			name:	this.name,
-			state:	this
-		});
-
-		this.modalOverlay.fulfill();
 	}
 
 	async destroy() {
@@ -557,6 +560,12 @@ async function main() {
 	[ normalizeStyle, worldStyle, spinnerStyle, overlayStyle ].forEach( style => style.use() );
 
 	await eventLoop.fire( 'waitForDOM.appEvents' );
+
+	anotherWorld = !!doc.querySelector( 'div#world' );
+
+	if( anotherWorld ) {
+		return;
+	}
 
 	if( 'performance' in win ) {
 		let renderSpeed = win.performance.timing.domComplete - win.performance.timing.domLoading;
