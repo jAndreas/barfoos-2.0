@@ -6,7 +6,8 @@ import { extend, type } from './toolkit.js';
 const		win				= window,
 			doc				= win.document,
 			undef			= void 0,
-			query			= Object.create( null );
+			query			= Object.create( null ),
+			globalShadowDOM	= doc.implementation.createHTMLDocument( null );
 
 /*****************************************************************************************************
  * Class DOMTools: Provides a DOM toolset for transpiling html-strings into Node-References, watching
@@ -18,7 +19,7 @@ let DOMTools = target => class extends target {
 
 		extend( this ).with( data ).and({
 			id:					this.constructor.name,
-			vDom:				doc.implementation.createHTMLDocument( null ),
+			vDom:				globalShadowDOM,
 			data:				new WeakMap(),
 			nodes:				Object.create( null ),
 			availableNames:		Object.create( null )

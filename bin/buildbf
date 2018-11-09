@@ -3,6 +3,9 @@
 
 const	{ execSync }	= require( 'child_process' ),
 		cmd				= require( 'commander' ),
+		path			= require( 'path' ),
+		target			= '/home/zer0cool/projects/dvg_website',
+		source			= '/home/zer0cool/projects/barfoos-2.0',
 		olddir			= __dirname;
 
 
@@ -11,21 +14,31 @@ cmd
 	.option( '-p, --production', 'compile barfoos for production usage' )
 	.option( '-d, --development', 'compile barfoos for development usage' )
 	.option( '-l, --legacy', 'compile barfoos for legacy usage' )
+	.option( '-t, --target [dir]', 'target project directory')
 	.parse( process.argv );
 
+if( cmd.target ) {
+	target = cmd.target;
+	console.log( `bf2.0 target set to ${ target }` );
+}
+
 if( cmd.production ) {
-	process.chdir( __dirname );
-	execSync( 'npm run es7' );
+	process.chdir( path.resolve( source ) );
+	execSync( `babel *.js --out-dir ${ target }/node_modules/barfoos2.0/` );
+	execSync( `cp -R ${ source }/html/ ${ target }/node_modules/barfoos2.0/` );
+	execSync( `cp -R ${ source }/css/ ${ target }/node_modules/barfoos2.0/` );
 }
 
 if( cmd.legacy ) {
-	process.chdir( __dirname );
-	execSync( 'npm run compile' );
+	execSync( `babel ${ source }/ --out-dir ${ target }/node_modules/barfoos2.0/ --ignore "${ source }/node_modules/","${ source }/node_modules/**/*.js"` );
+	execSync( `cp -R ${ source }/html/ ${ target }/node_modules/barfoos2.0/` );
+	execSync( `cp -R ${ source }/css/ ${ target }/node_modules/barfoos2.0/` );
 }
 
 if( cmd.development ) {
-	process.chdir( __dirname );
-	execSync( 'npm run es7' );
+	execSync( `cp ${ source }/*.js ${ target }/node_modules/barfoos2.0/` );
+	execSync( `cp -R ${ source }/html/ ${ target }/node_modules/barfoos2.0/` );
+	execSync( `cp -R ${ source }/css/ ${ target }/node_modules/barfoos2.0/` );
 }
 
 process.chdir( olddir );
