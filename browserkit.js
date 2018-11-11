@@ -108,7 +108,7 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 			return fetch( url ).then( res => res.blob() ).then( blob => URL.createObjectURL( blob ) );
 		} catch ( ex ) {
 			this.log( `Error: ${ ex.message }` );
-			return true;
+			return false;
 		}
 	}
 
