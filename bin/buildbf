@@ -4,10 +4,19 @@
 const	{ execSync }	= require( 'child_process' ),
 		cmd				= require( 'commander' ),
 		path			= require( 'path' ),
-		target			= '/home/zer0cool/projects/dvg_website',
+		fs				= require( 'fs' ),
 		source			= '/home/zer0cool/projects/barfoos-2.0',
 		olddir			= __dirname;
 
+let		target			= '/home/zer0cool/projects/dvg_website';
+
+function mkdirSync( path ) {
+	try {
+		fs.mkdirSync( path );
+	} catch (err) {
+		if (err.code !== 'EEXIST') throw err
+	}
+}
 
 cmd
 	.version( '0.1.0' )
@@ -21,6 +30,10 @@ if( cmd.target ) {
 	target = cmd.target;
 	console.log( `bf2.0 target set to ${ target }` );
 }
+
+mkdirSync( `${ target }/` );
+mkdirSync( `${ target }/node_modules/` );
+mkdirSync( `${ target }/node_modules/barfoos2.0/` );
 
 if( cmd.production ) {
 	process.chdir( path.resolve( source ) );
