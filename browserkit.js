@@ -61,6 +61,7 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		this.on( 'isAppHidden.appEvents', () => doc.hidden );
 		this.on( 'isAppFocused.appEvents', () => doc.hasFocus() );
 		this.on( 'getHash.appEvents', () => new win.URLSearchParams( win.location.hash.slice( 1 ) ) );
+		this.on( 'getParams.appEvents', () => new win.URLSearchParams( win.location.search ) );
 		// onbeforeunload
 		// mediaQuery
 		// resize

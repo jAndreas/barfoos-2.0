@@ -5,7 +5,7 @@ import { MakeClass, isAgentCrawler } from './toolkit.js';
 import Mediator from './mediator.js';
 import io from 'socket.io-client';
 
-const	socket = io( ENV_PROD ? 'https://der-vegane-germane.de' : 'https://dev.der-vegane-germane.de', {
+const	socket = io( win.location.protocol + '//' + win.location.hostname, {
 			transports:		isAgentCrawler ? [ 'polling' ] : [ 'websocket', 'polling' ],
 			secure:			true,
 			autoConnect:	false
@@ -69,7 +69,7 @@ eventLoop.on( 'getUserSession.server', () => {
 
 function idleWatcher( active ) {
 	if( active ) {
-		if(!socket.connected ) {
+		if(!socket.connected && socket.io.readyState !== 'opening' ) {
 			if( ENV_PROD === false ) console.log('re-opening socket for client.');
 
 			if(!isAgentCrawler ) {
