@@ -34,24 +34,30 @@ if( cmd.target ) {
 mkdirSync( `${ target }/` );
 mkdirSync( `${ target }/node_modules/` );
 mkdirSync( `${ target }/node_modules/barfoos2.0/` );
+mkdirSync( `${ target }/node_modules/barfoos2.0/html/` );
+mkdirSync( `${ target }/node_modules/barfoos2.0/css/` );
+mkdirSync( `${ target }/node_modules/barfoos2.0/fonts/` );
 
 if( cmd.production ) {
 	process.chdir( path.resolve( source ) );
 	execSync( `babel *.js --out-dir ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/html/ ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/css/ ${ target }/node_modules/barfoos2.0/` );
+	execSync( `cp -R ${ source }/fonts/ ${ target }/node_modules/barfoos2.0/` );
 }
 
 if( cmd.legacy ) {
 	execSync( `babel ${ source }/ --out-dir ${ target }/node_modules/barfoos2.0/ --ignore "${ source }/node_modules/","${ source }/node_modules/**/*.js"` );
 	execSync( `cp -R ${ source }/html/ ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/css/ ${ target }/node_modules/barfoos2.0/` );
+	execSync( `cp -R ${ source }/fonts/ ${ target }/node_modules/barfoos2.0/` );
 }
 
 if( cmd.development ) {
 	execSync( `cp ${ source }/*.js ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/html/ ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/css/ ${ target }/node_modules/barfoos2.0/` );
+	execSync( `cp -R ${ source }/fonts/ ${ target }/node_modules/barfoos2.0/` );
 }
 
 process.chdir( olddir );
