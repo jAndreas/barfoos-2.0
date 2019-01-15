@@ -16,6 +16,8 @@ let Speech = target => class extends target {
 			if( 'speechSynthesis' in win ) {
 				synth			= win.speechSynthesis;
 				defaultVoice	= await this.waitForVoices();
+
+				this.speechNotAvailable = false;
 			} else {
 				this.speechNotAvailable = true;
 			}
@@ -27,12 +29,15 @@ let Speech = target => class extends target {
 
 	read( text ) {
 		try {
-			let utter	= new SpeechSynthesisUtterance( text );
-			utter.voice	= defaultVoice;
+			return new Promise(( res, rej ) => {
+				let utter		= new SpeechSynthesisUtterance( text );
+				utter.voice		= defaultVoice;
 
-			synth.speak( utter );
+				utter.onend 	= () => res();
+				utter.onerror	= () => res();
 
-			return true;
+				synth.speak( utter );
+			});
 		} catch( ex ) {
 			this.log( ex.message );
 

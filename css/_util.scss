@@ -15,18 +15,25 @@
 	overflow:hidden;
 
 	font-size:2vh;
+	user-select:none;
 }
 
 .bfButton:disabled {
-	filter:sepia(1) opacity(0.8);
+	filter:sepia(0.8) opacity(0.6);
 	cursor:default;
 	color:rgba(200,200,200,0.5) !important;
 }
 
-.bfButton:hover {
+.bfButton:not([disabled]):hover {
 	color:rgba(255,255,255,0.9);
 }
 
 .bfButton:active {
 	transform:translateY(2px) scale(0.98, 0.98);
+}
+
+.ellipsis {
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
 }

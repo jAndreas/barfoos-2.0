@@ -10,7 +10,7 @@ const	socket = io( win.location.protocol + '//' + win.location.hostname, {
 			secure:			true,
 			autoConnect:	false
 		}),
-		maxTimeout	= 3000;
+		maxTimeout	= 5000;
 
 const	eventLoop	= MakeClass( class ServerComEventLoop{ }, { id: 'ServerComEventLoop' } ).Mixin( Mediator );
 

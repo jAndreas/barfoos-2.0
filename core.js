@@ -87,6 +87,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.on( `findModule.${ this.name }`, this.findModule, this );
 		this.on( `getModuleDimensionsByName.${ this.name }`, this.getModuleDimensions, this );
 		this.on( `slideDownTo.${ this.name }`, this.slideDownTo, this );
+		this.on( `switchTo.${ this.name }`, this.switchTo, this );
 		this.on( `dialogMode.core`, this.onDialogModeChange, this );
 		this.on( 'centerScroll.appEvents', this.onCenterScrollCore, this );
 		this.on( 'moduleDestruction.appEvents', this.onModuleDestruction, this );
@@ -94,17 +95,17 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this._depsResolve = await Promise.all( this.runtimeDependencies );
 
 		if(!anotherWorld ) {
-			await this.installModule();
-
-			this.createModalOverlay({
+			// disabled the overlay spinner because it seems like it serves no reasonable purpose at this point
+			/*this.createModalOverlay({
 				opts:	{
 					spinner: true
 				}
-			});
+			});*/
+			await this.installModule();
 
-			if( this.loadingMessage ) {
+			/*if( this.loadingMessage ) {
 				this.modalOverlay.log( this.loadingMessage, this.loadingMessageDelay || 0 );
-			}
+			}*/
 
 			this.onCenterScrollCore();
 
@@ -114,7 +115,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				state:	this
 			});
 
-			this.modalOverlay.fulfill();
+			//this.modalOverlay.fulfill();
 		}
 	}
 
@@ -247,6 +248,10 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.fire( 'slideDownTo.appEvents', this.nodes.root );
 	}
 
+	switchTo() {
+		this.nodes.root.scrollIntoView();
+	}
+
 	async scrollContainerIntoView() {
 		let rootElementFromParent = await this.fire( `getModuleRootElement.${ this.location }` );
 
@@ -269,7 +274,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		}
 	}
 
-	onCenterScrollCore() {
+	onCenterScrollCore( scrollTop ) {
 		let clientRect			= this.nodes.root.getBoundingClientRect(),
 			centerOfViewport	= win.innerHeight / 2;
 
@@ -284,6 +289,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				this.offViewport();
 			}
 		}
+
+		super.onCenterScrollCore  && super.onCenterScrollCore( ...arguments );
 	}
 
 	inViewport({ enteredFrom = '' } = { }) {
@@ -556,7 +563,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 /*****************************************************************************************************
  * Core entry point
  *****************************************************************************************************/
-async function main() {
+async function main( performanceCheck = true ) {
 	[ normalizeStyle, worldStyle, spinnerStyle, overlayStyle ].forEach( style => style.use() );
 
 	await eventLoop.fire( 'waitForDOM.appEvents' );
@@ -567,14 +574,16 @@ async function main() {
 		return;
 	}
 
-	if( 'performance' in win ) {
-		let renderSpeed = win.performance.timing.domComplete - win.performance.timing.domLoading;
+	if( performanceCheck ) {
+		if( 'performance' in win ) {
+			let renderSpeed = win.performance.timing.domComplete - win.performance.timing.domLoading;
 
-		if( renderSpeed > 500 ) {
+			if( renderSpeed > 700 ) {
+				nodes[ 'div#world' ].classList.add( 'lowRes' );
+			}
+		} else {
 			nodes[ 'div#world' ].classList.add( 'lowRes' );
 		}
-	} else {
-		nodes[ 'div#world' ].classList.add( 'lowRes' );
 	}
 
 	doc.body.appendChild( nodes[ 'div#world' ] );
@@ -585,7 +594,7 @@ async function main() {
 
 nodes[ 'section.center' ].addEventListener( 'scroll', event => {
 	if( Date.now() - lastScrollEvent > 200 ) {
-		eventLoop.fire( 'centerScroll.appEvents' );
+		eventLoop.fire( 'centerScroll.appEvents', nodes[ 'section.center' ].scrollTop );
 
 		lastScrollEvent = Date.now();
 		win.clearTimeout( observerTimer );
@@ -593,7 +602,7 @@ nodes[ 'section.center' ].addEventListener( 'scroll', event => {
 
 	// make sure centerScroll fires at least one time
 	observerTimer = win.setTimeout(() => {
-		eventLoop.fire( 'centerScroll.appEvents' );
+		eventLoop.fire( 'centerScroll.appEvents', nodes[ 'section.center' ].scrollTop );
 	}, 200);
 }, false);
 
@@ -745,6 +754,23 @@ eventLoop.on( 'requestMobileNavigation.core', state => {
 		nodes[ 'section.center' ].removeEventListener( 'touchstart', endNavMode );
 		eventLoop.fire( 'remoteNavigate.appEvents' );
 	}
+});
+
+eventLoop.on( 'loadScript.core', ( src = '' ) => {
+	return new Promise(( res, rej ) => {
+		let scr			= doc.createElement( 'script' );
+			scr.src		= src;
+			scr.async	= true;
+			scr.defer	= true;
+			scr.onload	= () => {
+				res();
+			};
+			scr.onerror	= () => {
+				rej();
+			};
+
+		doc.body.appendChild( scr );
+	});
 });
 
 eventLoop.on( 'configApp.core', app => {

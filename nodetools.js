@@ -26,31 +26,47 @@ let NodeTools = target => class extends target {
 		this._alreadyDelegatedEvents = Object.create( null );
 
 		this._delegatedEventHandler = (event) => {
-			let callbackResult;
+			let callbackResult = [ ];
 
 			if( this && Object.keys( this ).length && this.data ) {
 				if( this.data.get( event.target ) ) {
 					if( this.data.get( event.target ).events[ event.type ] ) {
-						this.data.get( event.target ).events[ event.type ].forEach( fnc => {
-							callbackResult = fnc.call( this, event );
+						this.data.get( event.target ).events[ event.type ].every( fnc => {
+							let retV = fnc.call( this, event );
+
+							callbackResult.push( retV );
+
+							if( retV === -1 ) {
+								return false;
+							}
 						});
 
-						if( callbackResult === false ) {
+						if( callbackResult.indexOf( false ) > -1 ) {
+							return false;
+						}
+
+						if( callbackResult.indexOf( -1 ) > -1 ) {
 							return false;
 						}
 					}
 
-					if( this.data.get( event.target ) === undef ) {
+					if( this && this.data && this.data.get( event.target ) === undef ) {
 						this.cleanDelegations();
 						return false;
 					}
 
-					if( this.data.get( event.target ).oneTimeEvents[ event.type ] ) {
-						this.data.get( event.target ).oneTimeEvents[ event.type ].forEach( fnc => {
-							callbackResult = fnc.call( this, event );
+					if( this && this.data && this.data.get( event.target ).oneTimeEvents[ event.type ] ) {
+						this.data.get( event.target ).oneTimeEvents[ event.type ].every( fnc => {
+							let retV = fnc.call( this, event );
+
+							callbackResult.push( retV );
+
+							if( retV === -1 ) {
+								return false;
+							}
 						});
 
-						if( callbackResult === false ) {
+						if( callbackResult.indexOf( false ) > -1 ) {
 							return false;
 						}
 
@@ -130,6 +146,11 @@ let NodeTools = target => class extends target {
 				for( let type of types ) {
 					type = mappedMobileEvents[ type ] || type;
 
+					if( type === 'touchend' ) {
+						node.addEventListener( 'touchstart', this.hitMarker, false );
+						node.addEventListener( 'touchend', this.hitMarkerCheck, false );
+					}
+
 					if(!this._alreadyDelegatedEvents[ type ] ) {
 						this._alreadyDelegatedEvents[ type ] = true;
 
@@ -171,6 +192,11 @@ let NodeTools = target => class extends target {
 			for( let type of types ) {
 				type = mappedMobileEvents[ type ] || type;
 
+				if( type === 'touchend' ) {
+					node.addEventListener( 'touchstart', this.hitMarker, false );
+					node.addEventListener( 'touchend', this.hitMarkerCheck, false );
+				}
+
 				if(!this._alreadyDelegatedEvents[ type ] ) {
 					this._alreadyDelegatedEvents[ type ] = true;
 
@@ -210,6 +236,11 @@ let NodeTools = target => class extends target {
 		if( node instanceof HTMLElement ) {
 			for( let type of types ) {
 				type = mappedMobileEvents[ type ] || type;
+
+				if( type === 'touchend' ) {
+					node.removeEventListener( 'touchstart', this.hitMarker, false );
+					node.removeEventListener( 'touchend', this.hitMarkerCheck, false );
+				}
 
 				if( typeof fnc === 'function' ) {
 					if( Array.isArray( this.data.get( node ).events[ type ] ) ) {
@@ -535,6 +566,37 @@ let NodeTools = target => class extends target {
 
 	reflow( element ) {
 		doc.body.offsetHeight;
+	}
+
+	hitMarker( event ) {
+		if( event.changedTouches && event.changedTouches.length ) {
+			this.touchStartPos = event.changedTouches[ 0 ];
+		} else {
+			this.touchStartPos = { pageX: event.pageX, pageY: event.pageY };
+		}
+	}
+
+	hitMarkerCheck( event ) {
+		let touchEndPos;
+
+		if( event && event.changedTouches && event.changedTouches.length ) {
+			touchEndPos = event.changedTouches[ 0 ];
+		} else {
+			touchEndPos	= event;
+		}
+
+		if( event === 0 || (Math.abs( this.touchStartPos.pageX - touchEndPos.pageX ) < 10 && Math.abs( this.touchStartPos.pageY - touchEndPos.pageY ) < 10) ) {
+
+		} else {
+			try {
+				//event.preventDefault();
+				event.stopPropagation();
+			} catch( ex ) {
+				console.log( ex.message );
+			}
+
+			return false;
+		}
 	}
 };
 
