@@ -133,7 +133,7 @@ function getTimePeriod( timestamp ) {
 			diffHours		= Math.round( diffMinutes / 60 ),
 			diffDays		= Math.round( diffHours / 24 ),
 			diffWeeks		= Math.round( diffDays / 7 ),
-			diffMonths		= Math.round( diffWeeks / 4),
+			diffMonths		= (diffWeeks / 4),
 			diffYears		= (diffMonths / 12);
 
 		if( diffYears >= 1 ) {
@@ -144,8 +144,8 @@ function getTimePeriod( timestamp ) {
 			}
 
 			return diffYears + ' Jahr' + (diffYears > 1 ? 'en' : '');
-		} else if( diffMonths >= 1 ) {
-			return diffMonths + ' Monat' + (diffMonths > 1 ? 'en' : '');
+		} else if( diffMonths >= 0.9 ) {
+			return Math.round( diffMonths ) + ' Monat' + (diffMonths > 1 ? 'en' : '');
 		} else if( diffWeeks >= 1 ) {
 			return diffWeeks + ' Woche' + (diffWeeks > 1 ? 'n' : '');
 		} else if( diffDays >= 1 ) {
