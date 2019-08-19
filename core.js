@@ -89,6 +89,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.on( `slideDownTo.${ this.name }`, this.slideDownTo, this );
 		this.on( `switchTo.${ this.name }`, this.switchTo, this );
 		this.on( `dialogMode.core`, this.onDialogModeChange, this );
+		this.on( `mobileNavMenuChange.core`, this.onMobileNavMenuChange, this );
 		this.on( 'centerScroll.appEvents', this.onCenterScrollCore, this );
 		this.on( 'moduleDestruction.appEvents', this.onModuleDestruction, this );
 
@@ -271,6 +272,16 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		} else {
 			this.nodes.root.style.background	= '';
 			this._dialogMode = false;
+		}
+	}
+
+	onMobileNavMenuChange( state ) {
+		if( this.location === moduleLocations.center && this.name !== 'NavSection' ) {
+			if( state === 'open' ) {
+				this.nodes.root.classList.add( 'navBlur' );
+			} else {
+				this.nodes.root.classList.remove( 'navBlur' );
+			}
 		}
 	}
 
@@ -612,9 +623,15 @@ nodes[ 'section.center' ].addEventListener( 'scroll', event => {
 eventLoop.on( 'dialogMode.core', active => {
 	if( active ) {
 		nodes[ 'section.center' ].style.background	= 'inherit';
+		nodes[ 'div#world' ].classList.add( 'dialogBlur' );
 	} else {
 		nodes[ 'section.center' ].style.background	= '';
+		nodes[ 'div#world' ].classList.remove( 'dialogBlur' );
 	}
+});
+
+eventLoop.on( 'pushToSky.core', elem => {
+	nodes[ 'div#world' ].insertAdjacentElement( 'beforebegin', elem );
 });
 
 eventLoop.on( 'setScrollingStatus.core', status => {
@@ -780,7 +797,7 @@ eventLoop.on( 'configApp.core', app => {
 
 	if( app.background ) {
 		if( typeof app.background.objURL === 'string' ) {
-			nodes[ 'div#world' ].style.backgroundImage = `${ app.background.gradient || 'linear-gradient(45deg, rgba(56, 55, 66, 0.9), rgba(150, 148, 175, 0.9))' }, url( ${ app.background.objURL } )`;
+			nodes[ 'div#world' ].style.backgroundImage = `${ app.background.gradient || 'linear-gradient(0deg, rgba(56, 55, 46, 0.6), rgba(50, 48, 46, 0.9))' }, url( ${ app.background.objURL } )`;
 			nodes[ 'div#world' ].classList.add( 'backgroundImage' );
 
 			for( let [ prop, value ] of Object.entries( app.background.css ) ) {

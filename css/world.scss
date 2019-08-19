@@ -11,6 +11,9 @@ div#world {
 	overflow:hidden;
 
 	/*transition:all 600ms linear;*/
+	&.dialogBlur {
+		filter:blur(7px) brightness(0.7);
+	}
 
 	&.lowRes {
 		background-image:none !important;
@@ -117,5 +120,13 @@ div#world.backgroundImage {
 	display:flex;
 	flex-direction:column;
 	flex-wrap:nowrap;
-	box-shadow:0px 0px 155px 1px #efefef87;
+	/*box-shadow:0px 0px 155px 1px #efefef87;*/
+
+	&.navBlur {
+		filter:blur(5px);
+	}
+}
+
+::placeholder {
+	color:rgba(255,255,255,0.65);
 }

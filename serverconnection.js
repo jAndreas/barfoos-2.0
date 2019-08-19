@@ -8,9 +8,11 @@ import io from 'socket.io-client';
 const	socket = io( win.location.protocol + '//' + win.location.hostname, {
 			transports:		isAgentCrawler ? [ 'polling' ] : [ 'websocket', 'polling' ],
 			secure:			true,
-			autoConnect:	false
+			autoConnect:	false,
+			forceNew:		true,
+			pingTimeout:	3000
 		}),
-		maxTimeout	= 5000;
+		maxTimeout	= 3000;
 
 const	eventLoop	= MakeClass( class ServerComEventLoop{ }, { id: 'ServerComEventLoop' } ).Mixin( Mediator );
 
@@ -19,7 +21,7 @@ let		session				= null,
 
 socket.on( 'reconnect_attempt', () => {
 	if( ENV_PROD === false ) console.log('Reconnecting, also allowing for XHR.');
-	socket.io.opts.transports = [ 'polling', 'websocket' ];
+	socket.io.opts.transports = [ 'websocket', 'polling' ];
 });
 
 socket.on( 'connect', () => {
@@ -101,7 +103,7 @@ function idleWatcher( active ) {
 	}
 }
 
-eventLoop.on( 'appVisibilityChange.appEvents appFocusChange.appEvents', idleWatcher );
+//eventLoop.on( 'appVisibilityChange.appEvents appFocusChange.appEvents', idleWatcher );
 
 if(!isAgentCrawler ) {
 	socket.open();
@@ -122,11 +124,17 @@ let ServerConnection = target => class extends target {
 		super.destroy && super.destroy( ...arguments );
 	}
 
-	send( { type = '', payload = { } } = { }, { noTimeout = false, simplex = false } = { } ) {
+	async send( { type = '', payload = { } } = { }, { noTimeout = false, simplex = false } = { } ) {
 		let self = this;
 		let responseTimeout;
 
+		await this.fire( 'waitForConnection.server' );
+
 		return new Promise( ( resolve, reject ) => {
+			if(!socket.connected ) {
+				reject( 'Keine Server Verbindung.' );
+			}
+
 			if(!noTimeout ) {
 				responseTimeout = win.setTimeout(() => {
 					if( self.id ) {
@@ -164,8 +172,10 @@ let ServerConnection = target => class extends target {
 		});
 	}
 
-	recv( type, callback ) {
+	async recv( type, callback ) {
 		let self = this;
+
+		await this.fire( 'waitForConnection.server' );
 
 		this.instanceListeners[ type ] = callback;
 

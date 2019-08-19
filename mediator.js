@@ -59,7 +59,7 @@ let Mediator = target => class extends target {
 			for( let singleLocation of eventLocators.split( /\s+/ ) ) {
 				[ eventName, eventNameSpace = 'global' ] = singleLocation.split( '.' );
 
-				if( eventNameSpace in namespaceContainer ) {
+				if( eventNameSpace in namespaceContainer && eventName in namespaceContainer[ eventNameSpace ] ) {
 					if( eventName.trim().length ) {
 						if( typeof handler === 'function' ) {
 							namespaceContainer[ eventNameSpace ][ eventName ] = namespaceContainer[ eventNameSpace ][ eventName ].filter( eventData => eventData.handler !== handler );
@@ -74,7 +74,7 @@ let Mediator = target => class extends target {
 						// no event name was passed, drop entire namespace here?
 					}
 				} else {
-					throw new Error( `There is no "${ eventNameSpace }" namespace.` );
+					this.log && this.log( `There is no "${ eventNameSpace }" namespace.` );
 				}
 			}
 		} else {

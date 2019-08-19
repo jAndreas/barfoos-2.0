@@ -28,12 +28,9 @@ class Overlay extends Component {
 			this.error( `Destonation is required for options.location. Received ${ this.location } instead.` );
 		}
 
-		if( !this.fixed ) {
-			//this.fire( 'setScrollingStatus.core', 'disable' );
-			overlayInstances++;
-		}
+		overlayInstances++;
 
-		if( overlayInstances === 1 && !this.fixed ) {
+		if( overlayInstances === 1 ) {
 			this.fire( 'dialogMode.core', true );
 		}
 
@@ -48,9 +45,9 @@ class Overlay extends Component {
 	}
 
 	async destroy() {
-		if( !this.fixed ) {
+		//if( !this.fixed ) {
 			overlayInstances--;
-		}
+		//}
 
 		if( overlayInstances === 0 ) {
 			if( this.modalOverlay ) {
@@ -87,12 +84,13 @@ class Overlay extends Component {
 
 		if( this.fixed ) {
 			this.nodes.dialogRoot.style.position = 'fixed';
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(78, 139, 214, 0.95), rgba(28, 36, 58, 0.95))';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgba(68, 68, 68, 0.9))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
+			this.fire( 'pushToSky.core', this.nodes.dialogRoot );
 		}
 
 		if( this.noBlur ) {
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(78, 139, 214, 0.95), rgba(28, 36, 58, 0.95))';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgba(68, 68, 68, 0.9))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 		}
 
