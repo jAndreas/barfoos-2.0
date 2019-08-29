@@ -579,6 +579,10 @@ let NodeTools = target => class extends target {
 	hitMarkerCheck( event ) {
 		let touchEndPos;
 
+		if(!this.touchStartPos	) {
+			return false;
+		}
+		
 		if( event && event.changedTouches && event.changedTouches.length ) {
 			touchEndPos = event.changedTouches[ 0 ];
 		} else {

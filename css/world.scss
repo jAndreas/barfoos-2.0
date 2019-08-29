@@ -11,9 +11,6 @@ div#world {
 	overflow:hidden;
 
 	/*transition:all 600ms linear;*/
-	&.dialogBlur {
-		filter:blur(7px) brightness(0.7);
-	}
 
 	&.lowRes {
 		background-image:none !important;
@@ -34,7 +31,7 @@ div#world {
 	}
 
 	@media screen and (max-width:$iPhone6Landscape) {
-		overflow-y:hidden;
+		overflow:hidden;
   		-webkit-overflow-scrolling:touch;
 	}
 
@@ -50,6 +47,8 @@ div#world {
 		justify-content:flex-start;
 		flex-direction:row;
 		flex-wrap:wrap;
+
+		scrollbar-width:none;
 		/*
 		DEBUG BORDER
 		box-sizing:border-box;
@@ -58,18 +57,55 @@ div#world {
 	}
 
 	> section.head {
-		flex-grow:1;
-		flex-basis:100%;
+		position:relative;
+
+		&.dialogBlur {
+			filter:blur(7px) brightness(0.7);
+			overflow:hidden;
+			transition:filter 200ms linear;
+		}
 	}
 
 	> section.content.center {
 		background:inherit;
 		justify-content:flex-start;
 		/*width:100vw;*/
-		height:100vh;
+		height:90vh;
 		overflow-x:hidden;
 		overflow-y:scroll;
 		z-index:1;
+		flex-basis:75%;
+
+		&::-webkit-scrollbar {
+			display:none;
+		}
+
+		@media screen and (max-width:$iPadLandscape) {
+			background:none;
+
+			flex-basis:100%;
+			&~section.content.right {
+				flex-basis:0%;
+				display:none;
+			}
+		}
+
+		&.chatSideBar {
+			flex-basis:0%;
+			transition:flex-basis 200ms linear;
+		}
+
+		&.chatSideBar ~ section.content.right {
+			right:0;
+			display:flex;
+			transition:right 200ms linear;
+		}
+
+		&.dialogBlur {
+			filter:blur(7px) brightness(0.7);
+			overflow:hidden;
+			transition:filter 200ms linear;
+		}
 
 		&.mobileNavMode {
 			flex-basis:20%
@@ -102,10 +138,26 @@ div#world {
 
 	> section.content.right {
 		color:white;
-		flex-basis:0%;
+		flex-basis:25%;
 		flex-grow:0;
 		order:4;
-		display:none;
+		display:flex;
+		background-color:#0000007d;
+		height:90vh;
+		width:25vw;
+
+		@media screen and (max-width:$iPadLandscape) {
+			width:100vw;
+			position:absolute;
+			right:-100vw;
+			display:none;
+		}
+
+		&.dialogBlur {
+			filter:blur(7px) brightness(0.7);
+			overflow:hidden;
+			transition:filter 200ms linear;
+		}
 	}
 }
 
@@ -130,3 +182,7 @@ div#world.backgroundImage {
 ::placeholder {
 	color:rgba(255,255,255,0.65);
 }
+
+/*::-webkit-scrollbar {
+	display:none;
+}*/

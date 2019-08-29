@@ -620,18 +620,41 @@ nodes[ 'section.center' ].addEventListener( 'scroll', event => {
 /*****************************************************************************************************
  * Core Event handling
  *****************************************************************************************************/
-eventLoop.on( 'dialogMode.core', active => {
-	if( active ) {
-		nodes[ 'section.center' ].style.background	= 'inherit';
-		nodes[ 'div#world' ].classList.add( 'dialogBlur' );
+eventLoop.on( 'dialogMode.core', data => {
+	if( data.active ) {
+		//nodes[ 'section.center' ].style.background	= 'inherit';
+		nodes[ 'section.center' ].classList.add( 'dialogBlur' );
+		nodes[ 'section.head' ].classList.add( 'dialogBlur' );
+
+		if(!data.visibleChat) {
+			nodes[ 'section.right' ].classList.add( 'dialogBlur' );
+		}
 	} else {
-		nodes[ 'section.center' ].style.background	= '';
-		nodes[ 'div#world' ].classList.remove( 'dialogBlur' );
+		//nodes[ 'section.center' ].style.background	= '';
+		nodes[ 'section.center' ].classList.remove( 'dialogBlur' );
+		nodes[ 'section.right' ].classList.remove( 'dialogBlur' );
+		nodes[ 'section.head' ].classList.remove( 'dialogBlur' );
+	}
+});
+
+eventLoop.on( 'mobileNavMenuChange.core', state => {
+	if( state === 'open' ) {
+		nodes[ 'section.right' ].classList.add( 'dialogBlur' );
+	} else {
+		nodes[ 'section.right' ].classList.remove( 'dialogBlur' );
 	}
 });
 
 eventLoop.on( 'pushToSky.core', elem => {
 	nodes[ 'div#world' ].insertAdjacentElement( 'beforebegin', elem );
+});
+
+eventLoop.on( 'enableChatSideBar.core', () => {
+	nodes[ 'section.center' ].classList.add( 'chatSideBar' );
+});
+
+eventLoop.on( 'disableChatSideBar.core', () => {
+	nodes[ 'section.center' ].classList.remove( 'chatSideBar' );
 });
 
 eventLoop.on( 'setScrollingStatus.core', status => {
@@ -671,7 +694,7 @@ eventLoop.on( 'mouseWheelDown.appEvents', () => {
 
 eventLoop.on( 'slideDownTo.appEvents', node => {
 	return new Promise(( res, rej ) => {
-		let	count		= 1,
+		/*let	count		= 1,
 		prog		= 1 / 100,
 		accel		= 0,
 		endValue	= nodes[ 'section.center' ].scrollTop + node.getBoundingClientRect().top;
@@ -691,13 +714,15 @@ eventLoop.on( 'slideDownTo.appEvents', node => {
 			}
 		}
 
-		win.requestAnimationFrame( step );
+		win.requestAnimationFrame( step );*/
+		node.scrollIntoView();
+		res();
 	});
 });
 
 eventLoop.on( 'slideUpTo.appEvents', node => {
 	return new Promise(( res, rej ) => {
-		let	count		= 1,
+		/*let	count		= 1,
 		prog		= 1 / 100,
 		accel		= 0,
 		endValue	= nodes[ 'section.center' ].scrollTop - Math.abs( node.getBoundingClientRect().top );
@@ -716,7 +741,9 @@ eventLoop.on( 'slideUpTo.appEvents', node => {
 			}
 		}
 
-		win.requestAnimationFrame( step );
+		win.requestAnimationFrame( step );*/
+		node.scrollIntoView();
+		res();
 	});
 });
 

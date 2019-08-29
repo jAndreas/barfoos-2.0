@@ -31,7 +31,7 @@ class Overlay extends Component {
 		overlayInstances++;
 
 		if( overlayInstances === 1 ) {
-			this.fire( 'dialogMode.core', true );
+			this.fire( 'dialogMode.core', { active: true, visibleChat: this.visibleChat } );
 		}
 
 		this.on( 'appOrientationChange.appEvents', this.orientationChange, this );
@@ -275,6 +275,12 @@ let Draggable = target => class extends target {
 		this._boundMouseMoveHandler = this.mouseMoveHandler.bind( this );
 
 		super.init && await super.init();
+	}
+
+	async destroy() {
+		this.log('DESTROYYY MEEEEEE');
+		this.fire( 'removeMouseMoveListener.appEvents', this._boundMouseMoveHandler, () => {} );
+		super.destroy && await super.destroy();
 	}
 
 	installModule() {

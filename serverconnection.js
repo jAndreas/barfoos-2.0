@@ -103,7 +103,7 @@ function idleWatcher( active ) {
 	}
 }
 
-//eventLoop.on( 'appVisibilityChange.appEvents appFocusChange.appEvents', idleWatcher );
+eventLoop.on( 'appVisibilityChange.appEvents appFocusChange.appEvents', idleWatcher );
 
 if(!isAgentCrawler ) {
 	socket.open();
