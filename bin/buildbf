@@ -26,8 +26,9 @@ cmd
 	.option( '-t, --target [dir]', 'target project directory')
 	.parse( process.argv );
 
-if( cmd.target ) {
-	target = cmd.target;
+const opts = cmd.opts();
+if( opts.target ) {
+	target = opts.target;
 	console.log( `bf2.0 target set to ${ target }` );
 }
 
@@ -38,26 +39,29 @@ mkdirSync( `${ target }/node_modules/barfoos2.0/html/` );
 mkdirSync( `${ target }/node_modules/barfoos2.0/css/` );
 mkdirSync( `${ target }/node_modules/barfoos2.0/fonts/` );
 
-if( cmd.production ) {
-	process.chdir( path.resolve( source ) );
+if( opts.production ) {
+	process.chdir( path.resolve( source ) );	
 	execSync( `babel *.js --out-dir ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/html/ ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/css/ ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/fonts/ ${ target }/node_modules/barfoos2.0/` );
+	execSync( `cp package.json ${ target }/node_modules/barfoos2.0/` );
 }
 
-if( cmd.legacy ) {
+if( opts.legacy ) {
 	execSync( `babel ${ source }/ --out-dir ${ target }/node_modules/barfoos2.0/ --ignore "${ source }/node_modules/","${ source }/node_modules/**/*.js"` );
 	execSync( `cp -R ${ source }/html/ ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/css/ ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/fonts/ ${ target }/node_modules/barfoos2.0/` );
+	execSync( `cp package.json ${ target }/node_modules/barfoos2.0/` );
 }
 
-if( cmd.development ) {
+if( opts.development ) {
 	execSync( `cp ${ source }/*.js ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/html/ ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/css/ ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/fonts/ ${ target }/node_modules/barfoos2.0/` );
+	execSync( `cp package.json ${ target }/node_modules/barfoos2.0/` );
 }
 
 process.chdir( olddir );

@@ -3,7 +3,7 @@
 import { win, doc, undef } from './domkit.js';
 import { MakeClass, isAgentCrawler } from './toolkit.js';
 import Mediator from './mediator.js';
-import io from 'socket.io-client';
+import io from '../socket.io-client';
 
 const	socket = io( win.location.protocol + '//' + win.location.hostname, {
 			transports:		isAgentCrawler ? [ 'polling' ] : [ 'websocket', 'polling' ],
@@ -98,7 +98,7 @@ function idleWatcher( active ) {
 
 					socket.close();
 				//}
-			}, 60 * 1000 * 10);
+			}, 60 * 1000 * 2);
 		}
 	}
 }

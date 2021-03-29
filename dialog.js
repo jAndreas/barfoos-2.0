@@ -293,7 +293,7 @@ let Draggable = target => class extends target {
 		let clRect	= this.dialogElements[ 'div.bfDialogWrapper' ].getBoundingClientRect(),
 			parent	= await this.fire( `getModuleDimensions.${ this.location }` );
 
-		if( parent === null ) {
+		if( parent === null || this.fixed ) {
 			this.relativeCursorPositionLeft		= event.pageX - this.dialogElements[ 'div.bfDialogWrapper' ].offsetLeft;
 			this.relativeCursorPositionTop		= event.pageY - this.dialogElements[ 'div.bfDialogWrapper' ].offsetTop;
 		} else {

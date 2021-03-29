@@ -27,7 +27,8 @@ const 	nodes			= DOM.transpile({ htmlData: worldMarkup }),
 
 let		lastScrollEvent	= 0,
 		observerTimer	= 0,
-		anotherWorld	= false;
+		anotherWorld	= false,
+		greenScreenMode	= false;
 
 /*****************************************************************************************************
  * Class Component is the basic GUI Module set of BarFoos 2. It provides automatic html-string transpiling,
@@ -88,8 +89,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.on( `getModuleDimensionsByName.${ this.name }`, this.getModuleDimensions, this );
 		this.on( `slideDownTo.${ this.name }`, this.slideDownTo, this );
 		this.on( `switchTo.${ this.name }`, this.switchTo, this );
-		this.on( `dialogMode.core`, this.onDialogModeChange, this );
-		this.on( `mobileNavMenuChange.core`, this.onMobileNavMenuChange, this );
+		this.on( 'dialogMode.core', this.onDialogModeChange, this );
+		this.on( 'mobileNavMenuChange.core', this.onMobileNavMenuChange, this );
 		this.on( 'centerScroll.appEvents', this.onCenterScrollCore, this );
 		this.on( 'moduleDestruction.appEvents', this.onModuleDestruction, this );
 
@@ -620,6 +621,18 @@ nodes[ 'section.center' ].addEventListener( 'scroll', event => {
 /*****************************************************************************************************
  * Core Event handling
  *****************************************************************************************************/
+eventLoop.on( 'greenScreenMode.appEvents', () => {
+	nodes[ 'section.right' ].remove();
+	nodes[ 'section.footer' ].remove();
+	nodes[ 'section.center' ].style.height = '100vh';
+	nodes[ 'section.center' ].style.flexBasis = '100%';
+	nodes[ 'div#world' ].style.backgroundImage = 'none';
+	nodes[ 'div#world' ].style.backgroundColor = 'transparent';
+	nodes[ 'div#world' ].classList.remove( 'backgroundImage' );
+	greenScreenMode = true;
+
+});
+
 eventLoop.on( 'dialogMode.core', data => {
 	if( data.active ) {
 		//nodes[ 'section.center' ].style.background	= 'inherit';
@@ -822,7 +835,7 @@ eventLoop.on( 'configApp.core', app => {
 
 	doc.title	= app.title || 'BarFoos Application';
 
-	if( app.background ) {
+	if( app.background && !greenScreenMode ) {
 		if( typeof app.background.objURL === 'string' ) {
 			nodes[ 'div#world' ].style.backgroundImage = `${ app.background.gradient || 'linear-gradient(0deg, rgba(56, 55, 46, 0.6), rgba(50, 48, 46, 0.9))' }, url( ${ app.background.objURL } )`;
 			nodes[ 'div#world' ].classList.add( 'backgroundImage' );

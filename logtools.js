@@ -14,16 +14,16 @@ let LogTools = target => class extends target {
 	}
 
 	log( ...args ) {
-		if( ENV_PROD ) {
-			return;
-		}
+		//if( ENV_PROD ) {
+		//	return;
+		//}
 
 		let prefixed = args.slice( 0 );
 
 		prefixed.unshift( `%c${this.id}: `, `color: #${this.color};font-weight: normal;text-shadow: 1px 1px 1px white,-1px -1px 1px black;` );
 
 		console.groupCollapsed( ...prefixed );
-		this.nodes && console.log( this.nodes.root, prefixed.slice( 2 ) );
+		this.nodes && console[ 'log' ]( this.nodes.root, prefixed.slice( 2 ) );
 		console.trace();
 		console.groupEnd();
 
