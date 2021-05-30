@@ -10,9 +10,9 @@ const	socket = io( win.location.protocol + '//' + win.location.hostname, {
 			secure:			true,
 			autoConnect:	false,
 			forceNew:		true,
-			pingTimeout:	3000
+			pingTimeout:	5000
 		}),
-		maxTimeout	= 3000;
+		maxTimeout	= 5000;
 
 const	eventLoop	= MakeClass( class ServerComEventLoop{ }, { id: 'ServerComEventLoop' } ).Mixin( Mediator );
 
@@ -128,7 +128,7 @@ let ServerConnection = target => class extends target {
 		let self = this;
 		let responseTimeout;
 
-		await this.fire( 'waitForConnection.server' );
+		//await this.fire( 'waitForConnection.server' );
 
 		return new Promise( ( resolve, reject ) => {
 			if(!socket.connected ) {

@@ -552,6 +552,44 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				return {
 					at:		reference => {
 						let hash = this.addNodes({ htmlData, reference, standalone });
+
+						let templateLogic = hash.localRoot.querySelectorAll( '[logic]' );
+
+						if( templateLogic.length ) {
+							for( let node of templateLogic ) {
+								let instructions = JSON.parse( node.getAttribute( 'logic' ) );
+
+								for( let [ cmd, src ] of Object.entries( instructions ) ) {
+									switch( cmd ) {
+										case 'loop':
+											node.removeAttribute( 'logic' );
+
+											let nodeHTML	= node.outerHTML,
+												parent		= node.parentElement;
+
+											node.remove();
+
+											if( Array.isArray( replacementHash[ src ] ) ) {
+												for( let entry of replacementHash[ src ] ) {
+													let updatedHTML;
+													if( crlf ) {
+														updatedHTML = nodeHTML.replace( new RegExp( '%loopReplace%', 'g' ), (entry !== undef ? entry : '').toString().replace( /<br>|<br\/>/g, '\n' ) );
+													} else {
+														updatedHTML = nodeHTML.replace( new RegExp( '%loopReplace%', 'g' ), (entry !== undef ? entry : '').toString().replace( /\n/g, '<br/>') );
+													}
+
+													parent.insertAdjacentHTML( 'afterbegin', updatedHTML );
+												}
+											}
+
+											parent = null;
+											break;
+										case 'if':
+											break;
+									}
+								}
+							}
+						}
 						return hash;
 					},
 					get:	() => {

@@ -20,6 +20,6 @@
 		"@babel/preset-env": "^7.13.10",
 		"@babel/runtime-corejs2": "^7.13.10",
 		"commander": "^7.1.0",
-		"socket.io": "^3.1.2"
+		"socket.io": "^4.0.1"
 	}
 }
