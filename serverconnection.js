@@ -8,9 +8,9 @@ import io from '../socket.io-client';
 const	socket = io( win.location.protocol + '//' + win.location.hostname, {
 			transports:		isAgentCrawler ? [ 'polling' ] : [ 'websocket', 'polling' ],
 			secure:			true,
-			autoConnect:	false,
+			autoConnect:	true,
 			forceNew:		true,
-			pingTimeout:	5000
+			pingTimeout:	8000
 		}),
 		maxTimeout	= 5000;
 
@@ -193,7 +193,7 @@ let ServerConnection = target => class extends target {
 	}
 
 	disableSocketAutoClose() {
-		eventLoop.off( 'appVisibilityChange.appEvents', idleWatcher );
+		eventLoop.off( 'appVisibilityChange.appEvents appFocusChange.appEvents', idleWatcher );
 		win.clearTimeout( socketCloseTimeout );
 	}
 

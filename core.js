@@ -571,14 +571,16 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 											if( Array.isArray( replacementHash[ src ] ) ) {
 												for( let entry of replacementHash[ src ] ) {
-													let updatedHTML;
-													if( crlf ) {
-														updatedHTML = nodeHTML.replace( new RegExp( '%loopReplace%', 'g' ), (entry !== undef ? entry : '').toString().replace( /<br>|<br\/>/g, '\n' ) );
-													} else {
-														updatedHTML = nodeHTML.replace( new RegExp( '%loopReplace%', 'g' ), (entry !== undef ? entry : '').toString().replace( /\n/g, '<br/>') );
-													}
+													if( entry ) {
+														let updatedHTML;
+														if( crlf ) {
+															updatedHTML = nodeHTML.replace( new RegExp( '%loopReplace%', 'g' ), entry.toString().replace( /<br>|<br\/>/g, '\n' ) );
+														} else {
+															updatedHTML = nodeHTML.replace( new RegExp( '%loopReplace%', 'g' ), entry.toString().replace( /\n/g, '<br/>') );
+														}
 
-													parent.insertAdjacentHTML( 'afterbegin', updatedHTML );
+														parent.insertAdjacentHTML( 'afterbegin', updatedHTML );
+													}
 												}
 											}
 

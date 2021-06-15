@@ -378,10 +378,10 @@ let NodeTools = target => class extends target {
 				let store			= this.data.get( node ).storage,
 					cancelOrigin	= null;
 
-				if( store.animations[ id ] ) {
-					this.warn( `It seems like there is a pending or finished transition for ${ node } - ID: ${ id }.` );
-					res();
-				}
+				//if( store.animations[ id ] ) {
+				//	this.warn( `It seems like there is a pending or finished transition for ${ node } - ID: ${ id }.` );
+				//	res();
+				//}
 
 				store.animations.running = store.animations.running || [ ];
 
@@ -453,7 +453,7 @@ let NodeTools = target => class extends target {
 						}
 					};
 
-					store.animations[ id ] = options;
+					//store.animations[ id ] = options;
 
 					win.clearTimeout( cancelOrigin );
 					res( options );
@@ -555,7 +555,7 @@ let NodeTools = target => class extends target {
 					}
 				};
 
-				store.transitions[ id ] = options;
+				//store.transitions[ id ] = options;
 
 				res( options );
 			} else {
