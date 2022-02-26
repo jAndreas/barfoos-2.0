@@ -49,6 +49,10 @@ class Overlay extends Component {
 			overlayInstances--;
 		//}
 
+		if( this.modalDialog ) {
+			this.removeNodes( 'div#__modalDialogOverlay', true );
+		}
+
 		if( overlayInstances === 0 ) {
 			if( this.modalOverlay ) {
 				await this.modalOverlay.fulfill();
@@ -82,6 +86,16 @@ class Overlay extends Component {
 			this.nodes.dialogRoot.style.zIndex	= 1000;
 		}
 
+		if( this.modalDialog ) {
+			this.addNodes({
+				htmlData:	'<div id="__modalDialogOverlay" style="position:absolute;top:0;left:0;height:100vh;width:100vw;z-index:999"></div>',
+				reference:	{
+					node:		this.modalDialog.global ? doc.body : this.nodes.dialogRoot,
+					position:	'afterBegin'
+				}
+			});
+		}
+
 		if( this.fixed ) {
 			this.nodes.dialogRoot.style.position = 'fixed';
 			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgba(68, 68, 68, 0.9))';
@@ -109,6 +123,10 @@ class Overlay extends Component {
 				this.addNodeEvent( 'div.overlayClose', 'click', this.onOverlayCloseClick );
 				this.dialogElements[ 'div.overlayClose' ].style.display = 'flex';
 			}
+		}
+
+		if( this.background ) {
+			this.nodes.dialogRoot.style.background = this.background;
 		}
 	}
 
@@ -215,6 +233,35 @@ class Overlay extends Component {
 			}
 		}
 	}
+
+	tempMsg( node, msg, iv ) {
+		try {
+			if( node instanceof HTMLElement ) {
+				if( this.data.get( node ).storage.tmpMsgOld === undef ) {
+					this.data.get( node ).storage.tmpMsgOld = node.textContent;
+				}
+				
+				node.textContent = msg || '';
+				node.classList.add( 'redcolor' );
+
+				if( this.data.get( node ).storage.tmpMsgTimer ) {
+					win.clearTimeout( this.data.get( node ).storage.tmpMsgTimer );
+				}
+				
+				this.data.get( node ).storage.tmpMsgTimer = win.setTimeout(() => {
+					if( this && this.data ) {
+						node.classList.remove( 'redcolor' );
+						node.textContent = this.data.get( node ).storage.tmpMsgOld;
+
+						delete this.data.get( node ).storage.tmpMsgTimer;
+						delete this.data.get( node ).storage.tmpMsgOld;
+					}
+				}, iv);
+			}
+		} catch( ex ) {
+			console.log( ex.message );
+		}
+	}
 }
 
 let Dialog = target => class extends target {
@@ -278,7 +325,6 @@ let Draggable = target => class extends target {
 	}
 
 	async destroy() {
-		this.log('DESTROYYY MEEEEEE');
 		this.fire( 'removeMouseMoveListener.appEvents', this._boundMouseMoveHandler, () => {} );
 		super.destroy && await super.destroy();
 	}

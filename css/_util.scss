@@ -24,7 +24,7 @@
 
 .bfButton:disabled {
 	filter:sepia(0.8) opacity(0.6);
-	cursor:default;
+	cursor:not-allowed;
 	color:rgba(200,200,200,0.5) !important;
 }
 

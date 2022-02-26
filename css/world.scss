@@ -142,9 +142,6 @@ div#world {
 		flex-grow:0;
 		order:4;
 		display:flex;
-		background-color:#0000007d;
-		height:90vh;
-		width:25vw;
 
 		@media screen and (max-width:$iPadLandscape) {
 			width:100vw;

@@ -16,7 +16,7 @@ const	socket = io( win.location.protocol + '//' + win.location.hostname, {
 
 const	eventLoop	= MakeClass( class ServerComEventLoop{ }, { id: 'ServerComEventLoop' } ).Mixin( Mediator );
 
-let		session				= null,
+let		session				= Object.create( null ),
 		socketCloseTimeout	= null;
 
 socket.on( 'reconnect_attempt', () => {
@@ -56,17 +56,24 @@ eventLoop.on( 'startNewSession.server', user => {
 	session = Object.create( null );
 	Object.assign( session, user );
 
-	if( session ) {
+	localStorage.setItem( 'moralsession', JSON.stringify( session ) );
+
+	if( ENV_PROD === false ) console.log('new session set: ', session );
+
+	if( Object.keys( session ).length ) {
 		socket.emit( 'clientHasReturned', session );
 	}
 });
 
-eventLoop.on( 'userLogout.server', user => {
-	session = null;
+eventLoop.on( 'userLogout.server', () => {
+	socket.emit( 'sessionEnd', session );
+	session = Object.create( null );
+
+	localStorage.removeItem( 'moralsession' );
 });
 
 eventLoop.on( 'getUserSession.server', () => {
-	return session;
+	return Object.keys( session ).length ? session : null;
 });
 
 function idleWatcher( active ) {
@@ -92,7 +99,7 @@ function idleWatcher( active ) {
 				//if( doc.visibilityState === 'hidden' ) {
 					if( ENV_PROD === false ) console.log('client idle for 10 minutes, closing socket connection.');
 
-					if( session ) {
+					if( Object.keys( session ).length ) {
 						socket.emit( 'clientIsIdle', session );
 					}
 
@@ -114,6 +121,12 @@ let ServerConnection = target => class extends target {
 		super( ...arguments );
 
 		this.instanceListeners = Object.create( null );
+
+		let sessionData = JSON.parse( localStorage.getItem( 'moralsession' ) );
+
+		if( sessionData ) {
+			Object.assign( session, sessionData );
+		}
 	}
 
 	destroy() {
@@ -209,7 +222,7 @@ let ServerConnection = target => class extends target {
 		if( response ) {
 			if( response.error || response.errorCode ) {
 				// handle errors
-				throw new Error( response.error + ' (r)' || response.errorCode );
+				throw (response.error + ' (r)' || response.errorCode);
 			}
 		}
 	}

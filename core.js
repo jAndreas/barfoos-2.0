@@ -12,10 +12,11 @@ import overlayStyle from './css/modaloverlay.scss';
 import normalizeStyle from './css/normalize.scss';
 import worldStyle from './css/world.scss';
 
-const	eventLoop	= MakeClass( class coreEventLoop{ }, { id: 'coreEventLoop' } ).Mixin( Mediator ),
-		console		= MakeClass( class core{ }, { id: 'core'} ).Mixin( LogTools ),
-		DOM			= MakeClass( class DOM{ }, { id: 'DOM'} ).Mixin( Mediator, DOMTools ),
-		modules		= Object.create( null );
+const	eventLoop		= MakeClass( class coreEventLoop{ }, { id: 'coreEventLoop' } ).Mixin( Mediator ),
+		console			= MakeClass( class core{ }, { id: 'core'} ).Mixin( LogTools ),
+		DOM				= MakeClass( class DOM{ }, { id: 'DOM'} ).Mixin( Mediator, DOMTools ),
+		loadedScripts	= Object.create( null ),
+		modules			= Object.create( null );
 
 		modules.online		= Object.create( null );
 		modules.awaiting	= Object.create( null );
@@ -28,6 +29,7 @@ const 	nodes			= DOM.transpile({ htmlData: worldMarkup }),
 let		lastScrollEvent	= 0,
 		observerTimer	= 0,
 		anotherWorld	= false,
+		noFrame			= false,
 		greenScreenMode	= false;
 
 /*****************************************************************************************************
@@ -156,7 +158,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 		this.__proto__ = null;
 
-		console.log('That is all what remains: ', this);
+		if( ENV_PROD === false ) console.log('That is all what remains: ', this);
 	}
 
 	async installModule() {
@@ -408,6 +410,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 				this.removeNodes( 'overlaySpinner', true );
 				this.removeNodes( 'overlayConfirm', true );
+				this.removeNodes( 'modalOverlay', true );
 			},
 			log:		( msg ) => {
 				this.nodes.overlaySpinner.insertAdjacentHTML( 'afterend', `<div style="word-wrap:break-word;font-size:2vh;color:white;text-align:center;width:85%">${ msg }</div>` );
@@ -553,42 +556,69 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 					at:		reference => {
 						let hash = this.addNodes({ htmlData, reference, standalone });
 
-						let templateLogic = hash.localRoot.querySelectorAll( '[logic]' );
+						let templateLogic = Array.from( hash.localRoot.querySelectorAll( '[logic]' ) );
+						templateLogic.push( hash.localRoot );
 
 						if( templateLogic.length ) {
 							for( let node of templateLogic ) {
 								let instructions = JSON.parse( node.getAttribute( 'logic' ) );
 
-								for( let [ cmd, src ] of Object.entries( instructions ) ) {
-									switch( cmd ) {
-										case 'loop':
-											node.removeAttribute( 'logic' );
+								if( instructions ) {
+									for( let [ cmd, src ] of Object.entries( instructions ) ) {
+										switch( cmd ) {
+											case 'loop':
+												let nodeHTML	= node.outerHTML,
+													parent		= node.parentElement;
 
-											let nodeHTML	= node.outerHTML,
-												parent		= node.parentElement;
+												node.remove();
 
-											node.remove();
+												if( Array.isArray( replacementHash[ src ] ) ) {
+													for( let entry of replacementHash[ src ] ) {
+														if( entry ) {
+															let updatedHTML;
+															if( crlf ) {
+																updatedHTML = nodeHTML.replace( new RegExp( '%loopReplace%', 'g' ), entry.toString().replace( /<br>|<br\/>/g, '\n' ) );
+															} else {
+																updatedHTML = nodeHTML.replace( new RegExp( '%loopReplace%', 'g' ), entry.toString().replace( /\n/g, '<br/>') );
+															}
 
-											if( Array.isArray( replacementHash[ src ] ) ) {
-												for( let entry of replacementHash[ src ] ) {
-													if( entry ) {
-														let updatedHTML;
-														if( crlf ) {
-															updatedHTML = nodeHTML.replace( new RegExp( '%loopReplace%', 'g' ), entry.toString().replace( /<br>|<br\/>/g, '\n' ) );
-														} else {
-															updatedHTML = nodeHTML.replace( new RegExp( '%loopReplace%', 'g' ), entry.toString().replace( /\n/g, '<br/>') );
+															parent.insertAdjacentHTML( 'afterbegin', updatedHTML );
 														}
-
-														parent.insertAdjacentHTML( 'afterbegin', updatedHTML );
 													}
 												}
-											}
 
-											parent = null;
-											break;
-										case 'if':
-											break;
+												parent = null;
+												break;
+											case 'if':
+												for( let [ condition, action ] of Object.entries( src ) ) {
+													if( replacementHash[ condition ] ) {
+														for( let [ name, opt ] of Object.entries( action ) ) {
+															switch( name ) {
+																case 'addclass':
+																	node.classList.add( opt );
+																	break;
+															}
+														}
+													}
+												}
+												break;
+											case 'eq':
+												for( let [ key, condition ] of Object.entries( src ) ) {
+													for( let [ cmpValue, action ] of Object.entries( condition ) ) {
+														if( +replacementHash[ key ] === +cmpValue ) {
+															switch( action ) {
+																case 'remove':
+																	node.remove();
+																	break;
+															}
+														}
+													}
+												}
+												break;
+										}
 									}
+
+									node.removeAttribute( 'logic' );
 								}
 							}
 						}
@@ -608,6 +638,30 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		} catch ( ex ) {
 			this.log( `Error: ${ ex.message }` );
 		}
+	}
+
+	loadScript( url ) {
+		return new Promise( ( res, rej ) => {
+			try {
+				if( loadedScripts[ url ] ) {
+					res();
+				}
+
+				let scr		= doc.createElement( 'script' );
+				scr.type	= 'text/javascript';
+				scr.src		= url;
+				scr.async	= true;
+				scr.defer	= true;
+				scr.onload	= () => { res(); };
+
+				doc.head.appendChild( scr );
+
+				loadedScripts[ url ] = true;
+			} catch( ex ) {
+				this.log( `Error: ${ ex.message }` );
+				rej( ex.message );
+			}
+		});
 	}
 }
 /****************************************** Component End ******************************************/
@@ -670,7 +724,16 @@ eventLoop.on( 'greenScreenMode.appEvents', () => {
 	nodes[ 'div#world' ].style.backgroundColor = 'transparent';
 	nodes[ 'div#world' ].classList.remove( 'backgroundImage' );
 	greenScreenMode = true;
+});
 
+eventLoop.on( 'noFrame.appEvents', () => {
+	nodes[ 'section.right' ].remove();
+	nodes[ 'section.left' ].remove();
+	nodes[ 'section.footer' ].remove();
+	nodes[ 'section.head' ].remove();
+	nodes[ 'section.center' ].style.height = '100vh';
+	nodes[ 'section.center' ].style.flexBasis = '100%';
+	noFrame = true;
 });
 
 eventLoop.on( 'dialogMode.core', data => {
@@ -815,14 +878,14 @@ eventLoop.on( 'moduleLaunch.appEvents', ( module, event ) => {
 		delete modules.awaiting[ module.name ];
 	}
 
-	console.log( `module ${module.name} was launched( ${modules.online[module.name]}x )` );
+	if( ENV_PROD === false ) console.log( `module ${module.name} was launched( ${modules.online[module.name]}x )` );
 });
 
 eventLoop.on( 'moduleDestruction.appEvents', ( module, event ) => {
 	if( module.name in modules.online ) {
 		modules.online[ module.name ]--;
 
-		console.log( `module ${module.name} was destroyed( ${modules.online[module.name]}x instances left )` );
+		if( ENV_PROD === false ) console.log( `module ${module.name} was destroyed( ${modules.online[module.name]}x instances left )` );
 
 		if( modules.online[ module.name ] === 0 ) {
 			delete modules.online[ module.name ];
@@ -871,7 +934,7 @@ eventLoop.on( 'loadScript.core', ( src = '' ) => {
 });
 
 eventLoop.on( 'configApp.core', app => {
-	console.log( `Setting up BarFoos Application ${ app.name } version ${ app.version }(${ app.status }).` );
+	if( ENV_PROD === false ) console.log( `Setting up BarFoos Application ${ app.name } version ${ app.version }(${ app.status }).` );
 
 	doc.title	= app.title || 'BarFoos Application';
 

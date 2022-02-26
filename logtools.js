@@ -14,9 +14,9 @@ let LogTools = target => class extends target {
 	}
 
 	log( ...args ) {
-		//if( ENV_PROD ) {
-		//	return;
-		//}
+		if( ENV_PROD ) {
+			return;
+		}
 
 		let prefixed = args.slice( 0 );
 

@@ -15,7 +15,8 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 
 		extend( this ).with({
 			mouseMoveHandlers:	[ ],
-			DOMreadyHandlers:	[ ]
+			DOMreadyHandlers:	[ ],
+			skipHashChange:		false
 		});
 
 		this._boundMouseMove = this.mousemove.bind( this );
@@ -66,7 +67,17 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 
 			return urlParam;
 		});
+		this.on( 'setHash.appEvents', newHash => {
+			this.skipHashChange		= true;
+			win.location.hash		= newHash || '';
+		});
 		this.on( 'getParams.appEvents', () => new win.URLSearchParams( win.location.search ) );
+		this.on( 'getParamsFromHash.appEvents', () => {
+			const	query		= win.location.hash.indexOf( '?' ),
+					urlParam	= query > -1 ? new win.URLSearchParams( win.location.hash.slice( query ) ) : new win.URLSearchParams( win.location.hash.slice( 1 ) );
+
+			return urlParam;
+		});
 		// onbeforeunload
 		// mediaQuery
 		// resize
@@ -129,7 +140,11 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 	}
 
 	hashChange( event ) {
-		this.fire( 'hashChange.appEvents', new win.URLSearchParams( location.hash.slice( 1 ) ) );
+		if( this.skipHashChange ) {
+			this.skipHashChange = false;
+		} else {
+			this.fire( 'hashChange.appEvents', new win.URLSearchParams( location.hash.slice( 1 ) ) );
+		}
 	}
 
 	keydown( event ) {

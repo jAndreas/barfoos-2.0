@@ -161,4 +161,4 @@ function getTimePeriod( timestamp ) {
 		}
 	}
 
-export { Mix, MakeClass, Composition, extend, getTimePeriod, type, desc, defineProp, props, slice, hashCode, intToRGB, isMobileDevice, isAgentCrawler, isLocalChrome };
+export { Mix, MakeClass, Composition, extend, getTimePeriod, type, desc, defineProp, props, slice, hashCode, intToRGB, undef, win, isMobileDevice, isAgentCrawler, isLocalChrome };
