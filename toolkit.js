@@ -10,7 +10,10 @@ const	type		= input => Object.prototype.toString.call( input ).split( /\s/ )[ 1 
 
 const	win			= window,
 		doc			= win.document,
-		undef		= void 0;
+		undef		= void 0,
+		Seconds		= x => x * 1000,
+		Minutes		= x => x * Seconds( 1 ) * 60,
+		Hours		= x => x * Minutes( 1 ) * 60;
 
 let	isMobileDevice	= false,
 	isAgentCrawler	= /bot|google|bing|msn|duckduckbot|slurp/i.test( navigator.userAgent ),
@@ -161,4 +164,12 @@ function getTimePeriod( timestamp ) {
 		}
 	}
 
-export { Mix, MakeClass, Composition, extend, getTimePeriod, type, desc, defineProp, props, slice, hashCode, intToRGB, undef, win, isMobileDevice, isAgentCrawler, isLocalChrome };
+export { 
+	Mix, MakeClass, Composition,
+	extend,
+	getTimePeriod,
+	Seconds, Minutes, Hours,
+	type, desc, defineProp, props, slice, hashCode, intToRGB,
+	undef, win,
+	isMobileDevice, isAgentCrawler, isLocalChrome
+};

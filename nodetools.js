@@ -590,10 +590,10 @@ let NodeTools = target => class extends target {
 		}
 
 		if( event === 0 || (Math.abs( this.touchStartPos.pageX - touchEndPos.pageX ) < 10 && Math.abs( this.touchStartPos.pageY - touchEndPos.pageY ) < 10) ) {
-
+			event.CLICKRANGE = true;
 		} else {
 			try {
-				//event.preventDefault();
+				event.preventDefault();
 				event.stopPropagation();
 			} catch( ex ) {
 				console.log( ex.message );

@@ -72,13 +72,11 @@ div#world {
 		/*width:100vw;*/
 		height:100vh;
 		overflow-x:hidden;
-		overflow-y:scroll;
+		overflow-y:auto;
 		z-index:1;
 		flex-basis:75%;
 
-		&::-webkit-scrollbar {
-			display:none;
-		}
+		--scrollbar-width: calc(100vw - 100%);
 
 		@media screen and (max-width:$iPadLandscape) {
 			background:none;
@@ -103,7 +101,6 @@ div#world {
 
 		&.dialogBlur {
 			filter:blur(7px) brightness(0.7);
-			overflow:hidden;
 			transition:filter 200ms linear;
 		}
 
@@ -177,7 +174,7 @@ div#world.backgroundImage {
 }
 
 ::placeholder {
-	color:rgba(255,255,255,0.65);
+	color:rgba(170, 167, 167, 0.45);
 }
 
 /*::-webkit-scrollbar {

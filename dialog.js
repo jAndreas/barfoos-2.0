@@ -49,6 +49,8 @@ class Overlay extends Component {
 			overlayInstances--;
 		//}
 
+		this.dialogElements[ 'div.bfDialogWrapper' ].style.display = 'none';
+
 		if( this.modalDialog ) {
 			this.removeNodes( 'div#__modalDialogOverlay', true );
 		}
@@ -98,13 +100,13 @@ class Overlay extends Component {
 
 		if( this.fixed ) {
 			this.nodes.dialogRoot.style.position = 'fixed';
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgba(68, 68, 68, 0.9))';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgb(26 45 74 / 90%))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 			this.fire( 'pushToSky.core', this.nodes.dialogRoot );
 		}
 
 		if( this.noBlur ) {
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgba(68, 68, 68, 0.9))';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgb(26 45 74 / 90%))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 		}
 

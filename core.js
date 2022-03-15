@@ -1,6 +1,6 @@
 'use strict';
 
-import { extend, Composition, MakeClass, props, type, isMobileDevice } from './toolkit.js';
+import { extend, Composition, MakeClass, props, Seconds, type, isMobileDevice } from './toolkit.js';
 import { win, doc, undef, DOMTools } from './domkit.js';
 import { moduleLocations } from './defs.js';
 import Mediator from './mediator.js';
@@ -28,6 +28,7 @@ const 	nodes			= DOM.transpile({ htmlData: worldMarkup }),
 
 let		lastScrollEvent	= 0,
 		observerTimer	= 0,
+		overlayTimeout	= Seconds( 3 ),
 		anotherWorld	= false,
 		noFrame			= false,
 		greenScreenMode	= false;
@@ -96,22 +97,39 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.on( 'centerScroll.appEvents', this.onCenterScrollCore, this );
 		this.on( 'moduleDestruction.appEvents', this.onModuleDestruction, this );
 
-		this._depsResolve = await Promise.all( this.runtimeDependencies );
-
 		if(!anotherWorld ) {
 			// disabled the overlay spinner because it seems like it serves no reasonable purpose at this point
-			/*this.createModalOverlay({
-				opts:	{
-					spinner: true
-				}
-			});*/
 			await this.installModule();
 
-			/*if( this.loadingMessage ) {
-				this.modalOverlay.log( this.loadingMessage, this.loadingMessageDelay || 0 );
-			}*/
+			let overlayTimeoutId;
 
-			this.onCenterScrollCore();
+			if( this.loadWithSpinner ) {
+				this.createModalOverlay({
+					opts:	{
+						spinner: true
+					}
+				});
+
+				this.modalOverlay && this.modalOverlay.suspend();
+
+				overlayTimeoutId = win.setTimeout(() => {
+					this.modalOverlay && this.modalOverlay.log( 'Irgendetwas stimmt nicht...' );
+					this.modalOverlay && this.modalOverlay.return();
+				}, overlayTimeout);
+			}
+
+
+			this._depsResolve = await Promise.all( this.runtimeDependencies );
+
+			win.clearTimeout( overlayTimeoutId );
+
+			if( this.loadWithSpinner ) {
+				if( this.loadingMessage ) {
+					this.modalOverlay && this.modalOverlay.log( this.loadingMessage, this.loadingMessageDelay || 0 );
+				}
+			}
+
+			this.onCenterScrollCore( true );
 
 			this.fire( 'moduleLaunch.appEvents', {
 				id:		this.name,
@@ -119,7 +137,9 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				state:	this
 			});
 
-			//this.modalOverlay.fulfill();
+			if( this.loadWithSpinner ) {
+				this.modalOverlay && this.modalOverlay.fulfill();
+			}
 		}
 	}
 
@@ -173,7 +193,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				await this.fire( `newChildModule.${ this.location }`, {
 					isDialog:		!!this.nodes.dialogRoot,
 					node:			this.nodes.dialogRoot || this.nodes.root,
-					nodeLocation:	this.nodeLocation
+					nodeLocation:	this.nodeLocation,
+					nodeAnchor:		this.nodeAnchor
 				});
 			} else {
 				if(!(this.location in modules.awaiting) ) {
@@ -182,7 +203,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 				modules.awaiting[ this.location ].push({
 					node:			this.nodes.root,
-					nodeLocation:	this.nodeLocation
+					nodeLocation:	this.nodeLocation,
+					nodeAnchor:		this.nodeAnchor
 				});
 			}
 		}
@@ -230,9 +252,21 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 	newChildModule( hookData, event ) {
 		if( hookData.isDialog ) {
-			this.nodes.defaultDialogContainer.insertAdjacentElement( hookData.nodeLocation, hookData.node );
+			if( hookData.nodeAnchor ) {
+				this.nodes[ hookData.nodeAnchor ].replaceWith( hookData.node );
+			} else if( this.nodes.defaultDialogContainer instanceof HTMLElement ) {
+				this.nodes.defaultDialogContainer.insertAdjacentElement( hookData.nodeLocation, hookData.node );
+			} else {
+				this.log( `Error: No defaultDialogContainer set` );
+			}
 		} else {
-			this.nodes.defaultChildContainer.insertAdjacentElement( hookData.nodeLocation, hookData.node );
+			if( hookData.nodeAnchor ) {
+				this.nodes[ hookData.nodeAnchor ].replaceWith( hookData.node );
+			} else if( this.nodes.defaultChildContainer instanceof HTMLElement ) {
+				this.nodes.defaultChildContainer.insertAdjacentElement( hookData.nodeLocation, hookData.node );
+			} else {
+				this.log( `Error: No defaultChildContainer set` );
+			}
 		}
 	}
 
@@ -265,6 +299,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 		if( rootElementFromParent instanceof HTMLElement ) {
 			rootElementFromParent.scrollIntoView();
+			rootElementFromParent.scrollTop = 0;
 		}
 	}
 
@@ -288,14 +323,14 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		}
 	}
 
-	onCenterScrollCore( scrollTop ) {
+	onCenterScrollCore( skipReturn ) {
 		let clientRect			= this.nodes.root.getBoundingClientRect(),
 			centerOfViewport	= win.innerHeight / 2;
 
 		if( clientRect.top <= centerOfViewport && clientRect.bottom >= centerOfViewport ) {
 			if(!this._insightViewport ) {
 				this._insightViewport = true;
-				this.inViewport({ enteredFrom: clientRect.top > 0 ? 'top' : 'bottom' });
+				this.inViewport({ enteredFrom: clientRect.top > 0 ? 'top' : 'bottom', skipReturn });
 			}
 		} else {
 			if( this._insightViewport ) {
@@ -307,10 +342,12 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		super.onCenterScrollCore  && super.onCenterScrollCore( ...arguments );
 	}
 
-	inViewport({ enteredFrom = '' } = { }) {
+	inViewport({ enteredFrom = '', skipReturn = false } = { }) {
 		super.inViewport && super.inViewport( ...arguments );
 
-		this.modalOverlay && this.modalOverlay.return();
+		if(!skipReturn ) {
+			this.modalOverlay && this.modalOverlay.return();
+		}
 	}
 
 	offViewport() {
@@ -413,7 +450,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				this.removeNodes( 'modalOverlay', true );
 			},
 			log:		( msg ) => {
-				this.nodes.overlaySpinner.insertAdjacentHTML( 'afterend', `<div style="word-wrap:break-word;font-size:2vh;color:white;text-align:center;width:85%">${ msg }</div>` );
+				this.nodes.overlaySpinner.insertAdjacentHTML( 'afterend', `<div style="word-wrap:break-word;font-size:2vh;color:white;text-align:center;background:#00000094;border-radius:10px;padding:5px;">${ msg }</div>` );
+				this.nodes.overlaySpinner.classList.add( 'blurred' );
 			},
 			hide:		() => {
 				if( this.nodes.overlaySpinner ) {
@@ -577,9 +615,9 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 														if( entry ) {
 															let updatedHTML;
 															if( crlf ) {
-																updatedHTML = nodeHTML.replace( new RegExp( '%loopReplace%', 'g' ), entry.toString().replace( /<br>|<br\/>/g, '\n' ) );
+																updatedHTML = nodeHTML.replace( new RegExp( `%${ src }%`, 'g' ), entry.toString().replace( /<br>|<br\/>/g, '\n' ) );
 															} else {
-																updatedHTML = nodeHTML.replace( new RegExp( '%loopReplace%', 'g' ), entry.toString().replace( /\n/g, '<br/>') );
+																updatedHTML = nodeHTML.replace( new RegExp( `%${ src }%`, 'g' ), entry.toString().replace( /\n/g, '<br/>') );
 															}
 
 															parent.insertAdjacentHTML( 'afterbegin', updatedHTML );
@@ -645,6 +683,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			try {
 				if( loadedScripts[ url ] ) {
 					res();
+					return;
 				}
 
 				let scr		= doc.createElement( 'script' );

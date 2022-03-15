@@ -41,6 +41,11 @@ div.loading-spinner {
 	display:inline-block;
 	animation:1s linear 0s infinite rotate-forever;
 
+	&.blurred {
+		filter: blur(5px);
+    	z-index: -1;
+	}
+
 	@media screen and (max-width:$iPhone6Landscape) {
 		animation:1s linear 0s infinite rotate-forever-mobile;
 		filter:none;

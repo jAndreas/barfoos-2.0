@@ -48,6 +48,13 @@ socket.on( 'error', error => {
 	if( ENV_PROD === false ) console.log('server connection error: ', error);
 });
 
+socket.on( 'terminateSession', () => {
+	if( ENV_PROD === false ) console.log('terminating session data on client because of server request.' );
+
+	session = Object.create( null );
+	localStorage.removeItem( 'moralsession' );
+});
+
 eventLoop.on( 'waitForConnection.server', () => socket.connected || new Promise(( res, rej ) => {
 	socket.on( 'connect', () => res( true ) );
 }));
@@ -222,7 +229,7 @@ let ServerConnection = target => class extends target {
 		if( response ) {
 			if( response.error || response.errorCode ) {
 				// handle errors
-				throw (response.error + ' (r)' || response.errorCode);
+				throw (response.error || response.errorCode);
 			}
 		}
 	}
