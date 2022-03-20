@@ -738,7 +738,7 @@ async function main( performanceCheck = true ) {
 };
 
 nodes[ 'section.center' ].addEventListener( 'scroll', event => {
-	if( Date.now() - lastScrollEvent > 200 ) {
+	if( Date.now() - lastScrollEvent > 100 ) {
 		eventLoop.fire( 'centerScroll.appEvents', nodes[ 'section.center' ].scrollTop );
 
 		lastScrollEvent = Date.now();
