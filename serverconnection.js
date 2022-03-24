@@ -170,7 +170,7 @@ let ServerConnection = target => class extends target {
 			socket.emit( type, payload, response => {
 				win.clearTimeout( responseTimeout );
 
-				if( response ) {
+				if( response !== undef && response !== null ) {
 					try {
 						self.handleServerResponse( response );
 

@@ -26,6 +26,10 @@ let NodeTools = target => class extends target {
 		this._alreadyDelegatedEvents = Object.create( null );
 
 		this._delegatedEventHandler = (event) => {
+			if( this.modalOverlay ) {
+				return;
+			}
+
 			let callbackResult = [ ];
 
 			if( this && Object.keys( this ).length && this.data ) {
