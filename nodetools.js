@@ -103,7 +103,6 @@ let NodeTools = target => class extends target {
 										return target[ prop ];
 									}
 								}
-								return prop in shadow ? shadow[ prop ] : target[ prop ];
 							},
 							set:	function( target, prop, value ) {
 								shadow[ prop ] = value;

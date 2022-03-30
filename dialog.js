@@ -31,7 +31,7 @@ class Overlay extends Component {
 		overlayInstances++;
 
 		if( overlayInstances === 1 ) {
-			this.fire( 'dialogMode.core', { active: true, visibleChat: this.visibleChat } );
+			this.fire( 'dialogMode.core', { active: !this.standAlone, visibleChat: this.visibleChat } );
 		}
 
 		this.on( 'appOrientationChange.appEvents', this.orientationChange, this );
@@ -99,7 +99,7 @@ class Overlay extends Component {
 		}
 
 		if( this.fixed ) {
-			this.nodes.dialogRoot.style.position = 'fixed';
+			this.nodes.dialogRoot.style.position = this.standAlone ? 'static' : 'fixed';
 			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgb(26 45 74 / 90%))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 			this.fire( 'pushToSky.core', this.nodes.dialogRoot );
@@ -191,13 +191,18 @@ class Overlay extends Component {
 			}
 		}
 
-		if( rootRect ) {
-			this.nodes.dialogRoot.style.left		= `${ (rootRect.width / 2) - (ownRect.width / 2) }px`;
-			this.nodes.dialogRoot.style.top			= `${ ((rootRect.height / 2) - (ownRect.height / 2)) + (this.fixed ? 0 : Math.abs( rootRect.y / 2 )) }px`;
-			this.nodes.dialogRoot.style.alignSelf	= 'center';
-		}
-		else {
-			this.warn( 'Unable to receive parent Element dimensions.' );
+		if( this.standAlone ) {
+			this.nodes.dialogRoot.style.position	= 'static';
+			this.nodes.dialogRoot.style.margin		= 'auto';
+		} else {
+			if( rootRect ) {
+				this.nodes.dialogRoot.style.left		= `${ (rootRect.width / 2) - (ownRect.width / 2) }px`;
+				this.nodes.dialogRoot.style.top			= `${ ((rootRect.height / 2) - (ownRect.height / 2)) + (this.fixed ? 0 : Math.abs( rootRect.y / 2 )) }px`;
+				this.nodes.dialogRoot.style.alignSelf	= 'center';
+			}
+			else {
+				this.warn( 'Unable to receive parent Element dimensions.' );
+			}
 		}
 	}
 

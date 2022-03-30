@@ -600,6 +600,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 						if( templateLogic.length ) {
 							for( let node of templateLogic ) {
 								let instructions = JSON.parse( node.getAttribute( 'logic' ) );
+								
+								node.removeAttribute( 'logic' );
 
 								if( instructions ) {
 									for( let [ cmd, src ] of Object.entries( instructions ) ) {
@@ -614,13 +616,32 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 													for( let entry of replacementHash[ src ] ) {
 														if( entry ) {
 															let updatedHTML;
+
 															if( crlf ) {
-																updatedHTML = nodeHTML.replace( new RegExp( `%${ src }%`, 'g' ), entry.toString().replace( /<br>|<br\/>/g, '\n' ) );
+																if( typeof entry === 'string' ) {
+																	updatedHTML = nodeHTML.replace( new RegExp( `%${ src }%`, 'g' ), entry.toString().replace( /<br>|<br\/>/g, '\n' ) );
+																}
+																if( typeof entry === 'object' ) {
+																	updatedHTML = nodeHTML;
+
+																	for( let [ ph, ctn ] of Object.entries( entry ) ) {
+																		updatedHTML = updatedHTML.replace( new RegExp( `%${ ph }%`, 'g' ), ctn.toString().replace( /<br>|<br\/>/g, '\n' ) );
+																	}
+																}
 															} else {
-																updatedHTML = nodeHTML.replace( new RegExp( `%${ src }%`, 'g' ), entry.toString().replace( /\n/g, '<br/>') );
+																if( typeof entry === 'string' ) {
+																	updatedHTML = nodeHTML.replace( new RegExp( `%${ src }%`, 'g' ), entry.toString().replace( /\n/g, '<br/>') );
+																}
+																if( typeof entry === 'object' ) {
+																	updatedHTML = nodeHTML;
+
+																	for( let [ ph, ctn ] of Object.entries( entry ) ) {
+																		updatedHTML = updatedHTML.replace( new RegExp( `%${ ph }%`, 'g' ), ctn.toString().replace( /\n/g, '<br/>') );
+																	}
+																}
 															}
 
-															parent.insertAdjacentHTML( 'afterbegin', updatedHTML );
+															parent.insertAdjacentHTML( 'beforeend', updatedHTML );
 														}
 													}
 												}
