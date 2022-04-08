@@ -151,7 +151,7 @@ let ServerConnection = target => class extends target {
 		//await this.fire( 'waitForConnection.server' );
 
 		return new Promise( ( resolve, reject ) => {
-			if(!socket.connected ) {
+			if(!socket.connected && !noTimeout ) {
 				reject( 'Keine Server Verbindung.' );
 			}
 
@@ -213,6 +213,7 @@ let ServerConnection = target => class extends target {
 	}
 
 	disableSocketAutoClose() {
+		if( ENV_PROD === false ) console.log('Disabling socket auto close/open.' );
 		eventLoop.off( 'appVisibilityChange.appEvents appFocusChange.appEvents', idleWatcher );
 		win.clearTimeout( socketCloseTimeout );
 	}

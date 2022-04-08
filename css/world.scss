@@ -104,6 +104,10 @@ div#world {
 			transition:filter 200ms linear;
 		}
 
+		&.dialogNoPointerEvents {
+			pointer-events:none;
+		}
+
 		&.mobileNavMode {
 			flex-basis:20%
 		}

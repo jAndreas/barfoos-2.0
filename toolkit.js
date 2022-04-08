@@ -13,7 +13,10 @@ const	win			= window,
 		undef		= void 0,
 		Seconds		= x => x * 1000,
 		Minutes		= x => x * Seconds( 1 ) * 60,
-		Hours		= x => x * Minutes( 1 ) * 60;
+		Hours		= x => x * Minutes( 1 ) * 60,
+		Days		= x => x * Hours( 24 ),
+		Weeks		= x => x * Days( 7 ),
+		Months		= x => x * Days( 31 );
 
 let	isMobileDevice	= false,
 	isAgentCrawler	= /bot|google|bing|msn|duckduckbot|slurp/i.test( navigator.userAgent ),
@@ -168,7 +171,7 @@ export {
 	Mix, MakeClass, Composition,
 	extend,
 	getTimePeriod,
-	Seconds, Minutes, Hours,
+	Seconds, Minutes, Hours, Days, Weeks, Months,
 	type, desc, defineProp, props, slice, hashCode, intToRGB,
 	undef, win,
 	isMobileDevice, isAgentCrawler, isLocalChrome

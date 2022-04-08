@@ -417,7 +417,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				let overlayConfirmAnimation = this.animate({
 					node:	this.nodes.overlayConfirm,
 					rules:	{
-						duration:	1000,
+						duration:	200,
 						name:		'unfold'
 					}
 				});
@@ -470,12 +470,18 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		let opts				= { location, spinner },
 			controlInterface	= Object.create( null );
 
-		if( this.modalOverlay && typeof this.modalOverlay.cleanup === 'function' ) {
+		if( this.modalOverlay ) {
 			//await Promise.all( this.data.get( this.nodes.modalOverlay ).storage.animations.running );
 			this.modalOverlay && this.modalOverlay.cleanup();
 			this.modalOverlay = null;
+			delete this.modalOverlay;
 		}
 
+		if( this.nodes.modalOverlay ) {
+			this.removeNodes( 'modalOverlay', true );
+			delete this.modalOverlay;
+		}
+				
 		this.addNodes({
 			nodeData:	this.overlayNode.cloneNode(),
 			nodeName:	'modalOverlay',
@@ -484,7 +490,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				position:	location
 			}
 		});
-
+		
 		this.nodes.modalOverlay.classList.add( 'flex' );
 
 		if( inheritBackground ) {
@@ -500,7 +506,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 				}
 			});
 		}
-
+		
 		controlInterface.cleanup = () => {
 			if( spinner ) {
 				controlInterface.spinner.cleanup();
@@ -510,7 +516,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			delete this.modalOverlay;
 		};
 
-		controlInterface.log = async ( msg, duration = 3000 ) => {
+		controlInterface.log = async ( msg, duration ) => {
 			if(!this.nodes.modalOverlay ) {
 				return;
 			}
@@ -532,7 +538,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			}
 		};
 
-		controlInterface.fulfill = async ( duration = 1000 ) => {
+		controlInterface.fulfill = async ( duration = 200 ) => {
 			if(!this.nodes.modalOverlay ) {
 				return;
 			}
@@ -575,7 +581,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		};
 
 		controlInterface.possibleDelays = [ ];
-
+		
 		this.modalOverlay = controlInterface;
 	}
 
@@ -583,6 +589,10 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		return {
 			with:	replacementHash => {
 				for( let [ searchFor, value ] of Object.entries( replacementHash ) ) {
+					if( typeof value === 'object' ) {
+						continue;
+					}
+
 					if( crlf ) {
 						htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), (value !== undef ? value : '').toString().replace( /<br>|<br\/>/g, '\n' ) );
 					} else {
@@ -616,7 +626,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 													for( let entry of replacementHash[ src ] ) {
 														if( entry ) {
 															let updatedHTML;
-
+															
 															if( crlf ) {
 																if( typeof entry === 'string' ) {
 																	updatedHTML = nodeHTML.replace( new RegExp( `%${ src }%`, 'g' ), entry.toString().replace( /<br>|<br\/>/g, '\n' ) );
@@ -813,6 +823,14 @@ eventLoop.on( 'dialogMode.core', data => {
 	}
 });
 
+eventLoop.on( 'dialogModeModal.core', data => {
+	if( data.active ) {
+		nodes[ 'section.center' ].classList.add( 'dialogNoPointerEvents' );
+	} else {
+		nodes[ 'section.center' ].classList.remove( 'dialogNoPointerEvents' );
+	}
+});
+
 eventLoop.on( 'mobileNavMenuChange.core', state => {
 	if( state === 'open' ) {
 		nodes[ 'section.right' ].classList.add( 'dialogBlur' );
@@ -823,6 +841,10 @@ eventLoop.on( 'mobileNavMenuChange.core', state => {
 
 eventLoop.on( 'pushToSky.core', elem => {
 	nodes[ 'div#world' ].insertAdjacentElement( 'beforebegin', elem );
+});
+
+eventLoop.on( 'getWorld.core', () => {
+	return nodes[ 'div#world' ];
 });
 
 eventLoop.on( 'enableChatSideBar.core', () => {
@@ -932,7 +954,7 @@ eventLoop.on( 'moduleLaunch.appEvents', ( module, event ) => {
 
 	if( modules.awaiting[ module.name ] ) {
 		for( let hookData of modules.awaiting[ module.name ] ) {
-			this.fire( `newChildModule.${ module.name }`, hookData );
+			eventLoop.fire( `newChildModule.${ module.name }`, hookData );
 		}
 
 		delete modules.awaiting[ module.name ];

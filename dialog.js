@@ -52,7 +52,8 @@ class Overlay extends Component {
 		this.dialogElements[ 'div.bfDialogWrapper' ].style.display = 'none';
 
 		if( this.modalDialog ) {
-			this.removeNodes( 'div#__modalDialogOverlay', true );
+			//this.removeNodes( 'div#__modalDialogOverlay', true );
+			this.fire( 'dialogModeModal.core', { active: false } );
 		}
 
 		if( overlayInstances === 0 ) {
@@ -67,48 +68,11 @@ class Overlay extends Component {
 		super.destroy && await super.destroy();
 	}
 
-	installModule() {
+	async installModule() {
 		this.dialogElements[ 'div.bfContentDialogBody' ].insertAdjacentElement( 'beforeend', this.nodes.root );
 		this.nodes.dialogRoot = this.dialogElements.root;
 
 		super.installModule && super.installModule();
-
-		if( this.position ) {
-			this.nodes.dialogRoot.style.left	= `${this.position.left}px`;
-			this.nodes.dialogRoot.style.top		= `${this.position.top}px`;
-		}
-
-		if( this.center ) {
-			this.centerOverlay();
-		} else if( this.centerToViewport ) {
-			this.centerOverlay({ centerToViewport: true });
-		}
-
-		if( this.topMost ) {
-			this.nodes.dialogRoot.style.zIndex	= 1000;
-		}
-
-		if( this.modalDialog ) {
-			this.addNodes({
-				htmlData:	'<div id="__modalDialogOverlay" style="position:absolute;top:0;left:0;height:100vh;width:100vw;z-index:999"></div>',
-				reference:	{
-					node:		this.modalDialog.global ? doc.body : this.nodes.dialogRoot,
-					position:	'afterBegin'
-				}
-			});
-		}
-
-		if( this.fixed ) {
-			this.nodes.dialogRoot.style.position = this.standAlone ? 'static' : 'fixed';
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgb(26 45 74 / 90%))';
-			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
-			this.fire( 'pushToSky.core', this.nodes.dialogRoot );
-		}
-
-		if( this.noBlur ) {
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgb(26 45 74 / 90%))';
-			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
-		}
 
 		if( this.hoverOverlay ) {
 			this.dialogElements[ 'div.overlayTitle' ].textContent = this.title || '';
@@ -122,13 +86,55 @@ class Overlay extends Component {
 			}
 
 			if( this.hoverOverlay.close ) {
-				this.addNodeEvent( 'div.overlayClose', 'click', this.onOverlayCloseClick );
+				this.dialogElements[ 'div.overlayClose' ].addEventListener('click', this.onOverlayCloseClick.bind( this ), false );
 				this.dialogElements[ 'div.overlayClose' ].style.display = 'flex';
 			}
 		}
 
+		if( this.position ) {
+			this.nodes.dialogRoot.style.left	= `${this.position.left}px`;
+			this.nodes.dialogRoot.style.top		= `${this.position.top}px`;
+		}
+
+		if( this.center ) {
+			this.centerOverlay();
+		} else if( this.centerToViewport ) {
+			this.centerOverlay({ centerToViewport: true });
+		}
+
+		if( this.topMost ) {
+			this.nodes.dialogRoot.style.zIndex	= 101;
+		}
+
+		if( this.modalDialog ) {
+			/*this.addNodes({
+				htmlData:	'<div id="__modalDialogOverlay" style="position:absolute;top:0;left:0;height:100vh;width:100vw;z-index:999"></div>',
+				reference:	{
+					node:		this.modalDialog.global ? await this.fire( 'getWorld.core' ) : this.nodes.dialogRoot,
+					position:	'afterBegin'
+				}
+			});*/
+
+			this.fire( 'dialogModeModal.core', { active: true } );
+		}
+
+		if( this.fixed ) {
+			this.nodes.dialogRoot.style.position = this.standAlone ? 'static' : 'absolute';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgb(26 45 74 / 90%))';
+			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
+			this.fire( 'pushToSky.core', this.nodes.dialogRoot );
+		}
+
+		if( this.noBlur ) {
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgb(26 45 74 / 90%))';
+			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
+		}
+
 		if( this.background ) {
-			this.nodes.dialogRoot.style.background = this.background;
+			this.nodes.dialogRoot.style.background			= this.background;
+			this.nodes.dialogRoot.style.backgroundRepeat	= 'no-repeat, no-repeat';
+			this.nodes.dialogRoot.style.backgroundSize		= 'contain, contain';
+			this.nodes.dialogRoot.style.backgroundPosition	= 'center center, center center';
 		}
 	}
 
