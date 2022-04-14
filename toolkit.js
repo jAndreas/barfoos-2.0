@@ -16,7 +16,7 @@ const	win			= window,
 		Hours		= x => x * Minutes( 1 ) * 60,
 		Days		= x => x * Hours( 24 ),
 		Weeks		= x => x * Days( 7 ),
-		Months		= x => x * Days( 31 );
+		Months		= x => x * Days( 30 );
 
 let	isMobileDevice	= false,
 	isAgentCrawler	= /bot|google|bing|msn|duckduckbot|slurp/i.test( navigator.userAgent ),

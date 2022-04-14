@@ -251,10 +251,10 @@ class Overlay extends Component {
 		try {
 			if( node instanceof HTMLElement ) {
 				if( this.data.get( node ).storage.tmpMsgOld === undef ) {
-					this.data.get( node ).storage.tmpMsgOld = node.textContent;
+					this.data.get( node ).storage.tmpMsgOld = node.innerHTML;
 				}
 				
-				node.textContent = msg || '';
+				node.innerHTML = msg || '';
 				node.classList.add( 'redcolor' );
 
 				if( this.data.get( node ).storage.tmpMsgTimer ) {
@@ -264,7 +264,7 @@ class Overlay extends Component {
 				this.data.get( node ).storage.tmpMsgTimer = win.setTimeout(() => {
 					if( this && this.data ) {
 						node.classList.remove( 'redcolor' );
-						node.textContent = this.data.get( node ).storage.tmpMsgOld;
+						node.innerHTML = this.data.get( node ).storage.tmpMsgOld;
 
 						delete this.data.get( node ).storage.tmpMsgTimer;
 						delete this.data.get( node ).storage.tmpMsgOld;
