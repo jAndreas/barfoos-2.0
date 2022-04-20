@@ -61,6 +61,14 @@ let DOMTools = target => class extends target {
 	}
 
 	addNodes({ nodeData, htmlData, reference = { }, nodeName, standalone = false } = { }) {
+		if(!reference.node) {
+			if( this.nodes.defaultChildContainer instanceof HTMLElement ) {
+				reference.node = this.nodes.defaultChildContainer;
+			} else if( this.nodes.defaultDialogContainer instanceof HTMLElement ) {
+				reference.node = this.nodes.defaultDialogContainer;
+			}
+		}
+
 		if( typeof reference.node === 'string' ) {
 			reference.node = this.nodes[ reference.node ];
 		}
@@ -79,7 +87,7 @@ let DOMTools = target => class extends target {
 					if( reference.position === 'replace' ) {
 						reference.node.replaceWith( nodeHash.localRoot );
 					} else {
-						reference.node.insertAdjacentElement( reference.position, nodeHash.localRoot );
+						reference.node.insertAdjacentElement( reference.position || 'afterbegin', nodeHash.localRoot );
 					}
 
 					if(!standalone ) {
@@ -100,7 +108,7 @@ let DOMTools = target => class extends target {
 			if( reference.position === 'replace' ) {
 				reference.node.replaceWith( nodeHash.localRoot );
 			} else {
-				reference.node.insertAdjacentElement( reference.position, nodeHash.localRoot );
+				reference.node.insertAdjacentElement( reference.position || 'afterbegin', nodeHash.localRoot );
 			}
 
 			if(!standalone ) {

@@ -120,13 +120,13 @@ class Overlay extends Component {
 
 		if( this.fixed ) {
 			this.nodes.dialogRoot.style.position = this.standAlone ? 'static' : 'absolute';
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgb(26 45 74 / 90%))';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgb(26 45 74))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 			this.fire( 'pushToSky.core', this.nodes.dialogRoot );
 		}
 
 		if( this.noBlur ) {
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgb(26 45 74 / 90%))';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgb(26 45 74))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 		}
 
@@ -236,13 +236,15 @@ class Overlay extends Component {
 	}
 
 	async onBackgroundMouseDown( event ) {
-		if(!this.nodes.dialogRoot.contains( event.target ) ) {
-			if( this.modalOverlay ) {
-				await Promise.all( this.modalOverlay.possibleDelays );
-			}
+		if( event && event.target && !event.target.closest( 'div.bfDialogWrapper' ) ) {
+			if(!this.nodes.dialogRoot.contains( event.target ) ) {
+				if( this.modalOverlay ) {
+					await Promise.all( this.modalOverlay.possibleDelays );
+				}
 
-			if( this && Object.keys( this ).length ) {
-				this.destroy();
+				if( this && Object.keys( this ).length ) {
+					this.destroy();
+				}
 			}
 		}
 	}

@@ -305,10 +305,10 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 	onDialogModeChange( active ) {
 		if( active ) {
-			this.nodes.root.style.background	= 'inherit';
+			//this.nodes.root.style.background	= 'inherit';
 			this._dialogMode = true;
 		} else {
-			this.nodes.root.style.background	= '';
+			//this.nodes.root.style.background	= '';
 			this._dialogMode = false;
 		}
 	}
