@@ -120,13 +120,13 @@ class Overlay extends Component {
 
 		if( this.fixed ) {
 			this.nodes.dialogRoot.style.position = this.standAlone ? 'static' : 'absolute';
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgb(26 45 74))';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(146,161,171,0.95), rgba(26, 45, 74, 1))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 			this.fire( 'pushToSky.core', this.nodes.dialogRoot );
 		}
 
 		if( this.noBlur ) {
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(255, 251, 251, 0.9), rgb(26 45 74))';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(146,161,171,0.95), rgba(26, 45, 74, 1))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 		}
 
