@@ -41,7 +41,7 @@ mkdirSync( `${ target }/node_modules/barfoos2.0/fonts/` );
 
 if( opts.production ) {
 	process.chdir( path.resolve( source ) );	
-	execSync( `babel *.js --out-dir ${ target }/node_modules/barfoos2.0/` );
+	//execSync( `babel *.js --out-dir ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/html/ ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/css/ ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/fonts/ ${ target }/node_modules/barfoos2.0/` );
@@ -49,7 +49,7 @@ if( opts.production ) {
 }
 
 if( opts.legacy ) {
-	execSync( `babel ${ source }/ --out-dir ${ target }/node_modules/barfoos2.0/ --ignore "${ source }/node_modules/","${ source }/node_modules/**/*.js"` );
+	//execSync( `babel ${ source }/ --out-dir ${ target }/node_modules/barfoos2.0/ --ignore "${ source }/node_modules/","${ source }/node_modules/**/*.js"` );
 	execSync( `cp -R ${ source }/html/ ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/css/ ${ target }/node_modules/barfoos2.0/` );
 	execSync( `cp -R ${ source }/fonts/ ${ target }/node_modules/barfoos2.0/` );

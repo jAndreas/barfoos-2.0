@@ -42,6 +42,8 @@ let NodeTools = target => class extends target {
 
 							if( retV === -1 ) {
 								return false;
+							} else {
+								return true;
 							}
 						});
 

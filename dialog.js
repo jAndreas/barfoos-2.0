@@ -87,6 +87,7 @@ class Overlay extends Component {
 
 			if( this.hoverOverlay.close ) {
 				this.dialogElements[ 'div.overlayClose' ].addEventListener('click', this.onOverlayCloseClick.bind( this ), false );
+				this.dialogElements[ 'div.overlayClose' ].addEventListener('touchstart', this.onOverlayCloseClick.bind( this ), false );
 				this.dialogElements[ 'div.overlayClose' ].style.display = 'flex';
 			}
 		}
