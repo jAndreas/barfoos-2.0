@@ -4,6 +4,7 @@ $handleBorderColor:rgba(200,200,200,0.55);
 $dialogMinWidth:100px;
 $dialogMinHeight:18px;
 $radius:8px;
+$radiusMobile:0px;
 $themeColorA:rgba(60,60,60,0.7);
 $themeColorB:rgba(0,0,0,0.85);
 $themeTextColor:rgba(220,220,190,1);
@@ -23,11 +24,15 @@ div.bfDialogWrapper {
 		filter:none;
 		border-radius:0;
 
-		* {
+		/** {
 			filter:none !important;
 			box-shadow:none !important;
 			text-shadow:none !important;
-		}
+		}*/
+	}
+
+	@media screen and (min-width:1px) and (max-width:$iPhone6Portrait) {
+		border-radius:$radiusMobile;
 	}
 
 	&.liveChatMode {
@@ -63,6 +68,10 @@ div.bfDialogWrapper {
 		border-radius:8px 8px 0 0;
 		cursor:move;
 		overflow:hidden;
+
+		@media screen and (min-width:1px) and (max-width:$iPhone6Portrait) {
+			border-radius:$radiusMobile;
+		}
 
 		> div.overlayMax {
 			display:none;
@@ -111,6 +120,8 @@ div.bfDialogWrapper {
 		display:none;
 		flex-direction:row;
 		flex-wrap:nowrap;
+		justify-content:center;
+		align-items:center;
 		border-bottom:1px solid $handleBorderColor;
 		overflow:hidden;
 		background:linear-gradient(45deg, $themeColorA, $themeColorB);
@@ -119,6 +130,7 @@ div.bfDialogWrapper {
 		cursor:move;
 		user-select:none;
 		-moz-user-select:none;
+		max-width:98vw;
 
 		> div.title {
 			flex-grow:1;
@@ -126,6 +138,9 @@ div.bfDialogWrapper {
 			text-overflow:ellipsis;
 			white-space:nowrap;
 			position:relative;
+			text-align:center;
+			width:90vw;
+			font-size:1.2rem;
 		}
 
 		> div.mini {
@@ -137,6 +152,10 @@ div.bfDialogWrapper {
 			position:relative;
 			text-align:right;
 			font-weight:bold;
+
+			@media screen and (min-width:1px) and (max-width:$iPhone6Portrait) {
+				display: none;
+			}
 		}
 
 		> div.close {
@@ -144,6 +163,7 @@ div.bfDialogWrapper {
 			margin-right:2px;
 			position:relative;
 			text-align:center;
+			font-size:3rem;
 		}
 	}
 
@@ -158,6 +178,10 @@ div.bfDialogWrapper {
 		text-shadow:0 0 12px rgba(255,255,255,0.5);
 		overflow-y:auto;
 		overflow-x:hidden;
+
+		@media screen and (min-width:1px) and (max-width:$iPhone6Portrait) {
+			border-radius:0px 0px $radiusMobile $radiusMobile;
+		}
 
 		&.minified {
 			height:0;
@@ -184,6 +208,10 @@ div.bfDialogWrapper {
 			filter:none;
 			background:black;
 			display:none;
+		}
+
+		@media screen and (min-width:1px) and (max-width:$iPhone6Portrait) {
+			border-radius:$radiusMobile;
 		}
 
 		&:after {

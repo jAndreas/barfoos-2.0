@@ -167,6 +167,7 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 
 	focusout( event ) {
 		this.fire( 'appFocusChange.appEvents', doc.hasFocus() );
+		this.fire( 'globalFocusOut.appEvents', event );
 	}
 
 	/*mousewheel( event ) {

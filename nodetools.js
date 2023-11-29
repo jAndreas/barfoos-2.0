@@ -26,7 +26,7 @@ let NodeTools = target => class extends target {
 		this._alreadyDelegatedEvents = Object.create( null );
 
 		this._delegatedEventHandler = (event) => {
-			if( this.modalOverlay ) {
+			if( this.modalOverlay && !this.modalOverlay.suspended ) {
 				return;
 			}
 

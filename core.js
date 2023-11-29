@@ -571,6 +571,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		controlInterface.suspend = () => {
 			if( this.nodes.modalOverlay && spinner ) {
 				controlInterface.spinner.hide();
+				controlInterface.suspended = true;
 			}
 		};
 
@@ -773,10 +774,12 @@ nodes[ 'section.center' ].addEventListener( 'scroll', event => {
 		eventLoop.fire( 'centerScroll.appEvents', nodes[ 'section.center' ].scrollTop );
 
 		lastScrollEvent = Date.now();
-		win.clearTimeout( observerTimer );
 	}
 
-	// make sure centerScroll fires at least one time
+	// clear current offset timeout
+	win.clearTimeout( observerTimer );
+
+	// make sure centerScroll fires at least one time	
 	observerTimer = win.setTimeout(() => {
 		eventLoop.fire( 'centerScroll.appEvents', nodes[ 'section.center' ].scrollTop );
 	}, 200);

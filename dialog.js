@@ -74,7 +74,7 @@ class Overlay extends Component {
 
 		super.installModule && super.installModule();
 
-		if( this.hoverOverlay ) {
+		if( this.hoverOverlay && !isMobileDevice ) {
 			this.dialogElements[ 'div.overlayTitle' ].textContent = this.title || '';
 			this.nodes.dialogRoot.classList.add( 'hoverOverlay' );
 
@@ -246,6 +246,9 @@ class Overlay extends Component {
 				if( this && Object.keys( this ).length ) {
 					this.destroy();
 				}
+
+				event.preventDefault();
+				event.stopPropagation();
 			}
 		}
 	}
@@ -284,7 +287,9 @@ let Dialog = target => class extends target {
 	constructor() {
 		super( ...arguments );
 
-		this.dialogElements[ 'div.bfDialogHandle' ].style.display = 'flex';
+		if( isMobileDevice ) {
+			this.dialogElements[ 'div.bfDialogHandle' ].style.display = 'flex';
+		}
 	}
 
 	async init() {
@@ -303,7 +308,11 @@ let Dialog = target => class extends target {
 	}
 
 	onCloseClick( event ) {
-		this.destroy();
+		setTimeout( this.destroy.bind( this ), 1000 );
+
+		event.preventDefault();
+		event.stopPropagation();
+
 		return false;
 	}
 
@@ -319,7 +328,10 @@ let Dialog = target => class extends target {
 		super.onDialogHandleMouseDown && super.onDialogHandleMouseDown( ...arguments );
 
 		//this.removeNodeEvent( 'div.bfContentDialogBody', 'mouseup' );
-		this.addNodeEventOnce( 'div.title', 'mouseup touchend', this.onMouseUp.bind( this ) );
+
+		if( typeof this.onMouseUp === 'function' ) {
+			this.addNodeEventOnce( 'div.title', 'mouseup touchend', this.onMouseUp.bind( this ) );
+		}
 	}
 };
 
@@ -425,7 +437,7 @@ let GlasEffect = target => class extends target {
 	installModule() {
 		super.installModule && super.installModule();
 
-		if( this._DialogClass ) {
+		if( this._DialogClass && !isMobileDevice ) {
 			this.dialogElements[ 'div.bfBlurDialogBody' ].style.top = this.dialogElements[ 'div.bfDialogHandle' ].offsetHeight + 'px';
 		}
 
