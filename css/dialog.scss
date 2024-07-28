@@ -22,6 +22,7 @@ div.bfDialogWrapper {
 	@media screen and (max-width:$iPhone6Landscape) {
 		box-shadow:none;
 		filter:none;
+		border:none;
 		border-radius:0;
 
 		/** {
@@ -131,6 +132,11 @@ div.bfDialogWrapper {
 		user-select:none;
 		-moz-user-select:none;
 		max-width:98vw;
+
+		@media screen and (min-width:1px) and (max-width:$iPhone6Portrait) {
+			max-width:100dvw;
+			max-width:100vw;
+		}
 
 		> div.title {
 			flex-grow:1;

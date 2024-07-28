@@ -1,6 +1,23 @@
 @import 'viewportDefinitions';
 @import 'barfoosfonts';
 
+html {
+	@media screen and (min-width:1px) and (max-width:$iPhone6Portrait) {
+		margin:0;
+		overflow:hidden;
+		height:100%;
+	}
+}
+
+body {
+	@media screen and (min-width:1px) and (max-width:$iPhone6Portrait) {
+		margin:0;
+		overflow:auto;
+		height:100%;
+		-webkit-overflow-scrolling: touch;
+	}
+}
+
 div#world {
 	display:flex;
 	align-items:stretch;
@@ -72,6 +89,7 @@ div#world {
 		justify-content:flex-start;
 		/*width:100vw;*/
 		height:100vh;
+		height:100dvh;
 		overflow-x:hidden;
 		overflow-y:auto;
 		z-index:1;
@@ -147,8 +165,10 @@ div#world {
 
 		@media screen and (max-width:$iPadLandscape) {
 			width:100vw;
+			width:100dvw;
 			position:absolute;
 			right:-100vw;
+			right:-100dvw;
 			display:none;
 		}
 

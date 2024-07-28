@@ -104,7 +104,7 @@ let Mediator = target => class extends target {
 
 				if( namespaceContainer[ eventNameSpace ] && namespaceContainer[ eventNameSpace ][ eventName ] ) {
 					return new Promise(( res, rej ) => {
-						let container		= namespaceContainer[ eventNameSpace ][ eventName ],
+						let container		= namespaceContainer[ eventNameSpace ][ eventName ].slice( 0 ),
 							listenersMax	= container.length - 1,
 							resultData		= [ ],
 							event			= Object.create( null ),
@@ -122,6 +122,9 @@ let Mediator = target => class extends target {
 							if( listenersMax > -1 ) {
 								do {
 									listener	= container[ listenersMax ];
+
+									if(!listener ) continue; // in case of Module termination and asyncronous dispatches still in queue
+
 									result		= listener.handler.call( listener.scope, data, event );
 
 									// push whatever result was into data to our promises array

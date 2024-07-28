@@ -132,6 +132,8 @@ let NodeTools = target => class extends target {
 			nodes = [ nodes ];
 		} else if( Array.isArray( nodes ) ) {
 			nodes = nodes;
+		} else if( nodes instanceof NodeList ) {
+			nodes = nodes;
 		} else {
 			this.error( `Wrong argument types.` );
 		}

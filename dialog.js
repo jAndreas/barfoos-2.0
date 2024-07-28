@@ -36,10 +36,13 @@ class Overlay extends Component {
 
 		this.on( 'appOrientationChange.appEvents', this.orientationChange, this );
 		this.on( 'down.keys', this.onKeyDown, this );
+		this.on( 'globalFocusOut.appEvents', this.onFocusOut, this );
 
 		if(!this.avoidOutsideClickClose ) {
 			this.on( 'mousedown.appEvents', this.onBackgroundMouseDown, this );
 		}
+
+		this.fire( 'dialogOpen.core', { name: this.name } );
 
 		super.init && await super.init();
 	}
@@ -52,7 +55,7 @@ class Overlay extends Component {
 		this.dialogElements[ 'div.bfDialogWrapper' ].style.display = 'none';
 
 		if( this.modalDialog ) {
-			//this.removeNodes( 'div#__modalDialogOverlay', true );
+			this.removeNodes( 'div#__modalDialogOverlay', true );
 			this.fire( 'dialogModeModal.core', { active: false } );
 		}
 
@@ -64,6 +67,8 @@ class Overlay extends Component {
 			//this.fire( 'setScrollingStatus.core', 'enable' );
 			this.fire( 'dialogMode.core', false );
 		}
+
+		this.fire( 'dialogClose.core', { name: this.name } );
 
 		super.destroy && await super.destroy();
 	}
@@ -86,8 +91,12 @@ class Overlay extends Component {
 			}
 
 			if( this.hoverOverlay.close ) {
-				this.dialogElements[ 'div.overlayClose' ].addEventListener('click', this.onOverlayCloseClick.bind( this ), false );
-				this.dialogElements[ 'div.overlayClose' ].addEventListener('touchstart', this.onOverlayCloseClick.bind( this ), false );
+				if( isMobileDevice ) {
+					this.dialogElements[ 'div.overlayClose' ].addEventListener('touchend', this.onOverlayCloseClick.bind( this ), false );
+				} else {
+					this.dialogElements[ 'div.overlayClose' ].addEventListener('click', this.onOverlayCloseClick.bind( this ), false );
+				}
+				
 				this.dialogElements[ 'div.overlayClose' ].style.display = 'flex';
 			}
 		}
@@ -104,17 +113,17 @@ class Overlay extends Component {
 		}
 
 		if( this.topMost ) {
-			this.nodes.dialogRoot.style.zIndex	= 101;
+			this.nodes.dialogRoot.style.zIndex	= 1000;
 		}
 
 		if( this.modalDialog ) {
-			/*this.addNodes({
+			this.addNodes({
 				htmlData:	'<div id="__modalDialogOverlay" style="position:absolute;top:0;left:0;height:100vh;width:100vw;z-index:999"></div>',
 				reference:	{
 					node:		this.modalDialog.global ? await this.fire( 'getWorld.core' ) : this.nodes.dialogRoot,
 					position:	'afterBegin'
 				}
-			});*/
+			});
 
 			this.fire( 'dialogModeModal.core', { active: true } );
 		}
@@ -141,6 +150,7 @@ class Overlay extends Component {
 
 	onOverlayCloseClick( event ) {
 		event.stopPropagation();
+		event.preventDefault();
 
 		this.destroy();
 
@@ -188,6 +198,12 @@ class Overlay extends Component {
 		let ownRect		= this.nodes.dialogRoot.getBoundingClientRect(),
 			rootRect;
 
+		if( isMobileDevice ) {
+			this.nodes.dialogRoot.style.left	= '0px';
+			this.nodes.dialogRoot.style.top		= '0px';
+			return;
+		}
+
 		if( centerToViewport || this.fixed ) {
 			rootRect = doc.body.getBoundingClientRect();
 		} else {
@@ -234,6 +250,13 @@ class Overlay extends Component {
 				this.destroy();
 				break;
 		}
+	}
+
+	onFocusOut( event ) {
+		this.nodes.dialogRoot.scrollIntoView();
+		setTimeout(() => {
+			this.nodes.dialogRoot.scrollIntoView();
+		}, 100);
 	}
 
 	async onBackgroundMouseDown( event ) {
@@ -308,7 +331,8 @@ let Dialog = target => class extends target {
 	}
 
 	onCloseClick( event ) {
-		setTimeout( this.destroy.bind( this ), 1000 );
+		//setTimeout( this.destroy.bind( this ), 200 );
+		this.destroy();
 
 		event.preventDefault();
 		event.stopPropagation();

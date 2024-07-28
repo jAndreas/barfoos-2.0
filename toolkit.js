@@ -133,46 +133,57 @@ function intToRGB( i = 0 ){
 }
 
 function getTimePeriod( timestamp ) {
-		let diff 			= Date.now() - timestamp,
-			diffSeconds		= Math.round( diff / 1000 ),
-			diffMinutes		= Math.round( diffSeconds / 60 ),
-			diffHours		= Math.round( diffMinutes / 60 ),
-			diffDays		= Math.round( diffHours / 24 ),
-			diffWeeks		= Math.round( diffDays / 7 ),
-			diffMonths		= (diffWeeks / 4),
-			diffYears		= (diffMonths / 12);
+	let diff 			= Date.now() - timestamp,
+		diffSeconds		= Math.round( diff / 1000 ),
+		diffMinutes		= Math.round( diffSeconds / 60 ),
+		diffHours		= Math.round( diffMinutes / 60 ),
+		diffDays		= Math.round( diffHours / 24 ),
+		diffWeeks		= Math.round( diffDays / 7 ),
+		diffMonths		= (diffWeeks / 4),
+		diffYears		= (diffMonths / 12);
 
-		if( diffYears >= 1 ) {
-			diffYears = diffYears.toFixed( 1 ).replace( '.', ',' );
+	if( diffYears >= 1 ) {
+		diffYears = diffYears.toFixed( 1 ).replace( '.', ',' );
 
-			if( diffYears.slice( -1 ) === '0' ) {
-				diffYears = diffYears.slice( 0, -2 );
-			}
-
-			return diffYears + ' Jahr' + (diffYears > 1 ? 'en' : '');
-		} else if( diffMonths >= 0.9 ) {
-			return Math.round( diffMonths ) + ' Monat' + (diffMonths > 1 ? 'en' : '');
-		} else if( diffWeeks >= 1 ) {
-			return diffWeeks + ' Woche' + (diffWeeks > 1 ? 'n' : '');
-		} else if( diffDays >= 1 ) {
-			return diffDays + ' Tag' + (diffDays > 1 ? 'en' : '');
-		} else if( diffHours >= 1 ) {
-			return diffHours + ' Stunde' + (diffHours > 1 ? 'n' : '');
-		} else if( diffMinutes >= 1) {
-			return diffMinutes + ' Minute' + (diffMinutes > 1 ? 'n' : '');
-		} else if( diffSeconds >= 1) {
-			return diffSeconds + ' Sekunde' + (diffSeconds > 1 ? 'n' : '');
-		} else {
-			return 'kurzem...';
+		if( diffYears.slice( -1 ) === '0' ) {
+			diffYears = diffYears.slice( 0, -2 );
 		}
+
+		return diffYears + ' Jahr' + (diffYears > 1 ? 'en' : '');
+	} else if( diffMonths >= 0.9 ) {
+		return Math.round( diffMonths ) + ' Monat' + (diffMonths > 1 ? 'en' : '');
+	} else if( diffWeeks >= 1 ) {
+		return diffWeeks + ' Woche' + (diffWeeks > 1 ? 'n' : '');
+	} else if( diffDays >= 1 ) {
+		return diffDays + ' Tag' + (diffDays > 1 ? 'en' : '');
+	} else if( diffHours >= 1 ) {
+		return diffHours + ' Stunde' + (diffHours > 1 ? 'n' : '');
+	} else if( diffMinutes >= 1) {
+		return diffMinutes + ' Minute' + (diffMinutes > 1 ? 'n' : '');
+	} else if( diffSeconds >= 1) {
+		return diffSeconds + ' Sekunde' + (diffSeconds > 1 ? 'n' : '');
+	} else {
+		return 'kurzem...';
 	}
+}
+
+// probably use jwt-client in the future...
+function parseJwt( token ) {
+    var base64Url		= token.split( '.' )[ 1 ];
+    var base64			= base64Url.replace( /-/g, '+' ).replace( /_/g, '/' );
+    var jsonPayload		= decodeURIComponent( win.atob( base64 ).split( '' ).map(c => {
+        return '%' + ('00' + c.charCodeAt( 0 ).toString( 16 )).slice( -2 );
+    }).join( '' ));
+
+    return JSON.parse( jsonPayload );
+}
 
 export { 
 	Mix, MakeClass, Composition,
 	extend,
 	getTimePeriod,
 	Seconds, Minutes, Hours, Days, Weeks, Months,
-	type, desc, defineProp, props, slice, hashCode, intToRGB,
-	undef, win,
+	type, desc, defineProp, props, slice, hashCode, intToRGB, parseJwt,
+	undef, win, doc,
 	isMobileDevice, isAgentCrawler, isLocalChrome
 };

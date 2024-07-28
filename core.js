@@ -96,6 +96,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this.on( 'mobileNavMenuChange.core', this.onMobileNavMenuChange, this );
 		this.on( 'centerScroll.appEvents', this.onCenterScrollCore, this );
 		this.on( 'moduleDestruction.appEvents', this.onModuleDestruction, this );
+		this.on( 'forceTerminate.core', this.onForceTerminate, this );
 
 		if(!anotherWorld ) {
 			// disabled the overlay spinner because it seems like it serves no reasonable purpose at this point
@@ -212,7 +213,19 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 
 	onModuleDestruction( module ) {
 		if( (this.location === module.id || this.location === module.name) && module.root.contains( this.nodes.root ) ) {
-			this.destroy();
+			if( Object.keys( this ).length ) {
+				this.destroy();
+			}
+		}
+	}
+
+	onForceTerminate() {
+		try {
+			if( Object.keys( this ).length ) {
+				this.destroy();
+			}
+		} catch( ex ) {
+			console.log( `Error: ${ ex.message }` );
 		}
 	}
 
@@ -791,7 +804,7 @@ nodes[ 'section.center' ].addEventListener( 'scroll', event => {
 eventLoop.on( 'greenScreenMode.appEvents', () => {
 	nodes[ 'section.right' ].remove();
 	nodes[ 'section.footer' ].remove();
-	nodes[ 'section.center' ].style.height = '100vh';
+	nodes[ 'section.center' ].style.height = '100dvh';
 	nodes[ 'section.center' ].style.flexBasis = '100%';
 	nodes[ 'div#world' ].style.backgroundImage = 'none';
 	nodes[ 'div#world' ].style.backgroundColor = 'transparent';
@@ -804,7 +817,7 @@ eventLoop.on( 'noFrame.appEvents', () => {
 	nodes[ 'section.left' ].remove();
 	nodes[ 'section.footer' ].remove();
 	nodes[ 'section.head' ].remove();
-	nodes[ 'section.center' ].style.height = '100vh';
+	nodes[ 'section.center' ].style.height = '100dvh';
 	nodes[ 'section.center' ].style.flexBasis = '100%';
 	noFrame = true;
 });
