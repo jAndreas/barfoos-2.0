@@ -290,15 +290,19 @@ class Overlay extends Component {
 					win.clearTimeout( this.data.get( node ).storage.tmpMsgTimer );
 				}
 				
-				this.data.get( node ).storage.tmpMsgTimer = win.setTimeout(() => {
-					if( this && this.data ) {
-						node.classList.remove( 'redcolor' );
-						node.innerHTML = this.data.get( node ).storage.tmpMsgOld;
+				return new Promise(( res, rej ) => {
+					this.data.get( node ).storage.tmpMsgTimer = win.setTimeout(() => {
+						if( this && this.data ) {
+							node.classList.remove( 'redcolor' );
+							node.innerHTML = this.data.get( node ).storage.tmpMsgOld;
+	
+							delete this.data.get( node ).storage.tmpMsgTimer;
+							delete this.data.get( node ).storage.tmpMsgOld;
+						}
 
-						delete this.data.get( node ).storage.tmpMsgTimer;
-						delete this.data.get( node ).storage.tmpMsgOld;
-					}
-				}, iv);
+						res();
+					}, iv);
+				});
 			}
 		} catch( ex ) {
 			console.log( ex.message );
