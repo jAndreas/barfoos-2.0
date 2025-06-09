@@ -6,11 +6,13 @@ import Mediator from './mediator.js';
 import io from '../socket.io-client';
 
 const	socket = io( win.location.protocol + '//' + win.location.hostname, {
-			transports:		isAgentCrawler ? [ 'polling' ] : [ 'websocket', 'polling' ],
-			secure:			true,
-			autoConnect:	true,
-			forceNew:		true,
-			pingTimeout:	8000
+			transports:				isAgentCrawler ? [ 'polling' ] : [ 'websocket', 'polling' ],
+			secure:					false,
+			autoConnect:			true,
+			forceNew:				false,
+			multiplex:				true,
+			closeOnBeforeunload:	true,
+			pingTimeout:			5000
 		}),
 		maxTimeout	= 5000;
 
@@ -83,7 +85,7 @@ eventLoop.on( 'getUserSession.server', () => {
 	return Object.keys( session ).length ? session : null;
 });
 
-function idleWatcher( active ) {
+/*function idleWatcher( active ) {
 	if( active ) {
 		if(!socket.connected && socket.io.readyState !== 'opening' ) {
 			if( ENV_PROD === false ) console.log('re-opening socket for client.');
@@ -115,9 +117,15 @@ function idleWatcher( active ) {
 			}, 60 * 1000 * 2);
 		}
 	}
-}
+}*/
 
-eventLoop.on( 'appVisibilityChange.appEvents appFocusChange.appEvents', idleWatcher );
+//eventLoop.on( 'appVisibilityChange.appEvents appFocusChange.appEvents', idleWatcher );
+eventLoop.on( 'beforeUnload.appEvents', () => {
+	console.log('unloading app, closing socket connection.');
+
+	socket.close();
+	socket.removeAllListeners();
+});
 
 if(!isAgentCrawler ) {
 	socket.open();
@@ -137,9 +145,12 @@ let ServerConnection = target => class extends target {
 	}
 
 	destroy() {
-		for( let [ type, callback ] of Object.entries( this.instanceListeners ) ) {
-			socket.removeListener( type, callback );
-		}
+		//for( let [ type, callback ] of Object.entries( this.instanceListeners ) ) {
+		//	socket.removeListener( type, callback );
+		//}
+
+		//socket.close();
+		//socket.removeAllListeners();
 
 		super.destroy && super.destroy( ...arguments );
 	}
@@ -153,11 +164,13 @@ let ServerConnection = target => class extends target {
 		return new Promise( ( resolve, reject ) => {
 			if(!socket.connected && !noTimeout ) {
 				reject( 'Keine Server Verbindung.' );
+				this.tryReconnectServer();
 			}
 
-			if(!noTimeout ) {
+			if(!noTimeout && !simplex ) {
 				responseTimeout = win.setTimeout(() => {
 					if( self.id ) {
+						this.tryReconnectServer();
 						reject( new Error( `Es konnte keine Verbindung zum Server aufgebaut werden (${ type }).` ) );
 					}
 				}, maxTimeout);
@@ -214,7 +227,7 @@ let ServerConnection = target => class extends target {
 
 	disableSocketAutoClose() {
 		if( ENV_PROD === false ) console.log('Disabling socket auto close/open.' );
-		eventLoop.off( 'appVisibilityChange.appEvents appFocusChange.appEvents', idleWatcher );
+		//eventLoop.off( 'appVisibilityChange.appEvents appFocusChange.appEvents', idleWatcher );
 		win.clearTimeout( socketCloseTimeout );
 	}
 
@@ -223,7 +236,7 @@ let ServerConnection = target => class extends target {
 
 		win.setTimeout(() => {
 			socket.open();
-		}, 2000);
+		}, 400);
 	}
 
 	handleServerResponse( response ) {

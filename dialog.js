@@ -255,7 +255,9 @@ class Overlay extends Component {
 	onFocusOut( event ) {
 		this.nodes.dialogRoot.scrollIntoView();
 		setTimeout(() => {
-			this.nodes.dialogRoot.scrollIntoView();
+			if( this.nodes ) {
+				this.nodes.dialogRoot.scrollIntoView();
+			}
 		}, 100);
 	}
 

@@ -1,4 +1,4 @@
-@import 'viewportDefinitions';
+@use 'viewportDefinitions';
 
 @keyframes rotate-forever {
 	from {
@@ -46,7 +46,7 @@ div.loading-spinner {
     	z-index: -1;
 	}
 
-	@media screen and (max-width:$iPhone6Landscape) {
+	@media screen and (max-width:viewportDefinitions.$iPhone6Landscape) {
 		animation:1s linear 0s infinite rotate-forever-mobile;
 		filter:none;
 	}

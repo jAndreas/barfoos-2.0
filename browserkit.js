@@ -45,6 +45,7 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 		win.addEventListener( 'hashchange', this.hashChange.bind( this ), false );
 		win.addEventListener( 'keydown', this.keydown.bind( this ), false );
 		win.addEventListener( 'keydown', this.keyup.bind( this ), false );
+		win.addEventListener( 'beforeunload', this.beforeunload.bind( this ), false );
 		doc.addEventListener( 'visibilitychange', this.visibilityChange.bind( this ), false );
 		//doc.addEventListener( 'mousewheel', this.mousewheel.bind( this ), false );
 		doc.addEventListener( 'mousedown', this.mousedown.bind( this ), false );
@@ -153,6 +154,10 @@ class BrowserKit extends Composition( LogTools, Mediator ) {
 
 	keyup( event ) {
 		this.fire( 'up.keys', event.which || event.keyCode );
+	}
+
+	beforeunload( event ) {
+		this.fire( 'beforeUnload.appEvents', event );
 	}
 
 	mousemove( event ) {

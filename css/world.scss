@@ -1,8 +1,8 @@
-@import 'viewportDefinitions';
-@import 'barfoosfonts';
+@use 'viewportDefinitions';
+@use 'barfoosfonts';
 
 html {
-	@media screen and (min-width:1px) and (max-width:$iPhone6Portrait) {
+	@media screen and (min-width:1px) and (max-width:viewportDefinitions.$iPhone6Portrait) {
 		margin:0;
 		overflow:hidden;
 		height:100%;
@@ -10,7 +10,7 @@ html {
 }
 
 body {
-	@media screen and (min-width:1px) and (max-width:$iPhone6Portrait) {
+	@media screen and (min-width:1px) and (max-width:viewportDefinitions.$iPhone6Portrait) {
 		margin:0;
 		overflow:auto;
 		height:100%;
@@ -47,7 +47,7 @@ div#world {
 		}
 	}
 
-	@media screen and (max-width:$iPhone6Landscape) {
+	@media screen and (max-width:viewportDefinitions.$iPhone6Landscape) {
 		overflow:hidden;
   		-webkit-overflow-scrolling:touch;
 		-webkit-transform: translate3d(0,0,0);
@@ -97,7 +97,7 @@ div#world {
 
 		--scrollbar-width: calc(100vw - 100%);
 
-		@media screen and (max-width:$iPadLandscape) {
+		@media screen and (max-width:viewportDefinitions.$iPadLandscape) {
 			background:none;
 
 			flex-basis:100%;
@@ -163,7 +163,7 @@ div#world {
 		order:4;
 		display:flex;
 
-		@media screen and (max-width:$iPadLandscape) {
+		@media screen and (max-width:viewportDefinitions.$iPadLandscape) {
 			width:100vw;
 			width:100dvw;
 			position:absolute;
