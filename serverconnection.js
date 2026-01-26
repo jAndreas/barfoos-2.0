@@ -127,6 +127,10 @@ eventLoop.on( 'beforeUnload.appEvents', () => {
 	socket.removeAllListeners();
 });
 
+win.addEventListener( 'beforeunload', () => {
+	socket.close();
+}, false );
+
 if(!isAgentCrawler ) {
 	socket.open();
 }
@@ -135,7 +139,7 @@ let ServerConnection = target => class extends target {
 	constructor() {
 		super( ...arguments );
 
-		this.instanceListeners = Object.create( null );
+		this.instanceListeners	= Object.create( null );
 
 		let sessionData = JSON.parse( localStorage.getItem( 'moralsession' ) );
 
