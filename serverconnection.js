@@ -6,7 +6,7 @@ import Mediator from './mediator.js';
 import io from '../socket.io-client';
 
 const	socket = io( win.location.protocol + '//' + win.location.hostname, {
-			transports:				isAgentCrawler ? [ 'polling' ] : [ 'polling','websocket' ],
+			transports:				isAgentCrawler ? [ 'polling' ] : [ 'polling', 'websocket' ],
 			secure:					false,
 			autoConnect:			true,
 			forceNew:				false,
