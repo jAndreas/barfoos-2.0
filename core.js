@@ -822,6 +822,10 @@ eventLoop.on( 'noFrame.appEvents', () => {
 	noFrame = true;
 });
 
+eventLoop.on( 'mirrorMode.appEvents', () => {
+	nodes[ 'div#world' ].classList.add( 'mirror' );
+});
+
 eventLoop.on( 'dialogMode.core', data => {
 	if( data.active ) {
 		//nodes[ 'section.center' ].style.background	= 'inherit';

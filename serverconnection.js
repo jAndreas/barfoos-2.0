@@ -163,7 +163,7 @@ let ServerConnection = target => class extends target {
 		let self = this;
 		let responseTimeout;
 
-		//await this.fire( 'waitForConnection.server' );
+		await this.fire( 'waitForConnection.server' );
 
 		return new Promise( ( resolve, reject ) => {
 			if(!socket.connected && !noTimeout ) {
