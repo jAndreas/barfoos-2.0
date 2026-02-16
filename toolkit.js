@@ -33,6 +33,42 @@ let	isMobileDevice	= false,
 }());
 
 /*****************************************************************************************************
+ * isPortraitMode() returns true if the viewport is in portrait orientation (height > width)
+ * Can be called as a function to get the current state dynamically
+ *****************************************************************************************************/
+function isPortraitMode() {
+	return win.innerHeight > win.innerWidth;
+}
+
+/*****************************************************************************************************
+ * onOrientationChange() registers a callback for viewport orientation changes
+ * callback receives a boolean: true for portrait, false for landscape
+ *****************************************************************************************************/
+function onOrientationChange( callback ) {
+	const mediaQuery = win.matchMedia( '(orientation: portrait)' );
+	
+	const handler = ( e ) => {
+		callback( e.matches );
+	};
+
+	// Use modern API if available, fall back to deprecated addListener
+	if( mediaQuery.addEventListener ) {
+		mediaQuery.addEventListener( 'change', handler );
+	} else {
+		mediaQuery.addListener( handler );
+	}
+
+	// Return cleanup function
+	return () => {
+		if( mediaQuery.removeEventListener ) {
+			mediaQuery.removeEventListener( 'change', handler );
+		} else {
+			mediaQuery.removeListener( handler );
+		}
+	};
+}
+
+/*****************************************************************************************************
  * mix() should be used to augment an already existing class with multiple mixin-classes
  * It can also be used to extend a class at declaration, therefore it will create a anonymous
  * default class if none was passed.
@@ -185,5 +221,6 @@ export {
 	Seconds, Minutes, Hours, Days, Weeks, Months,
 	type, desc, defineProp, props, slice, hashCode, intToRGB, parseJwt,
 	undef, win, doc,
-	isMobileDevice, isAgentCrawler, isLocalChrome
+	isMobileDevice, isAgentCrawler, isLocalChrome,
+	isPortraitMode, onOrientationChange
 };
