@@ -61,6 +61,8 @@ eventLoop.on( 'waitForConnection.server', () => socket.connected || new Promise(
 	socket.on( 'connect', () => res( true ) );
 }));
 
+eventLoop.on( 'connectionEstablished.server', () => socket.connected );
+
 eventLoop.on( 'startNewSession.server', user => {
 	session = Object.create( null );
 	Object.assign( session, user );
