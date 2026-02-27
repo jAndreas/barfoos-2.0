@@ -1,7 +1,26 @@
 'use strict';
 
-let xDown, yDown, touchStart, xDiff, yDiff;
-
+/*****************************************************************************************************
+ * Mixin Class Swipe: Adds swipe gesture detection to a component.
+ *
+ * By default, registers on this.nodes.root. Override swipeTargetNodes() to return
+ * an array of node keys or HTMLElements to register on specific nodes instead.
+ *
+ * Override any of these methods in the consuming class to handle gestures:
+ *   onSwipeUp()    — finger moved upward
+ *   onSwipeDown()  — finger moved downward
+ *   onSwipeLeft()  — finger moved left
+ *   onSwipeRight() — finger moved right
+ *
+ * Additional hooks:
+ *   onTouchMove(xDiff, yDiff) — called on every touchmove with current deltas
+ *                                (positive xDiff = left, positive yDiff = up)
+ *   onSwipeReset()            — called when touch ends below threshold or is
+ *                                cancelled; use to undo visual previews
+ *
+ * Fires mediator events: slideUpGesture.<id>, slideDownGesture.<id>,
+ * slideLeftGesture.<id>, slideRightGesture.<id>
+ *****************************************************************************************************/
 let Swipe = target => class extends target {
 	constructor() {
 		super( ...arguments );
@@ -9,59 +28,81 @@ let Swipe = target => class extends target {
 
 	async init() {
 		super.init && await super.init( ...arguments );
-		this.addNodeEvent( this.nodes.root, 'touchstart', this.onSwipeTouchStart );
-		this.addNodeEvent( this.nodes.root, 'touchmove', this.onSwipeTouchMove );
-		this.addNodeEvent( this.nodes.root, 'touchend', this.onSwipeTouchEnd );
+
+		let targets = this.swipeTargetNodes ? this.swipeTargetNodes() : [ this.nodes.root ];
+
+		for( let node of targets ) {
+			this.addNodeEvent( node, 'touchstart', this._onSwipeTouchStart );
+			this.addNodeEvent( node, 'touchmove', this._onSwipeTouchMove );
+			this.addNodeEvent( node, 'touchend', this._onSwipeTouchEnd );
+			this.addNodeEvent( node, 'touchcancel', this._onSwipeTouchCancel );
+		}
+
+		return this;
 	}
 
-	onSwipeTouchStart( event ) {
-		xDown = event.touches[ 0 ].clientX;
-		yDown = event.touches[ 0 ].clientY;
-		touchStart = Date.now();
+	_onSwipeTouchStart( event ) {
+		if( event.touches && event.touches.length ) {
+			this._swipeXDown		= event.touches[ 0 ].clientX;
+			this._swipeYDown		= event.touches[ 0 ].clientY;
+			this._swipeTouchStart	= Date.now();
+			this._swipeXDiff		= 0;
+			this._swipeYDiff		= 0;
+		}
 	}
 
-	onSwipeTouchMove( event ) {
-		if( !xDown || !yDown ) {
+	_onSwipeTouchMove( event ) {
+		if( this._swipeXDown == null || !event.touches || !event.touches.length ) {
 			return;
 		}
 
-		let xUp		= event.touches[ 0 ].clientX,
-			yUp		= event.touches[ 0 ].clientY;
+		this._swipeXDiff = this._swipeXDown - event.touches[ 0 ].clientX;
+		this._swipeYDiff = this._swipeYDown - event.touches[ 0 ].clientY;
 
-		xDiff	= xDown - xUp,
-		yDiff	= yDown - yUp;
+		this.onTouchMove && this.onTouchMove( this._swipeXDiff, this._swipeYDiff );
 	}
 
-	onSwipeTouchEnd( event ) {
-		let touchEnd = Date.now();
+	_onSwipeTouchEnd( event ) {
+		let elapsed		= Date.now() - this._swipeTouchStart,
+			absX		= Math.abs( this._swipeXDiff ),
+			absY		= Math.abs( this._swipeYDiff ),
+			threshold	= 40;
 
-		if ( Math.abs( xDiff ) > Math.abs( yDiff ) ) {
-			if ( xDiff > 0 ) {
-				/* left swipe */
+		// Only count gestures with enough movement
+		if( absX < threshold && absY < threshold ) {
+			this.onSwipeReset && this.onSwipeReset();
+			this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipeTouchStart = null;
+			return;
+		}
+
+		if( absY > absX ) {
+			// Vertical swipe dominates
+			if( this._swipeYDiff > 0 ) {
+				this.onSwipeUp && this.onSwipeUp();
+				this.fire( `slideUpGesture.${ this.id }` );
 			} else {
-				/* right swipe */
+				this.onSwipeDown && this.onSwipeDown();
+				this.fire( `slideDownGesture.${ this.id }` );
 			}
 		} else {
-			if( (touchEnd - touchStart) < 300 ) {
-				if ( yDiff > 10 ) {
-					this.onSwipeDown();
-				} else if( yDiff < -10 ) {
-					this.onSwipeUp();
-				}
+			// Horizontal swipe dominates
+			if( this._swipeXDiff > 0 ) {
+				this.onSwipeLeft && this.onSwipeLeft();
+				this.fire( `slideLeftGesture.${ this.id }` );
+			} else {
+				this.onSwipeRight && this.onSwipeRight();
+				this.fire( `slideRightGesture.${ this.id }` );
 			}
 		}
 
-		xDown = yDown = xDiff = yDiff = touchStart = null;
+		this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipeTouchStart = null;
 	}
 
-	onSwipeUp() {
-		super.onSwipeUp && super.onSwipeUp( ...arguments );
-		this.fire( `slideUpGesture.${ this.id }` );
-	}
-
-	onSwipeDown() {
-		super.onSwipeDown && super.onSwipeDown( ...arguments );
-		this.fire( `slideDownGesture.${ this.id }` );
+	_onSwipeTouchCancel() {
+		// Browser cancelled the touch sequence (e.g. compositor took over scrolling).
+		// Reset visual previews, then clear state.
+		this.onSwipeReset && this.onSwipeReset();
+		this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipeTouchStart = null;
 	}
 }
 

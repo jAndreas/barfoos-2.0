@@ -24,6 +24,7 @@ let NodeTools = target => class extends target {
 		super( ...arguments );
 
 		this._alreadyDelegatedEvents = Object.create( null );
+		this._mappedClickHandlers = new Set();
 
 		this._delegatedEventHandler = (event) => {
 			if( this.modalOverlay && !this.modalOverlay.suspended ) {
@@ -36,6 +37,11 @@ let NodeTools = target => class extends target {
 				if( this.data.get( event.target ) ) {
 					if( this.data.get( event.target ).events[ event.type ] ) {
 						this.data.get( event.target ).events[ event.type ].every( fnc => {
+							// Skip mapped-click handlers (click→touchend) when touch moved beyond tap range
+							if( this._mappedClickHandlers.has( fnc ) && event.type === 'touchend' && !event.CLICKRANGE ) {
+								return true;
+							}
+
 							let retV = fnc.call( this, event );
 
 							callbackResult.push( retV );
@@ -63,6 +69,11 @@ let NodeTools = target => class extends target {
 
 					if( this && this.data && this.data.get( event.target ).oneTimeEvents[ event.type ] ) {
 						this.data.get( event.target ).oneTimeEvents[ event.type ].every( fnc => {
+							// Skip mapped-click handlers (click→touchend) when touch moved beyond tap range
+							if( this._mappedClickHandlers.has( fnc ) && event.type === 'touchend' && !event.CLICKRANGE ) {
+								return true;
+							}
+
 							let retV = fnc.call( this, event );
 
 							callbackResult.push( retV );
@@ -151,11 +162,15 @@ let NodeTools = target => class extends target {
 
 			if( node instanceof HTMLElement ) {
 				for( let type of types ) {
+					let originalType = type;
 					type = mappedMobileEvents[ type ] || type;
 
-					if( type === 'touchend' ) {
+					// Only add hitMarker/hitMarkerCheck for mapped events (click→touchend),
+					// not for explicitly registered touchend/touchstart/touchmove
+					if( type === 'touchend' && originalType !== type ) {
 						node.addEventListener( 'touchstart', this.hitMarker, false );
 						node.addEventListener( 'touchend', this.hitMarkerCheck, false );
+						this._mappedClickHandlers.add( fnc );
 					}
 
 					if(!this._alreadyDelegatedEvents[ type ] ) {
@@ -197,11 +212,14 @@ let NodeTools = target => class extends target {
 
 		if( node instanceof HTMLElement ) {
 			for( let type of types ) {
+				let originalType = type;
 				type = mappedMobileEvents[ type ] || type;
 
-				if( type === 'touchend' ) {
+				// Only add hitMarker/hitMarkerCheck for mapped events (click→touchend)
+				if( type === 'touchend' && originalType !== type ) {
 					node.addEventListener( 'touchstart', this.hitMarker, false );
 					node.addEventListener( 'touchend', this.hitMarkerCheck, false );
+					this._mappedClickHandlers.add( fnc );
 				}
 
 				if(!this._alreadyDelegatedEvents[ type ] ) {
@@ -242,14 +260,18 @@ let NodeTools = target => class extends target {
 
 		if( node instanceof HTMLElement ) {
 			for( let type of types ) {
+				let originalType = type;
 				type = mappedMobileEvents[ type ] || type;
 
-				if( type === 'touchend' ) {
+				// Only remove hitMarker/hitMarkerCheck for mapped events (click→touchend)
+				if( type === 'touchend' && originalType !== type ) {
 					node.removeEventListener( 'touchstart', this.hitMarker, false );
 					node.removeEventListener( 'touchend', this.hitMarkerCheck, false );
 				}
 
 				if( typeof fnc === 'function' ) {
+					this._mappedClickHandlers.delete( fnc );
+
 					if( Array.isArray( this.data.get( node ).events[ type ] ) ) {
 						this.data.get( node ).events[ type ] = this.data.get( node ).events[ type ].filter( currentFnc => currentFnc !== fnc );
 					}
@@ -598,16 +620,12 @@ let NodeTools = target => class extends target {
 
 		if( event === 0 || (Math.abs( this.touchStartPos.pageX - touchEndPos.pageX ) < 10 && Math.abs( this.touchStartPos.pageY - touchEndPos.pageY ) < 10) ) {
 			event.CLICKRANGE = true;
-		} else {
-			try {
-				event.preventDefault();
-				event.stopPropagation();
-			} catch( ex ) {
-				console.log( ex.message );
-			}
-
-			return false;
 		}
+
+		// Do NOT call stopPropagation here — let the event bubble so that
+		// swipe/touch handlers on ancestor nodes can still receive it.
+		// The _delegatedEventHandler will skip mapped-click handlers when
+		// CLICKRANGE is not set (i.e. touch moved beyond tap range).
 	}
 };
 

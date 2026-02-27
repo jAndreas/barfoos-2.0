@@ -887,6 +887,18 @@ eventLoop.on( 'setScrollingStatus.core', status => {
 	}
 });
 
+eventLoop.on( 'setBodyOverflow.core', status => {
+	switch( status ) {
+		case 'disable':
+			doc.body.style.overflow = 'hidden';
+			break;
+
+		case 'enable':
+			doc.body.style.overflow = '';
+			break;
+	}
+});
+
 eventLoop.on( 'getRootNodeOfSection.core', sectionName => {
 	return nodes[ `section.${ sectionName }` ];
 });
