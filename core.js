@@ -85,13 +85,13 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 		this._boundMediaChange = this.mediaChanged.bind( this );
 		this.setupMediaQueryWatchers();
 
-		this.on( `newChildModule.${ this.name }`, this.newChildModule, this );
-		this.on( `getModuleRootElement.${ this.name }`, this.getModuleRootElement, this );
-		this.on( `getModuleDimensions.${ this.name }`, this.getModuleDimensions, this );
-		this.on( `findModule.${ this.name }`, this.findModule, this );
-		this.on( `getModuleDimensionsByName.${ this.name }`, this.getModuleDimensions, this );
-		this.on( `slideDownTo.${ this.name }`, this.slideDownTo, this );
-		this.on( `switchTo.${ this.name }`, this.switchTo, this );
+		this.on( `newChildModule.${ this.id }`, this.newChildModule, this );
+		this.on( `getModuleRootElement.${ this.id }`, this.getModuleRootElement, this );
+		this.on( `getModuleDimensions.${ this.id }`, this.getModuleDimensions, this );
+		this.on( `findModule.${ this.id }`, this.findModule, this );
+		this.on( `getModuleDimensionsByName.${ this.id }`, this.getModuleDimensions, this );
+		this.on( `slideDownTo.${ this.id }`, this.slideDownTo, this );
+		this.on( `switchTo.${ this.id }`, this.switchTo, this );
 		this.on( 'dialogMode.core', this.onDialogModeChange, this );
 		this.on( 'mobileNavMenuChange.core', this.onMobileNavMenuChange, this );
 		this.on( 'centerScroll.appEvents', this.onCenterScrollCore, this );
@@ -133,8 +133,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 			this.onCenterScrollCore( true );
 
 			this.fire( 'moduleLaunch.appEvents', {
-				id:		this.name,
-				name:	this.name,
+				id:		this.id,
+				name:	this.id,
 				state:	this
 			});
 
@@ -147,7 +147,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	async destroy() {
 		this.fire( 'moduleDestruction.appEvents', {
 			id:		this.id,
-			name:	this.name,
+			name:	this.id,
 			root:	this.nodes.root
 		});
 
@@ -212,7 +212,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	}
 
 	onModuleDestruction( module ) {
-		if( (this.location === module.id || this.location === module.name) && module.root.contains( this.nodes.root ) ) {
+		if( this.location === module.id && module.root.contains( this.nodes.root ) ) {
 			if( Object.keys( this ).length ) {
 				this.destroy();
 			}
@@ -327,7 +327,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
 	}
 
 	onMobileNavMenuChange( state ) {
-		if( this.location === moduleLocations.center && this.name !== 'NavSection' ) {
+		if( this.location === moduleLocations.center && this.id !== 'NavSection' ) {
 			if( state === 'open' ) {
 				this.nodes.root.classList.add( 'navBlur' );
 			} else {
@@ -978,31 +978,31 @@ eventLoop.on( 'slideUpTo.appEvents', node => {
 });
 
 eventLoop.on( 'moduleLaunch.appEvents', ( module, event ) => {
-	if( module.name in modules.online ) {
-		modules.online[ module.name ]++;
+	if( module.id in modules.online ) {
+		modules.online[ module.id ]++;
 	} else {
-		modules.online[ module.name ] = 1;
+		modules.online[ module.id ] = 1;
 	}
 
-	if( modules.awaiting[ module.name ] ) {
-		for( let hookData of modules.awaiting[ module.name ] ) {
-			eventLoop.fire( `newChildModule.${ module.name }`, hookData );
+	if( modules.awaiting[ module.id ] ) {
+		for( let hookData of modules.awaiting[ module.id ] ) {
+			eventLoop.fire( `newChildModule.${ module.id }`, hookData );
 		}
 
-		delete modules.awaiting[ module.name ];
+		delete modules.awaiting[ module.id ];
 	}
 
-	if( ENV_PROD === false ) console.log( `module ${module.name} was launched( ${modules.online[module.name]}x )` );
+	if( ENV_PROD === false ) console.log( `module ${module.id} was launched( ${modules.online[module.id]}x )` );
 });
 
 eventLoop.on( 'moduleDestruction.appEvents', ( module, event ) => {
-	if( module.name in modules.online ) {
-		modules.online[ module.name ]--;
+	if( module.id in modules.online ) {
+		modules.online[ module.id ]--;
 
-		if( ENV_PROD === false ) console.log( `module ${module.name} was destroyed( ${modules.online[module.name]}x instances left )` );
+		if( ENV_PROD === false ) console.log( `module ${module.id} was destroyed( ${modules.online[module.id]}x instances left )` );
 
-		if( modules.online[ module.name ] === 0 ) {
-			delete modules.online[ module.name ];
+		if( modules.online[ module.id ] === 0 ) {
+			delete modules.online[ module.id ];
 		}
 	} else {
 

@@ -55,7 +55,7 @@ function onOrientationChange( callback ) {
 	if( mediaQuery.addEventListener ) {
 		mediaQuery.addEventListener( 'change', handler );
 	} else {
-		mediaQuery.addListener( handler );
+		mediaQuery.addEventListener( handler );
 	}
 
 	// Return cleanup function
@@ -63,7 +63,7 @@ function onOrientationChange( callback ) {
 		if( mediaQuery.removeEventListener ) {
 			mediaQuery.removeEventListener( 'change', handler );
 		} else {
-			mediaQuery.removeListener( handler );
+			mediaQuery.removeEventListener( handler );
 		}
 	};
 }

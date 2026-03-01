@@ -42,7 +42,7 @@ class Overlay extends Component {
 			this.on( 'mousedown.appEvents', this.onBackgroundMouseDown, this );
 		}
 
-		this.fire( 'dialogOpen.core', { name: this.name } );
+		this.fire( 'dialogOpen.core', { id: this.id } );
 
 		super.init && await super.init();
 	}
@@ -68,7 +68,7 @@ class Overlay extends Component {
 			this.fire( 'dialogMode.core', false );
 		}
 
-		this.fire( 'dialogClose.core', { name: this.name } );
+		this.fire( 'dialogClose.core', { id: this.id } );
 
 		super.destroy && await super.destroy();
 	}
