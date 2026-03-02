@@ -170,14 +170,18 @@ let ServerConnection = target => class extends target {
 		return new Promise( ( resolve, reject ) => {
 			if(!socket.connected && !noTimeout ) {
 				reject( 'Keine Server Verbindung.' );
-				this.tryReconnectServer();
-			}
+				this.tryReconnectServer();				return;			}
 
 			if(!noTimeout && !simplex ) {
 				responseTimeout = win.setTimeout(() => {
 					if( self.id ) {
-						this.tryReconnectServer();
 						reject( new Error( `Es konnte keine Verbindung zum Server aufgebaut werden (${ type }).` ) );
+
+						// Only force reconnect if the socket actually lost connection.
+						// If connected, the server was just slow — don't nuke the entire transport.
+						if( !socket.connected ) {
+							this.tryReconnectServer();
+						}
 					}
 				}, maxTimeout);
 			}
