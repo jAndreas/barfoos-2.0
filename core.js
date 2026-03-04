@@ -6,6 +6,7 @@ import { moduleLocations } from './defs.js';
 import Mediator from './mediator.js';
 import NodeTools from './nodetools.js';
 import LogTools from './logtools.js';
+import ServerConnection from './serverconnection.js';
 import worldMarkup from './html/world.html';
 import spinnerStyle from './css/spinner.scss';
 import overlayStyle from './css/modaloverlay.scss';
@@ -38,7 +39,7 @@ let		lastScrollEvent	= 0,
  * appending of module nodes, creating and waiting any async events (promises) to keep things in order and will
  * also be augmented with other classes to support GUI modules (Logging, internal Events, DOM utilities)
  *****************************************************************************************************/
-class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools ) {
+class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools, ServerConnection ) {
 	constructor( options = { } ) {
 		super( ...arguments );
 
