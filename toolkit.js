@@ -203,15 +203,37 @@ function getTimePeriod( timestamp ) {
 	}
 }
 
-// probably use jwt-client in the future...
-function parseJwt( token ) {
-    var base64Url		= token.split( '.' )[ 1 ];
-    var base64			= base64Url.replace( /-/g, '+' ).replace( /_/g, '/' );
-    var jsonPayload		= decodeURIComponent( win.atob( base64 ).split( '' ).map(c => {
-        return '%' + ('00' + c.charCodeAt( 0 ).toString( 16 )).slice( -2 );
-    }).join( '' ));
+function easeCount({ node = null, from = 0, to = 0, frame = 300 } = { }) {
+	if( !node ) return;
 
-    return JSON.parse( jsonPayload );
+	let	start		= null,
+		delta		= to - from,
+		duration	= Math.max( frame, 1 );
+
+	function easeInOut( t ) {
+		return t < 0.5
+			? 4 * t * t * t
+			: 1 - Math.pow( -2 * t + 2, 3 ) / 2;
+	}
+
+	function step( timestamp ) {
+		if( start === null ) start = timestamp;
+
+		let	elapsed		= timestamp - start,
+			progress	= Math.min( elapsed / duration, 1 ),
+			eased		= easeInOut( progress ),
+			current		= from + delta * eased;
+
+		node.textContent = Math.round( current );
+
+		if( progress < 1 ) {
+			win.requestAnimationFrame( step );
+		} else {
+			node.textContent = to;
+		}
+	}
+
+	win.requestAnimationFrame( step );
 }
 
 export { 
@@ -219,8 +241,9 @@ export {
 	extend,
 	getTimePeriod,
 	Seconds, Minutes, Hours, Days, Weeks, Months,
-	type, desc, defineProp, props, slice, hashCode, intToRGB, parseJwt,
+	type, desc, defineProp, props, slice, hashCode, intToRGB,
 	undef, win, doc,
 	isMobileDevice, isAgentCrawler, isLocalChrome,
-	isPortraitMode, onOrientationChange
+	isPortraitMode, onOrientationChange,
+	easeCount
 };

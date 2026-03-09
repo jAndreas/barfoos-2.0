@@ -373,6 +373,26 @@ let NodeTools = target => class extends target {
 				}
 			}
 
+		if( !validDelegation && this._nodeGroups ) {
+				for( let [ , group ] of this._nodeGroups ) {
+					if( validDelegation ) break;
+
+					for( let [ key, node ] of Object.entries( group.nodes ) ) {
+						let nodeData = this.data.get( node );
+
+						if( nodeData ) {
+							let persistEvents	= nodeData.events[ delegatedEvent ],
+								oneTimeEvents	= nodeData.oneTimeEvents[ delegatedEvent ];
+
+							if( (persistEvents && persistEvents.length) || (oneTimeEvents && oneTimeEvents.length) ) {
+								validDelegation = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+
 			if(!validDelegation || force ) {
 				delete this._alreadyDelegatedEvents[ delegatedEvent ];
 

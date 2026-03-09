@@ -10,6 +10,90 @@ const		win				= window,
 			globalShadowDOM	= doc.implementation.createHTMLDocument( null );
 
 /*****************************************************************************************************
+ * Class NodeGroup: Scoped container for dynamically rendered nodes with full framework API access.
+ * Returned by render({ scoped: 'myId' }).with().at(). Owns its own node hash and availableNames counter.
+ * All nodes are registered in the parent component's WeakMap, enabling addNodeEvent/animate/transition.
+ * Call destroy() to remove DOM, clean WeakMap entries, and release all references.
+ * Named groups (scoped: 'stringId') are accessible via this.nodeGroup('stringId') from the module.
+ * Anonymous groups (scoped: true) are only accessible via the returned reference.
+ *****************************************************************************************************/
+class NodeGroup {
+	constructor( owner, groupId, nodeHash ) {
+		this.owner		= owner;
+		this.groupId	= groupId;
+		this.nodes		= Object.create( null );
+
+		for( let [ key, value ] of Object.entries( nodeHash ) ) {
+			if( key === 'localRoot' ) {
+				this.nodes.root = value;
+			} else {
+				this.nodes[ key ] = value;
+			}
+		}
+	}
+
+	addNodeEvent( nodes, types, fnc ) {
+		if( typeof nodes === 'string' ) {
+			nodes = nodes.split( /\s+|,\s+/ ).map( n => this.nodes[ n ] ).filter( Boolean );
+		}
+
+		this.owner.addNodeEvent( nodes, types, fnc );
+	}
+
+	addNodeEventOnce( nodes, types, fnc ) {
+		if( typeof nodes === 'string' ) {
+			nodes = nodes.split( /\s+|,\s+/ ).map( n => this.nodes[ n ] ).filter( Boolean );
+		}
+
+		this.owner.addNodeEventOnce( nodes, types, fnc );
+	}
+
+	removeNodeEvent( node, types, fnc ) {
+		if( typeof node === 'string' ) {
+			node = this.nodes[ node ];
+		}
+
+		this.owner.removeNodeEvent( node, types, fnc );
+	}
+
+	animate( options ) {
+		if( typeof options.node === 'string' ) {
+			options.node = this.nodes[ options.node ];
+		}
+
+		return this.owner.animate( options );
+	}
+
+	transition( options ) {
+		if( typeof options.node === 'string' ) {
+			options.node = this.nodes[ options.node ];
+		}
+
+		return this.owner.transition( options );
+	}
+
+	destroy() {
+		if( !this.owner ) return;
+
+		for( let [ key, node ] of Object.entries( this.nodes ) ) {
+			if( node instanceof HTMLElement && this.owner.data ) {
+				this.owner.data.delete( node );
+			}
+		}
+
+		if( this.nodes.root ) {
+			this.nodes.root.remove();
+		}
+
+		this.owner._nodeGroups.delete( this.groupId );
+		this.owner.cleanDelegations();
+		this.nodes		= null;
+		this.groupId	= null;
+		this.owner		= null;
+	}
+}
+
+/*****************************************************************************************************
  * Class DOMTools: Provides a DOM toolset for transpiling html-strings into Node-References, watching
  * DOM ready events and providing request-events.
  *****************************************************************************************************/
@@ -22,7 +106,9 @@ let DOMTools = target => class extends target {
 			vDom:				globalShadowDOM,
 			data:				new WeakMap(),
 			nodes:				Object.create( null ),
-			availableNames:		Object.create( null )
+			availableNames:		Object.create( null ),
+			_nodeGroups:		new Map(),
+			_anonGroupCounter:	0
 		});
 	}
 
@@ -40,19 +126,19 @@ let DOMTools = target => class extends target {
 		}
 	}
 
-	transpile({ nodeData, nodeName, htmlData, moduleRoot, standalone })  {
+	transpile({ nodeData, nodeName, htmlData, moduleRoot, standalone, scoped })  {
 		let nodes;
 
 		if( typeof htmlData === 'string' ) {
 			this.vDom.body.innerHTML = htmlData;
 
-			nodes = this.cacheNodes({ rootNode: this.vDom.body.firstChild.cloneNode( true ), moduleRoot, standalone });
+			nodes = this.cacheNodes({ rootNode: this.vDom.body.firstChild.cloneNode( true ), moduleRoot, standalone, scoped });
 
 			this.vDom.body.firstElementChild.remove();
 		} else if( nodeData instanceof HTMLElement && typeof nodeName === 'string' ) {
 			this.vDom.body.insertAdjacentElement( 'afterbegin', nodeData );
 
-			nodes = this.cacheNodes({ rootNode: this.vDom.body.firstChild.cloneNode( true ), nodeName, moduleRoot, standalone });
+			nodes = this.cacheNodes({ rootNode: this.vDom.body.firstChild.cloneNode( true ), nodeName, moduleRoot, standalone, scoped });
 		}
 
 		this.vDom.body.innerHTML = '';
@@ -60,7 +146,7 @@ let DOMTools = target => class extends target {
 		return nodes;
 	}
 
-	addNodes({ nodeData, htmlData, reference = { }, nodeName, standalone = false } = { }) {
+	addNodes({ nodeData, htmlData, reference = { }, nodeName, standalone = false, scoped = false } = { }) {
 		if(!reference.node) {
 			if( this.nodes.defaultChildContainer instanceof HTMLElement ) {
 				reference.node = this.nodes.defaultChildContainer;
@@ -82,7 +168,7 @@ let DOMTools = target => class extends target {
 				if( nodeName in this.nodes ) {
 					this.error && this.error( `${ nodeName } already exists in Components Node Hash.` );
 				} else {
-					let nodeHash = this.transpile({ nodeData, nodeName, standalone });
+					let nodeHash = this.transpile({ nodeData, nodeName, standalone, scoped });
 
 					if( reference.position === 'replace' ) {
 						reference.node.replaceWith( nodeHash.localRoot );
@@ -90,7 +176,9 @@ let DOMTools = target => class extends target {
 						reference.node.insertAdjacentElement( reference.position || 'afterbegin', nodeHash.localRoot );
 					}
 
-					if(!standalone ) {
+					if( scoped ) {
+						return this._createNodeGroup( scoped, nodeHash );
+					} else if(!standalone ) {
 						delete nodeHash.localRoot;
 						extend( this.nodes ).with( nodeHash );
 					} else {
@@ -103,7 +191,7 @@ let DOMTools = target => class extends target {
 		}
 
 		if( typeof htmlData === 'string' ) {
-			let nodeHash = this.transpile({ htmlData, standalone });
+			let nodeHash = this.transpile({ htmlData, standalone, scoped });
 
 			if( reference.position === 'replace' ) {
 				reference.node.replaceWith( nodeHash.localRoot );
@@ -111,7 +199,9 @@ let DOMTools = target => class extends target {
 				reference.node.insertAdjacentElement( reference.position || 'afterbegin', nodeHash.localRoot );
 			}
 
-			if(!standalone ) {
+			if( scoped ) {
+				return this._createNodeGroup( scoped, nodeHash );
+			} else if(!standalone ) {
 				delete nodeHash.localRoot;
 				extend( this.nodes ).with( nodeHash );
 			} else {
@@ -170,9 +260,10 @@ let DOMTools = target => class extends target {
 		});
 	}
 
-	cacheNodes({ rootNode, nodeName, moduleRoot, standalone }) {
+	cacheNodes({ rootNode, nodeName, moduleRoot, standalone, scoped }) {
 		let nodeHash		= Object.create( null ),
-			self			= this;
+			self			= this,
+			nameCounter		= scoped ? Object.create( null ) : self.availableNames;
 
 		if( moduleRoot ) {
 			nodeHash.root		= rootNode;
@@ -186,33 +277,33 @@ let DOMTools = target => class extends target {
 
 		(function crawlNodes( node, nodeName ) {
 			if( node instanceof HTMLElement ) {
-				if( standalone ) {
+				if( standalone && !scoped ) {
 					for( let { name, value } of Array.from( node.attributes ).slice( 0 ) ) {
 						if( name.startsWith( 'on' ) ) {
 							node.addEventListener( name.slice( 2 ), self[ value ].bind( self ), false );
 							node.removeAttribute( name );
 						}
 					}
-				} else {
+				} else if( !standalone || scoped ) {
 					let currentTag = nodeName || node.nodeName.toLowerCase() + ( node.id ? ('#' + node.id) : node.className ? ('.' + node.className.split( /\s+/ )[ 0 ]) : '' );
 					currentTag = currentTag.replace( /\s+/, '' );
 
 					// avoid duplicates, keep track on the number of identical identifiers
-					if( typeof self.availableNames[ currentTag ] === 'undefined' ) {
-						self.availableNames[ currentTag ] = 1;
+					if( typeof nameCounter[ currentTag ] === 'undefined' ) {
+						nameCounter[ currentTag ] = 1;
 					}
 					else {
-						self.availableNames[ currentTag ]++;
+						nameCounter[ currentTag ]++;
 					}
 
 					// fill nodeHash lookup
-					if( self.availableNames[ currentTag ] === 1 ) {
+					if( nameCounter[ currentTag ] === 1 ) {
 						nodeHash[ currentTag ] = node;
 					}
 					else {
-						nodeHash[ currentTag + '_' + self.availableNames[ currentTag ] ] = node;
+						nodeHash[ currentTag + '_' + nameCounter[ currentTag ] ] = node;
 
-						self.warn && self.warn( `cacheNodes(): Duplicate node identifier on ${ currentTag }(${ self.availableNames[ currentTag ] }) -> `, node );
+						self.warn && self.warn( `cacheNodes(): Duplicate node identifier on ${ currentTag }(${ nameCounter[ currentTag ] }) -> `, node );
 					}
 
 					let alias				= node.getAttribute( 'alias' ),
@@ -279,7 +370,7 @@ let DOMTools = target => class extends target {
 			}
 		}( rootNode, nodeName ));
 
-		if(!standalone ) {
+		if( !standalone && !scoped ) {
 			if(!nodeHash.defaultChildContainer && moduleRoot ) {
 				nodeHash.defaultChildContainer = nodeHash.root;
 			}
@@ -290,6 +381,30 @@ let DOMTools = target => class extends target {
 		}
 
 		return nodeHash;
+	}
+
+	_createNodeGroup( scoped, nodeHash ) {
+		let groupId = typeof scoped === 'string' ? scoped : `_anon_${ ++this._anonGroupCounter }`;
+
+		if( this._nodeGroups.has( groupId ) ) {
+			this._nodeGroups.get( groupId ).destroy();
+		}
+
+		let group = new NodeGroup( this, groupId, nodeHash );
+		this._nodeGroups.set( groupId, group );
+		return group;
+	}
+
+	nodeGroup( id ) {
+		return this._nodeGroups.get( id ) || null;
+	}
+
+	removeNodeGroup( id ) {
+		let group = this._nodeGroups.get( id );
+
+		if( group ) {
+			group.destroy();
+		}
 	}
 
 	timeout( ms = 200 ) {

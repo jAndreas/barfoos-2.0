@@ -23,9 +23,7 @@ const	eventLoop		= MakeClass( class coreEventLoop{ }, { id: 'coreEventLoop' } ).
 		modules.awaiting	= Object.create( null );
 
 const 	nodes			= DOM.transpile({ htmlData: worldMarkup }),
-		scrollSpeed		= 20,
-		EaseOut			= power => {return t => { return (.04 - .04 / t) * Math.sin(25 * t) + 1 }},
-		ease			= EaseOut( 5 );
+		scrollSpeed		= 20;
 
 let		lastScrollEvent	= 0,
 		observerTimer	= 0,
@@ -153,6 +151,13 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools, Se
 		});
 
 		this.destroyMediaQueryWatchers();
+
+		if( this._nodeGroups ) {
+			for( let [ , group ] of this._nodeGroups ) {
+				group.destroy();
+			}
+		}
+
 		this.removeAllNodeEvents();
 
 		if( Object.keys( this.dialogElements ).length ) {
@@ -600,7 +605,7 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools, Se
 		this.modalOverlay = controlInterface;
 	}
 
-	render({ htmlData = '', standalone = false, crlf = false }) {
+	render({ htmlData = '', standalone = false, scoped = false, crlf = false }) {
 		return {
 			with:	replacementHash => {
 				for( let [ searchFor, value ] of Object.entries( replacementHash ) ) {
@@ -617,10 +622,11 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools, Se
 
 				return {
 					at:		reference => {
-						let hash = this.addNodes({ htmlData, reference, standalone });
-
-						let templateLogic = Array.from( hash.localRoot.querySelectorAll( '[logic]' ) );
-						templateLogic.push( hash.localRoot );
+						let hash			= this.addNodes({ htmlData, reference, standalone, scoped }),
+							logicRoot		= scoped ? hash.nodes.root : hash.localRoot,
+							templateLogic	= Array.from( logicRoot.querySelectorAll( '[logic]' ) );
+							
+						templateLogic.push( logicRoot );
 
 						if( templateLogic.length ) {
 							for( let node of templateLogic ) {
