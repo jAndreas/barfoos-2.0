@@ -100,6 +100,7 @@ let NodeTools = target => class extends target {
 					}*/
 
 					if( event.target.classList.contains( 'noPropagation' ) ) {
+						event.stopPropagation();
 						return false;
 					}
 
