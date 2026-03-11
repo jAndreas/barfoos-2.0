@@ -36,6 +36,21 @@ div.bfDialogWrapper {
 		border-radius:$radiusMobile;
 	}
 
+	@media screen and (max-height: viewportDefinitions.$iPhone6Portrait) and (orientation: landscape) {
+		position: fixed !important;
+		top: 0 !important;
+		left: 0 !important;
+		width: 100dvw !important;
+		height: 100dvh !important;
+		border-radius: 0;
+		box-shadow: none;
+		border: none;
+		filter: none;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
+
 	&.liveChatMode {
 		left:auto;
 		right:1vh;
@@ -187,6 +202,20 @@ div.bfDialogWrapper {
 
 		@media screen and (min-width:1px) and (max-width:viewportDefinitions.$iPhone6Portrait) {
 			border-radius:0px 0px $radiusMobile $radiusMobile;
+		}
+
+		@media screen and (max-height: viewportDefinitions.$iPhone6Portrait) and (orientation: landscape) {
+			flex: 1;
+			min-height: 0;
+			max-height: none;
+			height: auto;
+			width: 100%;
+			border-radius: 0;
+			overflow-x: visible;
+			overflow-y: auto;
+			-webkit-overflow-scrolling: touch;
+			display: flex;
+			justify-content: center;
 		}
 
 		&.minified {

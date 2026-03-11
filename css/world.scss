@@ -7,10 +7,23 @@ html {
 		overflow:hidden;
 		height:100%;
 	}
+
+	@media screen and (max-height: viewportDefinitions.$iPhone6Portrait) and (orientation: landscape) {
+		margin:0;
+		overflow:hidden;
+		height:100%;
+	}
 }
 
 body {
 	@media screen and (min-width:1px) and (max-width:viewportDefinitions.$iPhone6Portrait) {
+		margin:0;
+		overflow:auto;
+		height:100%;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	@media screen and (max-height: viewportDefinitions.$iPhone6Portrait) and (orientation: landscape) {
 		margin:0;
 		overflow:auto;
 		height:100%;
@@ -54,6 +67,12 @@ div#world {
 	@media screen and (max-width:viewportDefinitions.$iPhone6Landscape) {
 		overflow:hidden;
   		-webkit-overflow-scrolling:touch;
+		-webkit-transform: translate3d(0,0,0);
+	}
+
+	@media screen and (max-height: viewportDefinitions.$iPhone6Portrait) and (orientation: landscape) {
+		overflow:hidden;
+		-webkit-overflow-scrolling:touch;
 		-webkit-transform: translate3d(0,0,0);
 	}
 
