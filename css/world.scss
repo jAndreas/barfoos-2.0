@@ -1,14 +1,14 @@
-@use 'viewportDefinitions';
+
 @use 'barfoosfonts';
 
 html {
-	@media screen and (min-width:1px) and (max-width:viewportDefinitions.$iPhone6Portrait) {
+	@media (pointer: coarse) and (orientation: portrait) {
 		margin:0;
 		overflow:hidden;
 		height:100%;
 	}
 
-	@media screen and (max-height: viewportDefinitions.$iPhone6Portrait) and (orientation: landscape) {
+	@media (pointer: coarse) and (orientation: landscape) {
 		margin:0;
 		overflow:hidden;
 		height:100%;
@@ -16,14 +16,14 @@ html {
 }
 
 body {
-	@media screen and (min-width:1px) and (max-width:viewportDefinitions.$iPhone6Portrait) {
+	@media (pointer: coarse) and (orientation: portrait) {
 		margin:0;
 		overflow:auto;
 		height:100%;
 		-webkit-overflow-scrolling: touch;
 	}
 
-	@media screen and (max-height: viewportDefinitions.$iPhone6Portrait) and (orientation: landscape) {
+	@media (pointer: coarse) and (orientation: landscape) {
 		margin:0;
 		overflow:auto;
 		height:100%;
@@ -64,13 +64,17 @@ div#world {
 		}
 	}
 
-	@media screen and (max-width:viewportDefinitions.$iPhone6Landscape) {
+	@media (pointer: coarse) and (orientation: portrait) {
 		overflow:hidden;
   		-webkit-overflow-scrolling:touch;
 		-webkit-transform: translate3d(0,0,0);
 	}
 
-	@media screen and (max-height: viewportDefinitions.$iPhone6Portrait) and (orientation: landscape) {
+	@media (pointer: coarse) and (orientation: landscape) {
+		overflow:hidden;
+  		-webkit-overflow-scrolling:touch;
+		-webkit-transform: translate3d(0,0,0);
+
 		overflow:hidden;
 		-webkit-overflow-scrolling:touch;
 		-webkit-transform: translate3d(0,0,0);
@@ -120,7 +124,17 @@ div#world {
 
 		--scrollbar-width: calc(100vw - 100%);
 
-		@media screen and (max-width:viewportDefinitions.$iPadLandscape) {
+		@media (pointer: coarse) and (orientation: portrait) {
+			background:none;
+
+			flex-basis:100%;
+			&~section.content.right {
+				flex-basis:0%;
+				display:none;
+			}
+		}
+
+		@media (pointer: coarse) and (orientation: landscape) {
 			background:none;
 
 			flex-basis:100%;
@@ -186,7 +200,16 @@ div#world {
 		order:4;
 		display:flex;
 
-		@media screen and (max-width:viewportDefinitions.$iPadLandscape) {
+		@media (pointer: coarse) and (orientation: portrait) {
+			width:100vw;
+			width:100dvw;
+			position:absolute;
+			right:-100vw;
+			right:-100dvw;
+			display:none;
+		}
+
+		@media (pointer: coarse) and (orientation: landscape) {
 			width:100vw;
 			width:100dvw;
 			position:absolute;
