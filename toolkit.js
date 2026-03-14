@@ -203,6 +203,18 @@ function getTimePeriod( timestamp ) {
 	}
 }
 
+function formatDateDE( timestamp ) {
+	let d		= new Date( timestamp ),
+		months	= [ 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember' ],
+		day		= d.getDate(),
+		month	= months[ d.getMonth() ],
+		year	= d.getFullYear(),
+		hours	= String( d.getHours() ).padStart( 2, '0' ),
+		minutes	= String( d.getMinutes() ).padStart( 2, '0' );
+
+	return `${ day }. ${ month } ${ year }, ${ hours }.${ minutes } Uhr`;
+}
+
 function easeCount({ node = null, from = 0, to = 0, frame = 300 } = { }) {
 	if( !node ) return;
 
@@ -239,7 +251,7 @@ function easeCount({ node = null, from = 0, to = 0, frame = 300 } = { }) {
 export { 
 	Mix, MakeClass, Composition,
 	extend,
-	getTimePeriod,
+	getTimePeriod, formatDateDE,
 	Seconds, Minutes, Hours, Days, Weeks, Months,
 	type, desc, defineProp, props, slice, hashCode, intToRGB,
 	undef, win, doc,

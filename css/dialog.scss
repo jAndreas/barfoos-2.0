@@ -23,6 +23,14 @@ div.bfDialogWrapper {
 		filter:none;
 		border:none;
 		border-radius:$radiusMobile;
+		position: fixed !important;
+		top: 0 !important;
+		left: 0 !important;
+		width: 100dvw !important;
+		height: 100dvh !important;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
 	}
 
 	@media (pointer: coarse) and (orientation: landscape) {
@@ -109,14 +117,6 @@ div.bfDialogWrapper {
 			text-align:center;
 
 			@media (pointer: coarse) and (orientation: portrait) {
-				font-size:1.5vw;
-			}
-
-			@media (pointer: coarse) and (orientation: landscape) {
-				font-size:1.5vw;
-			}
-
-			@media (pointer: coarse) and (orientation: portrait) {
 				font-size:1.7vh;
 			}
 		}
@@ -194,6 +194,13 @@ div.bfDialogWrapper {
 
 		@media (pointer: coarse) and (orientation: portrait) {
 			border-radius:0px 0px $radiusMobile $radiusMobile;
+			flex: 1;
+			min-height: 0;
+			max-height: none;
+			height: auto;
+			width: 100%;
+			overflow-y: auto;
+			-webkit-overflow-scrolling: touch;
 		}
 
 		@media (pointer: coarse) and (orientation: landscape) {
