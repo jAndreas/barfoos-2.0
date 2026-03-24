@@ -606,6 +606,8 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools, Se
 	}
 
 	render({ htmlData = '', standalone = false, scoped = false, crlf = false }) {
+		let originalTemplate = scoped ? htmlData : null;
+
 		return {
 			with:	replacementHash => {
 				for( let [ searchFor, value ] of Object.entries( replacementHash ) ) {
@@ -622,96 +624,19 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools, Se
 
 				return {
 					at:		reference => {
-						let hash			= this.addNodes({ htmlData, reference, standalone, scoped }),
-							logicRoot		= scoped ? hash.nodes.root : hash.localRoot,
-							templateLogic	= Array.from( logicRoot.querySelectorAll( '[logic]' ) );
-							
-						templateLogic.push( logicRoot );
+						let hash		= this.addNodes({ htmlData, reference, standalone, scoped }),
+							logicRoot	= scoped ? hash.nodes.root : (hash && hash.localRoot ? hash.localRoot : null);
 
-						if( templateLogic.length ) {
-							for( let node of templateLogic ) {
-								let instructions = JSON.parse( node.getAttribute( 'logic' ) );
-								
-								node.removeAttribute( 'logic' );
-
-								if( instructions ) {
-									for( let [ cmd, src ] of Object.entries( instructions ) ) {
-										switch( cmd ) {
-											case 'loop':
-												let nodeHTML	= node.outerHTML,
-													parent		= node.parentElement;
-
-												node.remove();
-
-												if( Array.isArray( replacementHash[ src ] ) ) {
-													for( let entry of replacementHash[ src ] ) {
-														if( entry ) {
-															let updatedHTML;
-															
-															if( crlf ) {
-																if( typeof entry === 'string' ) {
-																	updatedHTML = nodeHTML.replace( new RegExp( `%${ src }%`, 'g' ), entry.toString().replace( /<br>|<br\/>/g, '\n' ) );
-																}
-																if( typeof entry === 'object' ) {
-																	updatedHTML = nodeHTML;
-
-																	for( let [ ph, ctn ] of Object.entries( entry ) ) {
-																		updatedHTML = updatedHTML.replace( new RegExp( `%${ ph }%`, 'g' ), ctn.toString().replace( /<br>|<br\/>/g, '\n' ) );
-																	}
-																}
-															} else {
-																if( typeof entry === 'string' ) {
-																	updatedHTML = nodeHTML.replace( new RegExp( `%${ src }%`, 'g' ), entry.toString().replace( /\n/g, '<br/>') );
-																}
-																if( typeof entry === 'object' ) {
-																	updatedHTML = nodeHTML;
-
-																	for( let [ ph, ctn ] of Object.entries( entry ) ) {
-																		updatedHTML = updatedHTML.replace( new RegExp( `%${ ph }%`, 'g' ), ctn.toString().replace( /\n/g, '<br/>') );
-																	}
-																}
-															}
-
-															parent.insertAdjacentHTML( 'beforeend', updatedHTML );
-														}
-													}
-												}
-
-												parent = null;
-												break;
-											case 'if':
-												for( let [ condition, action ] of Object.entries( src ) ) {
-													if( replacementHash[ condition ] ) {
-														for( let [ name, opt ] of Object.entries( action ) ) {
-															switch( name ) {
-																case 'addclass':
-																	node.classList.add( opt );
-																	break;
-															}
-														}
-													}
-												}
-												break;
-											case 'eq':
-												for( let [ key, condition ] of Object.entries( src ) ) {
-													for( let [ cmpValue, action ] of Object.entries( condition ) ) {
-														if( +replacementHash[ key ] === +cmpValue ) {
-															switch( action ) {
-																case 'remove':
-																	node.remove();
-																	break;
-															}
-														}
-													}
-												}
-												break;
-										}
-									}
-
-									node.removeAttribute( 'logic' );
-								}
-							}
+						if( logicRoot ) {
+							this._processTemplateLogic( logicRoot, replacementHash, crlf );
 						}
+
+						if( scoped && hash._template !== undef ) {
+							hash._template		= originalTemplate;
+							hash._renderData	= Object.assign( Object.create( null ), replacementHash );
+							hash._crlf			= crlf;
+						}
+
 						return hash;
 					},
 					get:	() => {

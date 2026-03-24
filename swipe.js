@@ -13,10 +13,11 @@
  *   onSwipeRight() — finger moved right
  *
  * Additional hooks:
- *   onTouchMove(xDiff, yDiff) — called on every touchmove with current deltas
+ *   onTouchMove(xDiff, yDiff, axisLock) — called on every touchmove with current deltas
  *                                (positive xDiff = left, positive yDiff = up)
- *   onSwipeReset()            — called when touch ends below threshold or is
- *                                cancelled; use to undo visual previews
+ *                                axisLock is null, 'h', or 'v' once dominant axis is determined
+ *   onSwipeReset()            — called when touch ends below threshold, is
+ *                                cancelled, or gesture direction has no handler
  *
  * Fires mediator events: slideUpGesture.<id>, slideDownGesture.<id>,
  * slideLeftGesture.<id>, slideRightGesture.<id>
@@ -30,6 +31,7 @@ let Swipe = target => class extends target {
 		super.init && await super.init( ...arguments );
 
 		this._swipeRafId		= null;
+		this._swipeAxisLock		= null;
 		this._swipeTargetRefs	= [];
 
 		// Bound handler for native touchmove — bypasses delegation for performance.
@@ -43,10 +45,18 @@ let Swipe = target => class extends target {
 			this._swipeXDiff = this._swipeXDown - event.touches[ 0 ].clientX;
 			this._swipeYDiff = this._swipeYDown - event.touches[ 0 ].clientY;
 
+			if( !this._swipeAxisLock ) {
+				let totalMove = Math.abs( this._swipeXDiff ) + Math.abs( this._swipeYDiff );
+
+				if( totalMove > 10 ) {
+					this._swipeAxisLock = Math.abs( this._swipeXDiff ) >= Math.abs( this._swipeYDiff ) ? 'h' : 'v';
+				}
+			}
+
 			if( this._swipeRafId == null ) {
 				this._swipeRafId = requestAnimationFrame( () => {
 					this._swipeRafId = null;
-					this.onTouchMove && this.onTouchMove( this._swipeXDiff, this._swipeYDiff );
+					this.onTouchMove && this.onTouchMove( this._swipeXDiff, this._swipeYDiff, this._swipeAxisLock );
 				});
 			}
 		};
@@ -96,10 +106,16 @@ let Swipe = target => class extends target {
 			this._swipeTouchStart	= Date.now();
 			this._swipeXDiff		= 0;
 			this._swipeYDiff		= 0;
+			this._swipeAxisLock		= null;
 		}
 	}
 
 	_onSwipeTouchEnd( event ) {
+		// Guard: delegation walk-up can fire this handler multiple times per
+		// single touchend.  After the first call clears _swipeXDown, subsequent
+		// calls would compute NaN diffs and trigger phantom onSwipeRight() calls.
+		if( this._swipeXDown == null ) return;
+
 		// Cancel pending visual update — touch sequence is over
 		if( this._swipeRafId != null ) {
 			cancelAnimationFrame( this._swipeRafId );
@@ -123,34 +139,52 @@ let Swipe = target => class extends target {
 		// flick (high velocity with minimal travel to filter accidental taps)
 		if( maxAbs < threshold && !( velocity > 0.4 && maxAbs > 20 ) ) {
 			this.onSwipeReset && this.onSwipeReset();
-			this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipeTouchStart = null;
+			this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipeTouchStart = this._swipeAxisLock = null;
 			return;
 		}
 
 		if( absY > absX ) {
 			// Vertical swipe dominates
 			if( finalY > 0 ) {
-				this.onSwipeUp && this.onSwipeUp();
+				if( this.onSwipeUp ) {
+					this.onSwipeUp();
+				} else {
+					this.onSwipeReset && this.onSwipeReset();
+				}
 				this.fire( `slideUpGesture.${ this.id }` );
 			} else {
-				this.onSwipeDown && this.onSwipeDown();
+				if( this.onSwipeDown ) {
+					this.onSwipeDown();
+				} else {
+					this.onSwipeReset && this.onSwipeReset();
+				}
 				this.fire( `slideDownGesture.${ this.id }` );
 			}
 		} else {
 			// Horizontal swipe dominates
 			if( finalX > 0 ) {
-				this.onSwipeLeft && this.onSwipeLeft();
+				if( this.onSwipeLeft ) {
+					this.onSwipeLeft();
+				} else {
+					this.onSwipeReset && this.onSwipeReset();
+				}
 				this.fire( `slideLeftGesture.${ this.id }` );
 			} else {
-				this.onSwipeRight && this.onSwipeRight();
+				if( this.onSwipeRight ) {
+					this.onSwipeRight();
+				} else {
+					this.onSwipeReset && this.onSwipeReset();
+				}
 				this.fire( `slideRightGesture.${ this.id }` );
 			}
 		}
 
-		this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipeTouchStart = null;
+		this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipeTouchStart = this._swipeAxisLock = null;
 	}
 
 	_onSwipeTouchCancel() {
+		if( this._swipeXDown == null ) return;
+
 		// Browser cancelled the touch sequence (e.g. compositor took over scrolling).
 		// Cancel pending visual update and reset previews, then clear state.
 		if( this._swipeRafId != null ) {
@@ -159,7 +193,7 @@ let Swipe = target => class extends target {
 		}
 
 		this.onSwipeReset && this.onSwipeReset();
-		this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipeTouchStart = null;
+		this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipeTouchStart = this._swipeAxisLock = null;
 	}
 }
 

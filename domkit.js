@@ -19,9 +19,13 @@ const		win				= window,
  *****************************************************************************************************/
 class NodeGroup {
 	constructor( owner, groupId, nodeHash ) {
-		this.owner		= owner;
-		this.groupId	= groupId;
-		this.nodes		= Object.create( null );
+		this.owner			= owner;
+		this.groupId		= groupId;
+		this.nodes			= Object.create( null );
+		this._template		= null;
+		this._renderData	= null;
+		this._crlf			= false;
+		this._eventRegs		= [];
 
 		for( let [ key, value ] of Object.entries( nodeHash ) ) {
 			if( key === 'localRoot' ) {
@@ -33,27 +37,51 @@ class NodeGroup {
 	}
 
 	addNodeEvent( nodes, types, fnc ) {
+		let nodeStr = typeof nodes === 'string' ? nodes : null;
+
 		if( typeof nodes === 'string' ) {
 			nodes = nodes.split( /\s+|,\s+/ ).map( n => this.nodes[ n ] ).filter( Boolean );
 		}
 
 		this.owner.addNodeEvent( nodes, types, fnc );
+
+		if( nodeStr && this._eventRegs ) {
+			this._eventRegs.push({ nodes: nodeStr, types, fnc, once: false });
+		}
 	}
 
 	addNodeEventOnce( nodes, types, fnc ) {
+		let nodeStr = typeof nodes === 'string' ? nodes : null;
+
 		if( typeof nodes === 'string' ) {
 			nodes = nodes.split( /\s+|,\s+/ ).map( n => this.nodes[ n ] ).filter( Boolean );
 		}
 
 		this.owner.addNodeEventOnce( nodes, types, fnc );
+
+		if( nodeStr && this._eventRegs ) {
+			this._eventRegs.push({ nodes: nodeStr, types, fnc, once: true });
+		}
 	}
 
 	removeNodeEvent( node, types, fnc ) {
+		let nodeStr = typeof node === 'string' ? node : null;
+
 		if( typeof node === 'string' ) {
 			node = this.nodes[ node ];
 		}
 
 		this.owner.removeNodeEvent( node, types, fnc );
+
+		if( nodeStr && this._eventRegs ) {
+			this._eventRegs = this._eventRegs.filter( reg => {
+				let nodesMatch	= reg.nodes === nodeStr || reg.nodes.split( /\s+|,\s+/ ).includes( nodeStr );
+				let typesMatch	= !types || reg.types === types;
+				let fncMatch	= !fnc || reg.fnc === fnc;
+
+				return !( nodesMatch && typesMatch && fncMatch );
+			});
+		}
 	}
 
 	animate( options ) {
@@ -87,9 +115,77 @@ class NodeGroup {
 
 		this.owner._nodeGroups.delete( this.groupId );
 		this.owner.cleanDelegations();
-		this.nodes		= null;
-		this.groupId	= null;
-		this.owner		= null;
+		this.nodes			= null;
+		this.groupId		= null;
+		this._template		= null;
+		this._renderData	= null;
+		this._eventRegs		= null;
+		this._crlf			= false;
+		this.owner			= null;
+	}
+
+	rerender( newData = {} ) {
+		if(!this._template || !this.owner ) return this;
+
+		Object.assign( this._renderData, newData );
+
+		let htmlData = this._template;
+
+		for( let [ searchFor, value ] of Object.entries( this._renderData ) ) {
+			if( typeof value === 'object' ) continue;
+
+			if( this._crlf ) {
+				htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), (value !== undef ? value : '').toString().replace( /<br>|<br\/>/g, '\n' ) );
+			} else {
+				htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), (value !== undef ? value : '').toString().replace( /\n/g, '<br/>') );
+			}
+		}
+
+		this.owner.vDom.body.innerHTML = htmlData;
+		let newRoot = this.owner.vDom.body.firstChild.cloneNode( true );
+		this.owner.vDom.body.innerHTML = '';
+
+		let newNodeHash = this.owner.cacheNodes({ rootNode: newRoot, standalone: false, scoped: true });
+
+		this.owner._processTemplateLogic( newRoot, this._renderData, this._crlf );
+
+		for( let [ key, node ] of Object.entries( this.nodes ) ) {
+			if( node instanceof HTMLElement && this.owner.data ) {
+				this.owner.data.delete( node );
+			}
+		}
+
+		if( this.nodes.root && this.nodes.root.parentNode ) {
+			this.nodes.root.replaceWith( newRoot );
+		}
+
+		this.nodes = Object.create( null );
+
+		for( let [ key, value ] of Object.entries( newNodeHash ) ) {
+			if( key === 'localRoot' ) {
+				this.nodes.root = value;
+			} else {
+				this.nodes[ key ] = value;
+			}
+		}
+
+		for( let reg of this._eventRegs ) {
+			let resolvedNodes = reg.nodes.split( /\s+|,\s+/ ).map( n => this.nodes[ n ] ).filter( Boolean );
+
+			if( resolvedNodes.length ) {
+				if( reg.once ) {
+					this.owner.addNodeEventOnce( resolvedNodes, reg.types, reg.fnc );
+				} else {
+					this.owner.addNodeEvent( resolvedNodes, reg.types, reg.fnc );
+				}
+			} else {
+				this.owner.warn && this.owner.warn( `rerender: event target "${ reg.nodes }" no longer exists in group "${ this.groupId }"` );
+			}
+		}
+
+		this.owner.cleanDelegations();
+
+		return this;
 	}
 }
 
@@ -404,6 +500,100 @@ let DOMTools = target => class extends target {
 
 		if( group ) {
 			group.destroy();
+		}
+	}
+
+	_processTemplateLogic( rootNode, replacementHash, crlf ) {
+		let templateLogic = Array.from( rootNode.querySelectorAll( '[logic]' ) );
+
+		templateLogic.push( rootNode );
+
+		if( templateLogic.length ) {
+			for( let node of templateLogic ) {
+				let instructions = node.getAttribute( 'logic' );
+
+				if(!instructions ) continue;
+
+				instructions = JSON.parse( instructions );
+				node.removeAttribute( 'logic' );
+
+				if( instructions ) {
+					for( let [ cmd, src ] of Object.entries( instructions ) ) {
+						switch( cmd ) {
+							case 'loop':
+								let nodeHTML	= node.outerHTML,
+									parent		= node.parentElement;
+
+								node.remove();
+
+								if( Array.isArray( replacementHash[ src ] ) ) {
+									for( let entry of replacementHash[ src ] ) {
+										if( entry ) {
+											let updatedHTML;
+
+											if( crlf ) {
+												if( typeof entry === 'string' ) {
+													updatedHTML = nodeHTML.replace( new RegExp( `%${ src }%`, 'g' ), entry.toString().replace( /<br>|<br\/>/g, '\n' ) );
+												}
+												if( typeof entry === 'object' ) {
+													updatedHTML = nodeHTML;
+
+													for( let [ ph, ctn ] of Object.entries( entry ) ) {
+														updatedHTML = updatedHTML.replace( new RegExp( `%${ ph }%`, 'g' ), ctn.toString().replace( /<br>|<br\/>/g, '\n' ) );
+													}
+												}
+											} else {
+												if( typeof entry === 'string' ) {
+													updatedHTML = nodeHTML.replace( new RegExp( `%${ src }%`, 'g' ), entry.toString().replace( /\n/g, '<br/>') );
+												}
+												if( typeof entry === 'object' ) {
+													updatedHTML = nodeHTML;
+
+													for( let [ ph, ctn ] of Object.entries( entry ) ) {
+														updatedHTML = updatedHTML.replace( new RegExp( `%${ ph }%`, 'g' ), ctn.toString().replace( /\n/g, '<br/>') );
+													}
+												}
+											}
+
+											parent.insertAdjacentHTML( 'beforeend', updatedHTML );
+										}
+									}
+								}
+
+								parent = null;
+								break;
+							case 'if':
+								for( let [ condition, action ] of Object.entries( src ) ) {
+									if( replacementHash[ condition ] ) {
+										for( let [ name, opt ] of Object.entries( action ) ) {
+											switch( name ) {
+												case 'addclass':
+													node.classList.add( opt );
+													break;
+											}
+										}
+									}
+								}
+								break;
+							case 'eq':
+								for( let [ key, condition ] of Object.entries( src ) ) {
+									for( let [ cmpValue, action ] of Object.entries( condition ) ) {
+										if( +replacementHash[ key ] === +cmpValue ) {
+											switch( action ) {
+												case 'remove':
+													node.remove();
+													break;
+											}
+										}
+									}
+								}
+								break;
+						}
+					}
+
+					node.removeAttribute( 'logic' );
+				}
+			}
 		}
 	}
 

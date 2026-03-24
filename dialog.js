@@ -130,13 +130,13 @@ class Overlay extends Component {
 
 		if( this.fixed ) {
 			this.nodes.dialogRoot.style.position = this.standAlone ? 'static' : 'absolute';
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(146,161,171,0.95), rgba(26, 45, 74, 1))';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(146, 161, 171, 0.9), rgba(26, 45, 74, 0.31))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 			this.fire( 'pushToSky.core', this.nodes.dialogRoot );
 		}
 
 		if( this.noBlur ) {
-			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(146,161,171,0.95), rgba(26, 45, 74, 1))';
+			this.nodes.dialogRoot.style.background = 'linear-gradient(1750deg, rgba(146, 161, 171, 0.9), rgba(26, 45, 74, 0.31))';
 			this.dialogElements[ 'div.bfBlurDialogBody' ].remove();
 		}
 
@@ -145,6 +145,12 @@ class Overlay extends Component {
 			this.nodes.dialogRoot.style.backgroundRepeat	= 'no-repeat, no-repeat';
 			this.nodes.dialogRoot.style.backgroundSize		= 'contain, contain';
 			this.nodes.dialogRoot.style.backgroundPosition	= 'center center, center center';
+			this.nodes.dialogRoot.style.backdropFilter		= 'backdrop-filter: blur(4px)';
+		}
+
+		if( this.solidBackground ) {
+			this.nodes.dialogRoot.style.background		= 'linear-gradient(1750deg, rgba(191, 200, 205, 0.83), rgba(15, 40, 80, 0.83))';
+			this.nodes.dialogRoot.style.backdropFilter	= 'blur(8px)';
 		}
 	}
 
