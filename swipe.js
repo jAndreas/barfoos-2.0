@@ -53,6 +53,10 @@ let Swipe = target => class extends target {
 				}
 			}
 
+			if( this._swipeAxisLock && this.swipePreventScroll && this.swipePreventScroll( this._swipeAxisLock ) ) {
+				event.preventDefault();
+			}
+
 			if( this._swipeRafId == null ) {
 				this._swipeRafId = requestAnimationFrame( () => {
 					this._swipeRafId = null;
@@ -61,7 +65,8 @@ let Swipe = target => class extends target {
 			}
 		};
 
-		let targets = this.swipeTargetNodes ? this.swipeTargetNodes() : [ this.nodes.root ];
+		let targets			= this.swipeTargetNodes ? this.swipeTargetNodes() : [ this.nodes.root ],
+			needsPrevent	= typeof this.swipePreventScroll === 'function';
 
 		for( let node of targets ) {
 			if( typeof node === 'string' ) {
@@ -72,9 +77,11 @@ let Swipe = target => class extends target {
 			this.addNodeEvent( node, 'touchend', this._onSwipeTouchEnd );
 			this.addNodeEvent( node, 'touchcancel', this._onSwipeTouchCancel );
 
-			// Native passive listener for touchmove — compositor can scroll without
-			// waiting for JS, and we avoid the delegation handler overhead entirely.
-			node.addEventListener( 'touchmove', this._boundSwipeTouchMove, { passive: true } );
+			// Native touchmove listener — bypasses delegation overhead entirely.
+			// Passive by default (compositor scrolls without waiting for JS).
+			// Non-passive when consumer defines swipePreventScroll() — enables
+			// preventDefault() to block native scroll on the locked axis.
+			node.addEventListener( 'touchmove', this._boundSwipeTouchMove, { passive: !needsPrevent } );
 			this._swipeTargetRefs.push( node );
 		}
 
