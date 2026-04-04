@@ -18,7 +18,10 @@
 	box-sizing:border-box;
 
 	&:hover {
-		filter:brightness(1.1);
+		@media (hover: hover) {
+			filter:brightness(1.1);
+	
+		}
 	}
 }
 
@@ -29,7 +32,10 @@
 }
 
 .bfButton:not([disabled]):hover {
-	color:rgba(255,255,255,0.9);
+	@media (hover: hover) {
+		color:rgba(255,255,255,0.9);
+
+	}
 }
 
 .bfButton:active {

@@ -34,10 +34,15 @@ let Swipe = target => class extends target {
 		this._swipeAxisLock		= null;
 		this._swipeTargetRefs	= [];
 
-		// Bound handler for native touchmove — bypasses delegation for performance.
+		// Bound handlers — all touch events bypass delegation for performance.
 		// touchmove fires at ~60Hz; skipping the delegation proxy/walk-up saves
 		// significant per-frame overhead. rAF coalescing drops redundant frames.
-		this._boundSwipeTouchMove = ( event ) => {
+		// touchstart/touchend/touchcancel also bypass delegation to avoid
+		// compositor ↔ main-thread sync delays on iOS inside scroll containers.
+		this._boundSwipeTouchStart	= this._onSwipeTouchStart.bind( this );
+		this._boundSwipeTouchEnd	= this._onSwipeTouchEnd.bind( this );
+		this._boundSwipeTouchCancel	= this._onSwipeTouchCancel.bind( this );
+		this._boundSwipeTouchMove	= ( event ) => {
 			if( this._swipeXDown == null || !event.touches || !event.touches.length ) {
 				return;
 			}
@@ -73,15 +78,14 @@ let Swipe = target => class extends target {
 				node = this.nodes[ node ];
 			}
 
-			this.addNodeEvent( node, 'touchstart', this._onSwipeTouchStart );
-			this.addNodeEvent( node, 'touchend', this._onSwipeTouchEnd );
-			this.addNodeEvent( node, 'touchcancel', this._onSwipeTouchCancel );
-
-			// Native touchmove listener — bypasses delegation overhead entirely.
-			// Passive by default (compositor scrolls without waiting for JS).
-			// Non-passive when consumer defines swipePreventScroll() — enables
-			// preventDefault() to block native scroll on the locked axis.
-			node.addEventListener( 'touchmove', this._boundSwipeTouchMove, { passive: !needsPrevent } );
+			// All touch listeners registered natively — bypasses delegation
+			// overhead entirely and avoids compositor sync delays on iOS.
+			// touchstart/touchend/touchcancel are passive (no preventDefault).
+			// touchmove is non-passive only when swipePreventScroll is defined.
+			node.addEventListener( 'touchstart',  this._boundSwipeTouchStart,  { passive: true } );
+			node.addEventListener( 'touchend',    this._boundSwipeTouchEnd,    { passive: true } );
+			node.addEventListener( 'touchcancel', this._boundSwipeTouchCancel, { passive: true } );
+			node.addEventListener( 'touchmove',   this._boundSwipeTouchMove,   { passive: !needsPrevent } );
 			this._swipeTargetRefs.push( node );
 		}
 
@@ -96,12 +100,18 @@ let Swipe = target => class extends target {
 
 		if( this._swipeTargetRefs ) {
 			for( let node of this._swipeTargetRefs ) {
-				node.removeEventListener( 'touchmove', this._boundSwipeTouchMove );
+				node.removeEventListener( 'touchstart',  this._boundSwipeTouchStart );
+				node.removeEventListener( 'touchend',    this._boundSwipeTouchEnd );
+				node.removeEventListener( 'touchcancel', this._boundSwipeTouchCancel );
+				node.removeEventListener( 'touchmove',   this._boundSwipeTouchMove );
 			}
 			this._swipeTargetRefs = null;
 		}
 
-		this._boundSwipeTouchMove = null;
+		this._boundSwipeTouchStart	= null;
+		this._boundSwipeTouchEnd	= null;
+		this._boundSwipeTouchCancel	= null;
+		this._boundSwipeTouchMove	= null;
 
 		super.destroy && await super.destroy( ...arguments );
 	}
@@ -149,6 +159,13 @@ let Swipe = target => class extends target {
 			this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipeTouchStart = this._swipeAxisLock = null;
 			return;
 		}
+
+		// Gesture recognized — stop the event from bubbling further.
+		// This prevents BarFoos delegation handlers on ancestor nodes from
+		// running expensive recursive walk-ups on touchend for no reason
+		// (click→touchend mapping). Taps (below threshold) still propagate
+		// normally so delegated click handlers continue to work.
+		event.stopPropagation();
 
 		if( absY > absX ) {
 			// Vertical swipe dominates
