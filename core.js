@@ -730,6 +730,10 @@ nodes[ 'section.center' ].addEventListener( 'scroll', event => {
 	}, 200);
 }, false);
 
+doc.addEventListener( 'click', event => {
+	eventLoop.fire( 'documentClick.core', { target: event.target } );
+}, true );
+
 /*****************************************************************************************************
  * Core Event handling
  *****************************************************************************************************/
