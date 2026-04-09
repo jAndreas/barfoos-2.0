@@ -160,6 +160,25 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools, Se
 
 		this.removeAllNodeEvents();
 
+		if( this._originalAnchorNode instanceof HTMLElement ) {
+			let moduleRoot = this.nodes.dialogRoot || this.nodes.root;
+
+			if( moduleRoot && moduleRoot.parentNode ) {
+				moduleRoot.replaceWith( this._originalAnchorNode );
+			}
+
+			this._originalAnchorNode = null;
+		} else if( this.nodes.root && this.nodes.root.__bfOriginalAnchor instanceof HTMLElement ) {
+			let moduleRoot	= this.nodes.dialogRoot || this.nodes.root,
+				anchor		= this.nodes.root.__bfOriginalAnchor;
+
+			if( moduleRoot && moduleRoot.parentNode ) {
+				moduleRoot.replaceWith( anchor );
+			}
+
+			delete this.nodes.root.__bfOriginalAnchor;
+		}
+
 		if( Object.keys( this.dialogElements ).length ) {
 			delete this.nodes.root;
 
@@ -197,12 +216,17 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools, Se
 
 				nodes[ `section.${ this.location }` ].appendChild( this.nodes.dialogRoot || this.nodes.root );
 			} else if( this.location in modules.online ) {
-				await this.fire( `newChildModule.${ this.location }`, {
+				let originalAnchor = await this.fire( `newChildModule.${ this.location }`, {
 					isDialog:		!!this.nodes.dialogRoot,
 					node:			this.nodes.dialogRoot || this.nodes.root,
 					nodeLocation:	this.nodeLocation,
 					nodeAnchor:		this.nodeAnchor
 				});
+
+				if( originalAnchor instanceof HTMLElement ) {
+					this._originalAnchorNode	= originalAnchor;
+					this._originalAnchorKey		= this.nodeAnchor;
+				}
 			} else {
 				if(!(this.location in modules.awaiting) ) {
 					modules.awaiting[ this.location ] = [ ];
@@ -270,9 +294,12 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools, Se
 	}
 
 	newChildModule( hookData, event ) {
+		let originalAnchor = null;
+
 		if( hookData.isDialog ) {
 			if( hookData.nodeAnchor ) {
-				this.nodes[ hookData.nodeAnchor ].replaceWith( hookData.node );
+				originalAnchor = this.nodes[ hookData.nodeAnchor ];
+				originalAnchor.replaceWith( hookData.node );
 			} else if( this.nodes.defaultDialogContainer instanceof HTMLElement ) {
 				this.nodes.defaultDialogContainer.insertAdjacentElement( hookData.nodeLocation, hookData.node );
 			} else {
@@ -280,13 +307,20 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools, Se
 			}
 		} else {
 			if( hookData.nodeAnchor ) {
-				this.nodes[ hookData.nodeAnchor ].replaceWith( hookData.node );
+				originalAnchor = this.nodes[ hookData.nodeAnchor ];
+				originalAnchor.replaceWith( hookData.node );
 			} else if( this.nodes.defaultChildContainer instanceof HTMLElement ) {
 				this.nodes.defaultChildContainer.insertAdjacentElement( hookData.nodeLocation, hookData.node );
 			} else {
 				this.log( `Error: No defaultChildContainer set` );
 			}
 		}
+
+		if( originalAnchor instanceof HTMLElement ) {
+			hookData.node.__bfOriginalAnchor = originalAnchor;
+		}
+
+		return originalAnchor;
 	}
 
 	findModule() {

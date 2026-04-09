@@ -103,6 +103,7 @@ div#world {
 
 	> section.head {
 		position:relative;
+		z-index:2;
 
 		&.dialogBlur {
 			filter:blur(7px) brightness(0.2);

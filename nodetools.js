@@ -31,110 +31,139 @@ let NodeTools = target => class extends target {
 				return;
 			}
 
-			let callbackResult = [ ];
+			if(!this.id || !this.data ) {
+				return;
+			}
 
-			if( this && Object.keys( this ).length && this.data ) {
-				if( this.data.get( event.target ) ) {
-					if( this.data.get( event.target ).events[ event.type ] ) {
-						this.data.get( event.target ).events[ event.type ].every( fnc => {
-							// Skip mapped-click handlers (click→touchend) when touch moved beyond tap range
-							if( this._mappedClickHandlers.has( fnc ) && event.type === 'touchend' && !event.CLICKRANGE ) {
-								return true;
-							}
+			// Check handlers for the direct event target
+			if( this._checkNodeEvents( event.target, event ) === false ) {
+				return false;
+			}
 
-							let retV = fnc.call( this, event );
+			// Walk-up: check each ancestor once — O(n) instead of O(2^n)
+			if( event.target && event.target.parentElement ) {
+				if( event.target.classList.contains( 'noPropagation' ) ) {
+					event.stopPropagation();
+					return false;
+				}
 
-							callbackResult.push( retV );
-
-							if( retV === -1 ) {
-								return false;
+				let root		= Object.keys( this.dialogElements ).length ? this.dialogElements.root : this.nodes.root,
+					shadow		= Object.create( null ),
+					filter		= {
+						get:	function( target, prop ) {
+							if( prop in shadow ) {
+								return shadow[ prop ];
 							} else {
-								return true;
+								if( typeof target[ prop ] === 'function' ) {
+									return target[ prop ].bind( event );
+								} else {
+									return target[ prop ];
+								}
 							}
-						});
-
-						if( callbackResult.indexOf( false ) > -1 ) {
-							return false;
+						},
+						set:	function( target, prop, value ) {
+							shadow[ prop ] = value;
+							return true;
 						}
+					},
+					ev			= new Proxy( event, filter ),
+					currentNode	= event.target.parentElement;
 
-						if( callbackResult.indexOf( -1 ) > -1 ) {
-							return false;
-						}
-					}
+				ev.originalTarget = event.target;
 
-					if( this && this.data && this.data.get( event.target ) === undef ) {
-						this.cleanDelegations();
+				while( currentNode && currentNode !== root ) {
+					ev.target = currentNode;
+
+					if( this._checkNodeEvents( currentNode, ev ) === false ) {
 						return false;
 					}
 
-					if( this && this.data && this.data.get( event.target ).oneTimeEvents[ event.type ] ) {
-						this.data.get( event.target ).oneTimeEvents[ event.type ].every( fnc => {
-							// Skip mapped-click handlers (click→touchend) when touch moved beyond tap range
-							if( this._mappedClickHandlers.has( fnc ) && event.type === 'touchend' && !event.CLICKRANGE ) {
-								return true;
-							}
-
-							let retV = fnc.call( this, event );
-
-							callbackResult.push( retV );
-
-							if( retV === -1 ) {
-								return false;
-							}
-						});
-
-						if( callbackResult.indexOf( false ) > -1 ) {
-							return false;
-						}
-
-						this.data.get( event.target ).oneTimeEvents[ event.type ] = [ ];
-						this.cleanDelegations();
-					}
-				}
-
-				if( event.target && event.target.parentElement ) {
-					/*if( skippedPropagationElements.test( event.target.nodeName ) ) {
-						if( event.target.getAttribute( 'type' ) !== 'text') {
-							return false;
-						}
-					}*/
-
-					if( event.target.classList.contains( 'noPropagation' ) ) {
+					if( currentNode.classList.contains( 'noPropagation' ) ) {
 						event.stopPropagation();
 						return false;
 					}
 
-					let root	= Object.keys( this.dialogElements ).length ? this.dialogElements.root : this.nodes.root,
-						shadow	= Object.create( null ),
-						filter	= {
-							get:	function( target, prop ) {
-								if( prop in shadow ) {
-									return shadow[ prop ];
-								} else {
-									if( typeof target[ prop ] === 'function' ) {
-										return target[ prop ].bind( event );
-									} else {
-										return target[ prop ];
-									}
-								}
-							},
-							set:	function( target, prop, value ) {
-								shadow[ prop ] = value;
-								return true;
-							}
-						},
-					ev		= new Proxy( event, filter );
+					ev.originalTarget = currentNode;
+					currentNode = currentNode.parentElement;
+				}
 
-					while( ev.target && ev.target !== root ) {
-						ev.originalTarget	= ev.target;
-						ev.target			= ev.target.parentElement;
-						if( this._delegatedEventHandler( ev, event ) === false ) {
-							return false;
-						}
+				// Check root itself — handlers may be registered directly on root
+				if( currentNode === root ) {
+					ev.target = root;
+
+					if( this._checkNodeEvents( root, ev ) === false ) {
+						return false;
 					}
 				}
 			}
 		};
+	}
+
+
+	_checkNodeEvents( node, event ) {
+		let nodeData		= this.data.get( node ),
+			stopDelegation	= false,
+			handlers,
+			type,
+			retV;
+
+		if(!nodeData ) {
+			return;
+		}
+
+		type		= event.type;
+		handlers	= nodeData.events[ type ];
+
+		if( handlers ) {
+			for( let i = 0, len = handlers.length; i < len; i++ ) {
+				// Skip mapped-click handlers (click→touchend) when touch moved beyond tap range
+				if( this._mappedClickHandlers.has( handlers[ i ] ) && type === 'touchend' && !event.CLICKRANGE ) {
+					continue;
+				}
+
+				retV = handlers[ i ].call( this, event );
+
+				if( retV === false ) {
+					stopDelegation = true;
+				} else if( retV === -1 ) {
+					return false;
+				}
+			}
+
+			if( stopDelegation ) {
+				return false;
+			}
+		}
+
+		if( this.data.get( node ) === undef ) {
+			this.cleanDelegations();
+			return false;
+		}
+
+		handlers = nodeData.oneTimeEvents[ type ];
+
+		if( handlers ) {
+			for( let i = 0, len = handlers.length; i < len; i++ ) {
+				if( this._mappedClickHandlers.has( handlers[ i ] ) && type === 'touchend' && !event.CLICKRANGE ) {
+					continue;
+				}
+
+				retV = handlers[ i ].call( this, event );
+
+				if( retV === false ) {
+					stopDelegation = true;
+				} else if( retV === -1 ) {
+					return false;
+				}
+			}
+
+			if( stopDelegation ) {
+				return false;
+			}
+
+			nodeData.oneTimeEvents[ type ] = [ ];
+			this.cleanDelegations();
+		}
 	}
 
 	addNodeEvent( nodes, types, fnc ) {
