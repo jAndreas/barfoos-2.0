@@ -254,8 +254,9 @@ let ServerConnection = target => class extends target {
 	handleServerResponse( response ) {
 		if( response ) {
 			if( response.error || response.errorCode ) {
-				// handle errors
-				throw (response.error || response.errorCode);
+				let err			= new Error( response.error || response.errorCode );
+				err.errorCode	= response.errorCode;
+				throw err;
 			}
 		}
 	}

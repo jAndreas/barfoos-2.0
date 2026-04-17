@@ -248,10 +248,28 @@ function easeCount({ node = null, from = 0, to = 0, frame = 300 } = { }) {
 	win.requestAnimationFrame( step );
 }
 
+function formatCountdown( diff ) {
+	if( diff <= 0 ) return null;
+
+	let	days	= Math.floor( diff / Days( 1 ) ),
+		hours	= Math.floor( ( diff % Days( 1 ) ) / Hours( 1 ) ),
+		minutes	= Math.floor( ( diff % Hours( 1 ) ) / Minutes( 1 ) ),
+		seconds	= Math.floor( ( diff % Minutes( 1 ) ) / Seconds( 1 ) );
+
+	let parts = [];
+
+	if( days > 0 )		parts.push( `${ days } ${ days === 1 ? 'Tag' : 'Tagen' }` );
+	if( hours > 0 )		parts.push( `${ hours } ${ hours === 1 ? 'Stunde' : 'Stunden' }` );
+	parts.push( `${ minutes } ${ minutes === 1 ? 'Minute' : 'Minuten' }` );
+	parts.push( `${ seconds } ${ seconds === 1 ? 'Sekunde' : 'Sekunden' }` );
+
+	return parts.join( ' - ' );
+}
+
 export { 
 	Mix, MakeClass, Composition,
 	extend,
-	getTimePeriod, formatDateDE,
+	getTimePeriod, formatDateDE, formatCountdown,
 	Seconds, Minutes, Hours, Days, Weeks, Months,
 	type, desc, defineProp, props, slice, hashCode, intToRGB,
 	undef, win, doc,
