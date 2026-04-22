@@ -1,0 +1,79 @@
+/*****************************************************************************************************
+ * Styles for the Swipe mixin hint overlay (swipe.js).
+ * Loaded via style-loader lazyStyleTag: `import swipeHintStyles from './css/swipeHints.scss';`
+ * Activated once on first `_setupSwipeHints()` call via `swipeHintStyles.use()`.
+ *****************************************************************************************************/
+
+.bfSwipeHintOverlay {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	overflow: hidden;
+	z-index: 1;
+}
+
+.bfSwipeHint {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: rgba( 255, 255, 255, 0.75 );
+	text-shadow: 0 0 8px rgba( 0, 0, 0, 0.75 ), 0 0 2px rgba( 0, 0, 0, 0.9 );
+	font-size: 32px;
+	font-family: system-ui, -apple-system, sans-serif;
+	font-weight: 400;
+	letter-spacing: -2px;
+	opacity: 0;
+	transition: opacity 0.35s ease-out;
+	pointer-events: none;
+	will-change: transform, opacity;
+
+	&.active { opacity: 1; }
+}
+
+.bfSwipeHintLeft,
+.bfSwipeHintRight {
+	top: 50%;
+	width: 44px;
+	height: 44px;
+	transform: translateY( -50% );
+}
+
+.bfSwipeHintLeft  { left: 4px; }
+.bfSwipeHintRight { right: 4px; }
+
+.bfSwipeHintUp,
+.bfSwipeHintDown {
+	left: 50%;
+	width: 44px;
+	height: 44px;
+	transform: translateX( -50% );
+}
+
+.bfSwipeHintUp   { top: 4px; }
+.bfSwipeHintDown { bottom: 4px; }
+
+.bfSwipeHint.active.bfSwipeHintLeft  { animation: bfSwipeHintSlideLeft  1.6s ease-in-out infinite; }
+.bfSwipeHint.active.bfSwipeHintRight { animation: bfSwipeHintSlideRight 1.6s ease-in-out infinite; }
+.bfSwipeHint.active.bfSwipeHintUp    { animation: bfSwipeHintSlideUp    1.6s ease-in-out infinite; }
+.bfSwipeHint.active.bfSwipeHintDown  { animation: bfSwipeHintSlideDown  1.6s ease-in-out infinite; }
+
+@keyframes bfSwipeHintSlideLeft {
+	0%, 100% { transform: translate( 0, -50% );      opacity: 0.45; }
+	50%      { transform: translate( -10px, -50% ); opacity: 0.95; }
+}
+
+@keyframes bfSwipeHintSlideRight {
+	0%, 100% { transform: translate( 0, -50% );      opacity: 0.45; }
+	50%      { transform: translate( 10px, -50% );  opacity: 0.95; }
+}
+
+@keyframes bfSwipeHintSlideUp {
+	0%, 100% { transform: translate( -50%, 0 );      opacity: 0.45; }
+	50%      { transform: translate( -50%, -10px ); opacity: 0.95; }
+}
+
+@keyframes bfSwipeHintSlideDown {
+	0%, 100% { transform: translate( -50%, 0 );      opacity: 0.45; }
+	50%      { transform: translate( -50%, 10px );  opacity: 0.95; }
+}

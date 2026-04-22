@@ -1,5 +1,9 @@
 'use strict';
 
+import { isMobileDevice, doc } from './toolkit.js';
+import { win } from './domkit.js';
+import swipeHintStyles from './css/swipeHints.scss';
+
 /*****************************************************************************************************
  * Mixin Class Swipe: Adds swipe gesture detection to a component.
  *
@@ -21,7 +25,32 @@
  *
  * Fires mediator events: slideUpGesture.<id>, slideDownGesture.<id>,
  * slideLeftGesture.<id>, slideRightGesture.<id>
+ *
+ * ── Swipe Hint Overlay (mobile only) ───────────────────────────────────────
+ * Automatically injects a contained, subtle sliding-chevron hint per target
+ * node showing which directions are currently swipeable.
+ *
+ *   Override swipeHintDirections() → { left, right, up, down } booleans to
+ *     dynamically declare which directions are currently available.
+ *   If not overridden, availability is inferred from the presence of
+ *     onSwipeLeft/Right/Up/Down methods (static).
+ *   Call this.refreshSwipeHints() after state change (e.g. carousel nav)
+ *     so the framework re-evaluates and updates the overlay.
+ *   Set static hints opt-out: assign this.swipeHintsDisabled = true.
+ *
+ * The overlay is position:absolute, inset:0, pointer-events:none, overflow:
+ * hidden — it can never break out of the target container's box or z-index.
  *****************************************************************************************************/
+
+let _swipeHintStylesInjected = false;
+
+function _ensureSwipeHintStyles() {
+	if( _swipeHintStylesInjected ) return;
+	_swipeHintStylesInjected = true;
+
+	swipeHintStyles.use();
+}
+
 let Swipe = target => class extends target {
 	constructor() {
 		super( ...arguments );
@@ -73,6 +102,8 @@ let Swipe = target => class extends target {
 		let targets			= this.swipeTargetNodes ? this.swipeTargetNodes() : [ this.nodes.root ],
 			needsPrevent	= typeof this.swipePreventScroll === 'function';
 
+		this._swipeHintEntries = [ ];
+
 		for( let node of targets ) {
 			if( typeof node === 'string' ) {
 				node = this.nodes[ node ];
@@ -87,15 +118,98 @@ let Swipe = target => class extends target {
 			node.addEventListener( 'touchcancel', this._boundSwipeTouchCancel, { passive: true } );
 			node.addEventListener( 'touchmove',   this._boundSwipeTouchMove,   { passive: !needsPrevent } );
 			this._swipeTargetRefs.push( node );
+
+			this._setupSwipeHints( node );
 		}
 
+		this.refreshSwipeHints();
+
 		return this;
+	}
+
+	_setupSwipeHints( node ) {
+		if(!isMobileDevice || this.swipeHintsDisabled ) return;
+		if(!node || node.nodeType !== 1 ) return;
+
+		_ensureSwipeHintStyles();
+
+		let overlay		= doc.createElement( 'div' ),
+			arrows		= Object.create( null ),
+			computed	= win.getComputedStyle( node ),
+			origPos		= null;
+
+		// Ensure the target establishes a containing block for our absolute overlay.
+		// Track whether we had to set it so we can restore on destroy.
+		if( computed.position === 'static' ) {
+			origPos = node.style.position;
+			node.style.position = 'relative';
+		}
+
+		overlay.className = 'bfSwipeHintOverlay';
+
+		for( let dir of [ 'Left', 'Right', 'Up', 'Down' ] ) {
+			let a = doc.createElement( 'div' );
+
+			a.className		= `bfSwipeHint bfSwipeHint${ dir }`;
+			a.textContent	= { Left: '‹‹', Right: '››', Up: '˄˄', Down: '˅˅' }[ dir ];
+			overlay.appendChild( a );
+			arrows[ dir.toLowerCase() ] = a;
+		}
+
+		node.appendChild( overlay );
+
+		this._swipeHintEntries.push({ node, overlay, arrows, origPos });
+	}
+
+	_computeSwipeHintDirections() {
+		if( typeof this.swipeHintDirections === 'function' ) {
+			let d = this.swipeHintDirections() || { };
+
+			return {
+				left:	!!d.left,
+				right:	!!d.right,
+				up:		!!d.up,
+				down:	!!d.down
+			};
+		}
+
+		return {
+			left:	typeof this.onSwipeLeft  === 'function',
+			right:	typeof this.onSwipeRight === 'function',
+			up:		typeof this.onSwipeUp    === 'function',
+			down:	typeof this.onSwipeDown  === 'function'
+		};
+	}
+
+	refreshSwipeHints() {
+		if(!this._swipeHintEntries || !this._swipeHintEntries.length ) return;
+
+		let dirs = this._computeSwipeHintDirections();
+
+		for( let entry of this._swipeHintEntries ) {
+			for( let key of [ 'left', 'right', 'up', 'down' ] ) {
+				entry.arrows[ key ].classList.toggle( 'active', !!dirs[ key ] );
+			}
+		}
 	}
 
 	async destroy() {
 		if( this._swipeRafId != null ) {
 			cancelAnimationFrame( this._swipeRafId );
 			this._swipeRafId = null;
+		}
+
+		if( this._swipeHintEntries ) {
+			for( let entry of this._swipeHintEntries ) {
+				if( entry.overlay && entry.overlay.parentNode ) {
+					entry.overlay.parentNode.removeChild( entry.overlay );
+				}
+
+				if( entry.origPos !== null && entry.node ) {
+					entry.node.style.position = entry.origPos;
+				}
+			}
+			this._swipeHintEntries = null;
 		}
 
 		if( this._swipeTargetRefs ) {
@@ -204,6 +318,9 @@ let Swipe = target => class extends target {
 		}
 
 		this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipeTouchStart = this._swipeAxisLock = null;
+
+		// Direction availability may have changed (e.g. carousel navigated to a new slide).
+		this.refreshSwipeHints();
 	}
 
 	_onSwipeTouchCancel() {
