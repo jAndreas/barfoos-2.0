@@ -597,6 +597,48 @@ let DOMTools = target => class extends target {
 		}
 	}
 
+	render({ htmlData = '', standalone = false, scoped = false, crlf = false }) {
+		let originalTemplate = scoped ? htmlData : null;
+
+		return {
+			with:	replacementHash => {
+				for( let [ searchFor, value ] of Object.entries( replacementHash ) ) {
+					if( typeof value === 'object' ) {
+						continue;
+					}
+
+					if( crlf ) {
+						htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), (value !== undef ? value : '').toString().replace( /<br>|<br\/>/g, '\n' ) );
+					} else {
+						htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), (value !== undef ? value : '').toString().replace( /\n/g, '<br/>') );
+					}
+				}
+
+				return {
+					at:		reference => {
+						let hash		= this.addNodes({ htmlData, reference, standalone, scoped }),
+							logicRoot	= scoped ? hash.nodes.root : (hash && hash.localRoot ? hash.localRoot : null);
+
+						if( logicRoot ) {
+							this._processTemplateLogic( logicRoot, replacementHash, crlf );
+						}
+
+						if( scoped && hash._template !== undef ) {
+							hash._template		= originalTemplate;
+							hash._renderData	= Object.assign( Object.create( null ), replacementHash );
+							hash._crlf			= crlf;
+						}
+
+						return hash;
+					},
+					get:	() => {
+						return htmlData;
+					}
+				};
+			}
+		};
+	}
+
 	timeout( ms = 200 ) {
 		return new Promise(( res, rej ) => {
 			win.setTimeout( res, ms );

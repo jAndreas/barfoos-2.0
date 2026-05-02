@@ -197,12 +197,22 @@ let ServerConnection = target => class extends target {
 
 				if( response !== undef && response !== null ) {
 					try {
-						self.handleServerResponse( response );
+						// Guard handleServerResponse — the module instance
+						// may have been destroyed between socket.emit and
+						// this response callback (e.g. a mediator event
+						// triggered destroy() while the request was in
+						// flight). The recv() path on line ~229 already
+						// guards similarly; this keeps both paths consistent.
+						self.handleServerResponse && self.handleServerResponse( response );
 
 						if( self.id ) {
 							resolve( response );
 						} else {
-							throw new Error( 'Unidentified or Obsolete Module Instance.' );
+							// Resolve silently when the originating module is
+							// gone — the response is no longer relevant and
+							// there's no caller awaiting it (the await was
+							// abandoned when destroy() ran).
+							resolve( response );
 						}
 					} catch( ex ) {
 						reject( ex );

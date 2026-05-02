@@ -152,6 +152,34 @@ class Overlay extends Component {
 			this.nodes.dialogRoot.style.background		= 'linear-gradient(1750deg, rgba(191, 200, 205, 0.83), rgba(15, 40, 80, 0.83))';
 			this.nodes.dialogRoot.style.backdropFilter	= 'blur(8px)';
 		}
+
+		// autoCenter — CSS-based, content-size-agnostic centering.
+		//
+		// Difference vs. `center` / `centerToViewport`:
+		//   - `center` / `centerToViewport` measure the dialog ONCE in installModule()
+		//     and write px values into style.left / style.top. If the dialog's content
+		//     resizes afterwards (async-loaded iframes, lazy images, font swaps,
+		//     dynamic content, language switches, etc.) the dialog drifts off-center.
+		//   - `autoCenter` uses `position: fixed; left: 50%; top: 50%;
+		//     transform: translate(-50%, -50%)` — the browser keeps it centered
+		//     automatically, regardless of size changes. No JS measurement, no
+		//     orientationChange recompute needed.
+		//
+		// Opt-in only. Existing dialogs using `center` / `centerToViewport` keep
+		// their original behavior unchanged.
+		if( this.autoCenter ) {
+			if( isMobileDevice ) {
+				// Mobile dialogs render full-screen via CSS — match centerOverlay()'s
+				// mobile branch so we don't surprise existing styling.
+				this.nodes.dialogRoot.style.left	= '0px';
+				this.nodes.dialogRoot.style.top		= '0px';
+			} else {
+				this.nodes.dialogRoot.style.position	= 'fixed';
+				this.nodes.dialogRoot.style.left		= '50%';
+				this.nodes.dialogRoot.style.top			= '50%';
+				this.nodes.dialogRoot.style.transform	= 'translate(-50%, -50%)';
+			}
+		}
 	}
 
 	onOverlayCloseClick( event ) {
@@ -261,7 +289,7 @@ class Overlay extends Component {
 	onFocusOut( event ) {
 		this.nodes.dialogRoot.scrollIntoView();
 		setTimeout(() => {
-			if( this.nodes ) {
+			if( this?.nodes?.dialogRoot ) {
 				this.nodes.dialogRoot.scrollIntoView();
 			}
 		}, 100);
@@ -269,7 +297,7 @@ class Overlay extends Component {
 
 	async onBackgroundMouseDown( event ) {
 		if( event && event.target && !event.target.closest( 'div.bfDialogWrapper' ) ) {
-			if(!this.nodes.dialogRoot.contains( event.target ) ) {
+			if(!this?.nodes?.dialogRoot?.contains( event.target ) ) {
 				if( this.modalOverlay ) {
 					await Promise.all( this.modalOverlay.possibleDelays );
 				}
@@ -331,7 +359,16 @@ let Dialog = target => class extends target {
 		this.removeNodeEvent( 'div.bfContentDialogBody', 'mousedown', this.onDialogHandleMouseDown );
 		this.addNodeEvent( 'div.title', 'mousedown', this.onDialogHandleMouseDown );
 		this.addNodeEvent( 'div.close', 'click', this.onCloseClick );
-		this.addNodeEvent( 'div.mini', 'click', this.onMiniClick );
+
+		// `noMinimize: true` opts the dialog out of the minimize affordance —
+		// the div.mini handle button is hidden and no click handler is bound.
+		// Used for short-lived modal dialogs (login, register) where minimizing
+		// makes no sense and just clutters the title bar.
+		if( this.noMinimize ) {
+			this.dialogElements[ 'div.mini' ].style.display = 'none';
+		} else {
+			this.addNodeEvent( 'div.mini', 'click', this.onMiniClick );
+		}
 
 		this._DialogClass = true;
 

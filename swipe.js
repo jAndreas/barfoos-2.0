@@ -79,6 +79,16 @@ let Swipe = target => class extends target {
 			this._swipeXDiff = this._swipeXDown - event.touches[ 0 ].clientX;
 			this._swipeYDiff = this._swipeYDown - event.touches[ 0 ].clientY;
 
+			// Track the signed peak displacement in each axis so touchend can
+			// detect reversal gestures (e.g. swipe up 400px then pull back 200px
+			// → user intent is "cancel", not "commit up-swipe").
+			if( Math.abs( this._swipeXDiff ) > Math.abs( this._swipePeakX ) ) {
+				this._swipePeakX = this._swipeXDiff;
+			}
+			if( Math.abs( this._swipeYDiff ) > Math.abs( this._swipePeakY ) ) {
+				this._swipePeakY = this._swipeYDiff;
+			}
+
 			if( !this._swipeAxisLock ) {
 				let totalMove = Math.abs( this._swipeXDiff ) + Math.abs( this._swipeYDiff );
 
@@ -237,6 +247,8 @@ let Swipe = target => class extends target {
 			this._swipeTouchStart	= Date.now();
 			this._swipeXDiff		= 0;
 			this._swipeYDiff		= 0;
+			this._swipePeakX		= 0;
+			this._swipePeakY		= 0;
 			this._swipeAxisLock		= null;
 		}
 	}
@@ -270,7 +282,27 @@ let Swipe = target => class extends target {
 		// flick (high velocity with minimal travel to filter accidental taps)
 		if( maxAbs < threshold && !( velocity > 0.4 && maxAbs > 20 ) ) {
 			this.onSwipeReset && this.onSwipeReset();
-			this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipeTouchStart = this._swipeAxisLock = null;
+			this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipePeakX = this._swipePeakY = this._swipeTouchStart = this._swipeAxisLock = null;
+			return;
+		}
+
+		// Reversal detection — if the finger retreated significantly from its
+		// peak displacement in the dominant axis, the user's intent is to cancel
+		// the gesture, not commit it. Without this check, a user who drags far
+		// (e.g. 400px up) and then reverses back toward the start (e.g. 200px
+		// down, ending 200px above origin) would still trigger a swipe-up simply
+		// because cumulative displacement exceeds the threshold — which is
+		// counter-intuitive for held/drag gestures.
+		let absPeakX	= Math.abs( this._swipePeakX || 0 ),
+			absPeakY	= Math.abs( this._swipePeakY || 0 ),
+			peakVal		= absPeakY > absPeakX ? this._swipePeakY : this._swipePeakX,
+			finalVal	= absPeakY > absPeakX ? finalY : finalX,
+			peakSign	= Math.sign( peakVal ) || 1,
+			retreat		= Math.abs( peakVal ) - finalVal * peakSign;
+
+		if( retreat > 60 ) {
+			this.onSwipeReset && this.onSwipeReset();
+			this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipePeakX = this._swipePeakY = this._swipeTouchStart = this._swipeAxisLock = null;
 			return;
 		}
 
@@ -317,7 +349,7 @@ let Swipe = target => class extends target {
 			}
 		}
 
-		this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipeTouchStart = this._swipeAxisLock = null;
+		this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipePeakX = this._swipePeakY = this._swipeTouchStart = this._swipeAxisLock = null;
 
 		// Direction availability may have changed (e.g. carousel navigated to a new slide).
 		this.refreshSwipeHints();
@@ -334,7 +366,7 @@ let Swipe = target => class extends target {
 		}
 
 		this.onSwipeReset && this.onSwipeReset();
-		this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipeTouchStart = this._swipeAxisLock = null;
+		this._swipeXDown = this._swipeYDown = this._swipeXDiff = this._swipeYDiff = this._swipePeakX = this._swipePeakY = this._swipeTouchStart = this._swipeAxisLock = null;
 	}
 }
 

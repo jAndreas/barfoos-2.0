@@ -41,17 +41,15 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools, Se
 	constructor( options = { } ) {
 		super( ...arguments );
 
-		extend( this ).with( options ).and({
-			id:						this.constructor.name,
-			runtimeDependencies:	[ ]
+		extend( this ).with({
+			runtimeDependencies:	[ ],
+			preRenderDependencies:	[ ]
+		}).and( options ).and({
+			id:						this.constructor.name
 		});
 
 		if( typeof this.tmpl === 'string' ) {
 			extend( this ).with({
-				nodes:				this.transpile({
-										htmlData: this.renderData ? this.render({ htmlData: this.tmpl }).with( this.renderData ).get() : this.tmpl,
-										moduleRoot: true
-									}),
 				dialogElements:		Object.create( null ),
 				spinnerNode:		this.makeNode( '<div class="loading-spinner"></div>' ),
 				overlayNode:		this.makeNode( '<div class="BFModalOverlay"></div>' ),
@@ -66,13 +64,51 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools, Se
 				this.fire( 'waitForDOM.appEvents' )
 			);
 
-			this.data.set( this, Object.create( null ) );
+			// Transpile immediately when the subclass did NOT register any
+			// preRenderDependencies. When it did (e.g. async language loaders),
+			// defer transpile to init() so resolved results can be merged into
+			// this.renderData and substituted into %placeholders% BEFORE the
+			// shadow DOM is cloned into the live tree.
+			if( this.preRenderDependencies.length === 0 ) {
+				this.nodes = this.transpile({
+					htmlData:	this.renderData ? this.render({ htmlData: this.tmpl }).with( this.renderData ).get() : this.tmpl,
+					moduleRoot:	true
+				});
+
+				this.data.set( this, Object.create( null ) );
+			}
 		} else {
 			this.log('worker..?');
 		}
 	}
 
 	async init() {
+		// If the template was not transpiled in the constructor because the
+		// subclass populated preRenderDependencies, resolve those promises now
+		// and merge each object result into this.renderData. Then transpile
+		// in the shadow DOM so placeholders are replaced before first paint.
+		// Note: DOMTools initialises `this.nodes` to an empty object in its
+		// constructor, so we check for the transpiled `.root` element, not
+		// for the nodes container itself.
+		if( typeof this.tmpl === 'string' && !this.nodes.root ) {
+			let results = await Promise.all( this.preRenderDependencies );
+
+			this.renderData = this.renderData || Object.create( null );
+
+			for( let result of results ) {
+				if( result && typeof result === 'object' ) {
+					Object.assign( this.renderData, result );
+				}
+			}
+
+			this.nodes = this.transpile({
+				htmlData:	this.render({ htmlData: this.tmpl }).with( this.renderData ).get(),
+				moduleRoot:	true
+			});
+
+			this.data.set( this, Object.create( null ) );
+		}
+
 		super.init && super.init( ...arguments );
 
 		if( typeof ENV_PROD === 'undefined' ) {
@@ -639,48 +675,6 @@ class Component extends Composition( LogTools, Mediator, DOMTools, NodeTools, Se
 		this.modalOverlay = controlInterface;
 	}
 
-	render({ htmlData = '', standalone = false, scoped = false, crlf = false }) {
-		let originalTemplate = scoped ? htmlData : null;
-
-		return {
-			with:	replacementHash => {
-				for( let [ searchFor, value ] of Object.entries( replacementHash ) ) {
-					if( typeof value === 'object' ) {
-						continue;
-					}
-
-					if( crlf ) {
-						htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), (value !== undef ? value : '').toString().replace( /<br>|<br\/>/g, '\n' ) );
-					} else {
-						htmlData = htmlData.replace( new RegExp( '%' + searchFor + '%', 'g' ), (value !== undef ? value : '').toString().replace( /\n/g, '<br/>') );
-					}
-				}
-
-				return {
-					at:		reference => {
-						let hash		= this.addNodes({ htmlData, reference, standalone, scoped }),
-							logicRoot	= scoped ? hash.nodes.root : (hash && hash.localRoot ? hash.localRoot : null);
-
-						if( logicRoot ) {
-							this._processTemplateLogic( logicRoot, replacementHash, crlf );
-						}
-
-						if( scoped && hash._template !== undef ) {
-							hash._template		= originalTemplate;
-							hash._renderData	= Object.assign( Object.create( null ), replacementHash );
-							hash._crlf			= crlf;
-						}
-
-						return hash;
-					},
-					get:	() => {
-						return htmlData;
-					}
-				};
-			}
-		};
-	}
-
 	loadImage( url ) {
 		try {
 			return fetch( url ).then( res => res.blob() ).then( blob => URL.createObjectURL( blob ) );
@@ -1031,8 +1025,49 @@ eventLoop.on( 'configApp.core', app => {
 				nodes[ 'div#world' ].style[ prop ] = value;
 			}
 		}
+
+		// Optional video background. `background.video` is either a string URL
+		// or { src, poster, opacity, mixBlendMode, css }. Renders a muted,
+		// looping, autoplaying <video> pinned behind all content inside div#world.
+		// A second call replaces the previous video element.
+		if( app.background.video ) {
+			let cfg = typeof app.background.video === 'string'
+				? { src: app.background.video }
+				: app.background.video;
+
+			let existing = nodes[ 'div#world' ].querySelector( 'video.bfBackgroundVideo' );
+
+			if( existing && existing.parentNode ) {
+				existing.parentNode.removeChild( existing );
+			}
+
+			let hash = DOM.render({ htmlData: '<video class="bfBackgroundVideo" src="%src%" autoplay loop muted playsinline></video>', standalone: true })
+				.with({ src: cfg.src })
+				.at({ node: nodes[ 'div#world' ], position: 'afterbegin' });
+
+			let video = hash.localRoot;
+
+			if( cfg.poster ) video.poster = cfg.poster;
+
+			Object.assign( video.style, {
+				opacity:		cfg.opacity != null ? String( cfg.opacity ) : '0.35',
+				mixBlendMode:	cfg.mixBlendMode || 'normal'
+			});
+
+			if( cfg.css && typeof cfg.css === 'object' ) {
+				for( let [ prop, value ] of Object.entries( cfg.css ) ) {
+					video.style[ prop ] = value;
+				}
+			}
+
+			nodes[ 'div#world' ].classList.add( 'backgroundVideo' );
+
+			video.play && video.play().catch( () => { /* autoplay blocked — will still play on interaction */ } );
+		}
 	}
 });
+
+
 /****************************************** Event Handling End ****************************************/
 
 export { main, Component };
